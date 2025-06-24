@@ -1,5 +1,5 @@
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 interface Photo {
   id: number;
@@ -10,6 +10,7 @@ interface Photo {
 const EventsSection = () => {
   const column1Ref = useRef<HTMLDivElement>(null);
   const column2Ref = useRef<HTMLDivElement>(null);
+  const [isPaused, setIsPaused] = useState(false);
 
   // Sample photos for the photo wall
   const photos: Photo[] = [
@@ -29,7 +30,7 @@ const EventsSection = () => {
 
   useEffect(() => {
     const animateColumns = () => {
-      if (column1Ref.current && column2Ref.current) {
+      if (column1Ref.current && column2Ref.current && !isPaused) {
         const scrollSpeed = 0.5;
         const currentTime = Date.now() * 0.001;
         
@@ -48,7 +49,15 @@ const EventsSection = () => {
     const animationFrame = requestAnimationFrame(animateColumns);
     
     return () => cancelAnimationFrame(animationFrame);
-  }, []);
+  }, [isPaused]);
+
+  const handleImageHover = () => {
+    setIsPaused(true);
+  };
+
+  const handleImageLeave = () => {
+    setIsPaused(false);
+  };
 
   return (
     <section className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 py-16 px-4">
@@ -119,6 +128,8 @@ const EventsSection = () => {
                     <div
                       key={`col1-${photo.id}-${index}`}
                       className="relative group overflow-hidden rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300"
+                      onMouseEnter={handleImageHover}
+                      onMouseLeave={handleImageLeave}
                     >
                       <img
                         src={photo.src}
@@ -136,11 +147,13 @@ const EventsSection = () => {
                   className="flex flex-col gap-4"
                   style={{ willChange: 'transform' }}
                 >
-                  {/* FIXED: Duplicate photos for seamless loop */}
+                  {/* Duplicate photos for seamless loop */}
                   {[...column2Photos, ...column2Photos].map((photo, index) => (
                     <div
                       key={`col2-${photo.id}-${index}`}
                       className="relative group overflow-hidden rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300"
+                      onMouseEnter={handleImageHover}
+                      onMouseLeave={handleImageLeave}
                     >
                       <img
                         src={photo.src}
