@@ -136,7 +136,7 @@ const EventsSection = () => {
                   className="flex flex-col gap-4"
                   style={{ willChange: 'transform' }}
                 >
-                  {/* Duplicate photos for seamless loop */}
+                  {/* FIXED: Duplicate photos for seamless loop */}
                   {[...column2Photos, ...column2Photos].map((photo, index) => (
                     <div
                       key={`col2-${photo.id}-${index}`}
