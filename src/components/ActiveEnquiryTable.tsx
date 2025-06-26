@@ -1,9 +1,9 @@
-
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { DynamicTable, TableColumn, TableAction, TableFilter } from "@/components/ui/dynamic-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Edit, RotateCcw } from "lucide-react";
+import { Edit, RotateCcw, Eye } from "lucide-react";
 
 // Mock data for active enquiries
 const activeEnquiries = [
@@ -70,6 +70,7 @@ const activeEnquiries = [
 ];
 
 export function ActiveEnquiryTable() {
+  const navigate = useNavigate();
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
   const [filters, setFilters] = useState<TableFilter[]>([
     {
@@ -127,6 +128,11 @@ export function ActiveEnquiryTable() {
   ];
 
   const actions: TableAction[] = [
+    {
+      label: 'View Profile',
+      icon: <Eye className="h-4 w-4 mr-2" />,
+      onClick: (row) => navigate(`/leads/profile/${row.id}`)
+    },
     {
       label: 'Edit',
       icon: <Edit className="h-4 w-4 mr-2" />,

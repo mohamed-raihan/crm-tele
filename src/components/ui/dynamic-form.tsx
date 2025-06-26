@@ -78,9 +78,9 @@ export function DynamicForm({
             fieldSchema = z.string();
           }
           
-          if (field.required) {
-            fieldSchema = fieldSchema.min(1, `${field.label} is required`);
-          } else {
+          if (field.required && field.type !== 'date') {
+            fieldSchema = (fieldSchema as z.ZodString).min(1, `${field.label} is required`);
+          } else if (!field.required) {
             fieldSchema = fieldSchema.optional();
           }
           
