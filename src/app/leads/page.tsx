@@ -3,6 +3,7 @@ import { DashboardHeader } from "@/components/DashboardHeader";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { NewEnquiryForm } from "@/components/NewEnquiryForm";
+import { ActiveEnquirySection } from "@/components/ActiveEnquirySection";
 
 export default function LeadsPage() {
   return (
@@ -15,50 +16,29 @@ export default function LeadsPage() {
           <p className="text-gray-600">Track and manage your sales leads and enquiries</p>
         </div>
 
-        <Tabs defaultValue="new-enquiries" className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="new-enquiries">New Enquiries</TabsTrigger>
-            <TabsTrigger value="all-leads">All Leads</TabsTrigger>
-            <TabsTrigger value="follow-ups">Follow Ups</TabsTrigger>
-            <TabsTrigger value="converted">Converted</TabsTrigger>
+        <Tabs defaultValue="new-enquiry" className="w-full">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="new-enquiry">New Enquiry</TabsTrigger>
+            <TabsTrigger value="active-enquiry">Active Enquiry</TabsTrigger>
+            <TabsTrigger value="closed-enquiry">Closed Enquiry</TabsTrigger>
           </TabsList>
           
-          <TabsContent value="new-enquiries" className="space-y-4">
+          <TabsContent value="new-enquiry" className="space-y-4">
             <NewEnquiryForm />
           </TabsContent>
           
-          <TabsContent value="all-leads" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>All Leads</CardTitle>
-                <CardDescription>View and manage all your leads</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-gray-600">All leads overview coming soon...</p>
-              </CardContent>
-            </Card>
+          <TabsContent value="active-enquiry" className="space-y-4">
+            <ActiveEnquirySection />
           </TabsContent>
           
-          <TabsContent value="follow-ups" className="space-y-4">
+          <TabsContent value="closed-enquiry" className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle>Follow Ups</CardTitle>
-                <CardDescription>Leads that require follow up</CardDescription>
+                <CardTitle>Closed Enquiry</CardTitle>
+                <CardDescription>View and manage closed enquiries</CardDescription>
               </CardHeader>
               <CardContent>
-                <p className="text-gray-600">Follow up management coming soon...</p>
-              </CardContent>
-            </Card>
-          </TabsContent>
-          
-          <TabsContent value="converted" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Converted Leads</CardTitle>
-                <CardDescription>Successfully converted leads</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-gray-600">Converted leads tracking coming soon...</p>
+                <p className="text-gray-600">Closed enquiry management coming soon...</p>
               </CardContent>
             </Card>
           </TabsContent>
