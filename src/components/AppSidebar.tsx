@@ -86,7 +86,7 @@ export function AppSidebar() {
 
   return (
     <Sidebar className="border-r border-gray-200">
-      <SidebarHeader className="border-b border-gray-200 p-6">
+      <SidebarHeader className="p-6">
         <div className="flex items-center gap-2">
           <div className="h-8 w-8 rounded-lg bg-blue-600 flex items-center justify-center">
             <Phone className="h-4 w-4 text-white" />
