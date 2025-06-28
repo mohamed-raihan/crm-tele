@@ -32,14 +32,14 @@ const navigationItems = [
     icon: Home,
   },
   {
+    title: "Enquiry",
+    url: "/leads",
+    icon: Target,
+  },
+  {
     title: "Customers",
     url: "/customers",
     icon: Users,
-  },
-  {
-    title: "Leads",
-    url: "/leads",
-    icon: Target,
   },
   {
     title: "Contacts",
