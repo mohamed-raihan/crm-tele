@@ -11,6 +11,7 @@ import ExecutivePage from "./executive/page";
 import JobListPage from "./job-list/page";
 import WalkInListPage from "./walk-in-list/page";
 import FollowUps from "./follow-ups/page";
+import CallRegisterPage from "./call-register/page";
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
@@ -30,6 +31,7 @@ export function AppRouter() {
       <Route path="/job-list" element={<PrivateRoute><JobListPage/></PrivateRoute>} />
       <Route path="/walk-in-list" element={<PrivateRoute><WalkInListPage/></PrivateRoute>} />
       <Route path="/follow-ups" element={<PrivateRoute><FollowUps/></PrivateRoute>} />
+      <Route path="/call-register" element={<PrivateRoute><CallRegisterPage/></PrivateRoute>} />
       <Route path="/leads/profile/:id" element={<PrivateRoute><EnquiryProfilePage /></PrivateRoute>} />
       {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
       <Route path="*" element={<NotFound />} />

@@ -57,6 +57,11 @@ const navigationItems = [
     icon: Calendar,
   },
   {
+    title: "Call Register",
+    url: "/call-register",
+    icon: Calendar,
+  },
+  {
     title: "Reports",
     url: "/reports",
     icon: BarChart3,

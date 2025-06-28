@@ -4,63 +4,68 @@ import { DynamicForm, FormSection } from '@/components/ui/dynamic-form';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
-const walkInListData = [
+const callRegisterData = [
   {
     sl: '12122',
+    counselor: 'Bindya',
     candidate: 'Rishita Raj',
-    phone: '9997776543',
-    counselor: '9997776543',
+    mobile: '9994449494',
+    type: 'Direct',
+    status: '',
+    response: { label: 'Positive', value: 'positive' },
+    remark: 'Kerala',
+    duration: '1:00 - 2:30 PM',
+    date: '12/12/23',
+    time: { label: '02:30 PM', value: '02:30 PM' },
     branch: 'Kozhikode',
-    state: 'Kerala',
-    walkInDate: '12/12/23',
-    fixedOn: '9997776543',
-    remark: 'Will call tomorrow at 4pm',
   },
   {
     sl: '12122',
+    counselor: 'Bindya',
     candidate: 'Rishita Raj',
-    phone: '9997776543',
-    counselor: '9997776543',
+    mobile: '9994449494',
+    type: 'Direct',
+    status: '',
+    response: { label: 'Negative', value: 'negative' },
+    remark: 'Kerala',
+    duration: '1:00 - 2:30 PM',
+    date: '12/12/23',
+    time: { label: '02:30 PM', value: '02:30 PM' },
     branch: 'Kozhikode',
-    state: 'Kerala',
-    walkInDate: '12/12/23',
-    fixedOn: '9997776543',
-    remark: 'Good to hear about topic',
-  },
-  {
-    sl: '12122',
-    candidate: 'Rishita Raj',
-    phone: '9997776543',
-    counselor: '9997776543',
-    branch: 'Kozhikode',
-    state: 'Kerala',
-    walkInDate: '12/12/23',
-    fixedOn: '9997776543',
-    remark: 'Will call tomorrow at 4pm',
-  },
-  {
-    sl: '12122',
-    candidate: 'Rishita Raj',
-    phone: '9997776543',
-    counselor: '9997776543',
-    branch: 'Kozhikode',
-    state: 'Kerala',
-    walkInDate: '12/12/23',
-    fixedOn: '9997776543',
-    remark: 'Good to hear about topic',
   },
 ];
 
 const columns: TableColumn[] = [
   { key: 'sl', label: 'SL', sortable: true, width: 'w-20' },
-  { key: 'candidate', label: 'Candidate' },
-  { key: 'phone', label: 'Phone' },
   { key: 'counselor', label: 'Councelor' },
-  { key: 'branch', label: 'Branch' },
-  { key: 'state', label: 'State' },
-  { key: 'walkInDate', label: 'Walk in Date' },
-  { key: 'fixedOn', label: 'Fixed On' },
+  { key: 'candidate', label: 'Candidate' },
+  { key: 'mobile', label: 'Mobile' },
+  { key: 'type', label: 'Type' },
+  { key: 'status', label: 'Status' },
+  {
+    key: 'response',
+    label: 'Reponse',
+    render: (value) => (
+      <Badge variant="secondary" className={
+        value.label === 'Positive' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+      }>
+        {value.label}
+      </Badge>
+    ),
+  },
   { key: 'remark', label: 'Remark' },
+  { key: 'duration', label: 'Duration' },
+  { key: 'date', label: 'Date' },
+  {
+    key: 'time',
+    label: 'Time',
+    render: (value) => (
+      <Badge variant="secondary" className="bg-green-100 text-green-800">
+        {value.label}
+      </Badge>
+    ),
+  },
+  { key: 'branch', label: 'Branch' },
 ];
 
 const formSections: FormSection[] = [
@@ -84,6 +89,12 @@ const formSections: FormSection[] = [
         ],
         required: false,
       },
+    ],
+    columns: 2,
+    className: 'grid grid-cols-1 md:grid-cols-1 gap-4',
+  },
+  {
+    fields: [
       {
         name: 'branch',
         label: 'Branch',
@@ -101,23 +112,34 @@ const formSections: FormSection[] = [
         type: 'select',
         placeholder: 'Select Councelor',
         options: [
-          { value: 'rishita', label: 'Rishita Raj' },
+          { value: 'bindya', label: 'Bindya' },
+        ],
+        required: false,
+      },
+      {
+        name: 'response',
+        label: 'Response',
+        type: 'select',
+        placeholder: 'Select Counselor',
+        options: [
+          { value: 'positive', label: 'Positive' },
+          { value: 'negative', label: 'Negative' },
         ],
         required: false,
       },
     ],
-    columns: 2,
+    columns: 3,
     className: 'grid grid-cols-1 md:grid-cols-1 gap-4',
   },
 ];
 
-export default function WalkInListPage() {
+export default function CallRegisterPage() {
   const [filters, setFilters] = useState<TableFilter[]>([
     { key: 'allTime', label: 'All time', value: '', onRemove: () => removeFilter('allTime') },
     { key: 'recent', label: 'Recent', value: '', onRemove: () => removeFilter('recent') },
   ]);
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
-  const [data, setData] = useState(walkInListData);
+  const [data, setData] = useState(callRegisterData);
 
   function removeFilter(key: string) {
     setFilters((prev) => prev.filter((f) => f.key !== key));
@@ -139,8 +161,8 @@ export default function WalkInListPage() {
 
   return (
     <div className="min-h-screen bg-[#f7f7fb] p-8">
-      <div className="text-xs text-gray-400 mb-1">Walk in List</div>
-      <h1 className="text-3xl font-bold mb-6">Walk in List</h1>
+      <div className="text-xs text-gray-400 mb-1">Call Register</div>
+      <h1 className="text-3xl font-bold mb-6">Call Register</h1>
       <div className="mb-6">
         <DynamicForm
           sections={formSections}

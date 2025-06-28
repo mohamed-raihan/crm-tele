@@ -72,7 +72,6 @@ const columns: TableColumn[] = [
           type: 'date',
           placeholder: 'Sep 30, 2023 - Aug 30, 2023',
           required: false,
-          className: 'col-span-2',
         },
         {
           name: 'status',
