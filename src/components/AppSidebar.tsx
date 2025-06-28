@@ -37,23 +37,23 @@ const navigationItems = [
     icon: Target,
   },
   {
-    title: "Customers",
-    url: "/customers",
+    title: "Executive",
+    url: "/executive",
     icon: Users,
   },
   {
-    title: "Contacts",
-    url: "/contacts",
+    title: "Job List",
+    url: "/job-list",
     icon: Phone,
   },
   {
-    title: "Communications",
-    url: "/communications",
+    title: "Walk in List",
+    url: "/walk-in-list",
     icon: Mail,
   },
   {
-    title: "Calendar",
-    url: "/calendar",
+    title: "Follow Ups",
+    url: "/follow-ups",
     icon: Calendar,
   },
   {
