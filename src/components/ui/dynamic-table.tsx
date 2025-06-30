@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Search, Filter, X, Edit, RotateCcw } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Progress } from '@/components/ui/progress';
 
 export interface TableColumn {
   key: string;
@@ -15,6 +15,7 @@ export interface TableColumn {
   sortable?: boolean;
   render?: (value: any, row: any) => React.ReactNode;
   width?: string;
+  type?: 'progress';
 }
 
 export interface TableAction {
@@ -183,7 +184,18 @@ export function DynamicTable({
                   )}
                   {columns.map((column) => (
                     <TableCell key={column.key}>
-                      {column.render ? column.render(row[column.key], row) : row[column.key]}
+                      {column.type === 'progress' ? (
+                        <div className="flex items-center gap-2">
+                          <Progress value={row[column.key]?.value || 0} />
+                          <span className="text-xs text-gray-500 whitespace-nowrap">
+                            {row[column.key]?.label || `${row[column.key] || 0}%`}
+                          </span>
+                        </div>
+                      ) : column.render ? (
+                        column.render(row[column.key], row)
+                      ) : (
+                        row[column.key]
+                      )}
                     </TableCell>
                   ))}
                   {actions.length > 0 && (
