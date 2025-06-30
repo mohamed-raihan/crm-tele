@@ -219,7 +219,7 @@ export function DynamicForm({
                   Cancel
                 </Button>
               )}
-              <Button type="submit">
+              <Button type="submit" className='bg-violet-500'>
                 {submitLabel}
               </Button>
             </div>

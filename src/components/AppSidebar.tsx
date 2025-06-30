@@ -32,28 +32,33 @@ const navigationItems = [
     icon: Home,
   },
   {
-    title: "Customers",
-    url: "/customers",
-    icon: Users,
-  },
-  {
-    title: "Leads",
+    title: "Enquiry",
     url: "/leads",
     icon: Target,
   },
   {
-    title: "Contacts",
-    url: "/contacts",
+    title: "Executive",
+    url: "/executive",
+    icon: Users,
+  },
+  {
+    title: "Job List",
+    url: "/job-list",
     icon: Phone,
   },
   {
-    title: "Communications",
-    url: "/communications",
+    title: "Walk in List",
+    url: "/walk-in-list",
     icon: Mail,
   },
   {
-    title: "Calendar",
-    url: "/calendar",
+    title: "Follow Ups",
+    url: "/follow-ups",
+    icon: Calendar,
+  },
+  {
+    title: "Call Register",
+    url: "/call-register",
     icon: Calendar,
   },
   {
