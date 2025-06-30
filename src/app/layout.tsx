@@ -17,7 +17,7 @@ function LayoutContent({ children }: RootLayoutProps) {
   const location = useLocation();
 
   // Define paths where sidebar should be hidden
-  const pathsWithoutSidebar = ["/login", "/forgotpassword"];
+  const pathsWithoutSidebar = ["/login", "/forgot-password"];
   const shouldHideSidebar = pathsWithoutSidebar.includes(location.pathname);
 
   if (shouldHideSidebar) {

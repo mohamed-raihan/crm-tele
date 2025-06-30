@@ -29,6 +29,7 @@ const LoginPage = () => {
   const [serverError, setServerError] = useState("");
   const [showSuccessAlert, setShowSuccessAlert] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
+  const [userRole, setUserRole] = useState("");
 
   // Email validation
   const validateEmail = (email) => {
@@ -95,30 +96,16 @@ const LoginPage = () => {
 
       if (result.success) {
         // Show success alert
+        setUserRole(result.userRole);
+
         setSuccessMessage("Welcome back! Redirecting to your dashboard...");
         setShowSuccessAlert(true);
-
-        // Navigate after a short delay to show the success message
-        setTimeout(() => {
-          setShowSuccessAlert(false);
-          
-          // Navigate based on user role from API response
-          if (result.userRole === "Admin") {
-            console.log("Navigating to admin dashboard");
-            navigate("/dashboard");
-          } else if (result.userRole === "Telecaller") {
-            console.log("Navigating to telecaller dashboard");
-            navigate("/telecallerdashboard");
-          } else {
-            // Fallback navigation
-            console.log("Unknown role, navigating to default dashboard");
-            navigate("/dashboard");
-          }
-        }, 2000);
       } else {
         // Handle different types of errors from the API
-        if (result.error.includes("Invalid credentials") || 
-            result.error.includes("non_field_errors")) {
+        if (
+          result.error.includes("Invalid credentials") ||
+          result.error.includes("non_field_errors")
+        ) {
           setServerError("Invalid email or password. Please try again.");
         } else {
           setServerError(result.error || "Login failed. Please try again.");
@@ -138,7 +125,7 @@ const LoginPage = () => {
 
   // Handle Enter key press for form submission
   const handleKeyPress = (e) => {
-    if (e.key === 'Enter') {
+    if (e.key === "Enter") {
       e.preventDefault();
       handleSubmit();
     }
@@ -154,28 +141,66 @@ const LoginPage = () => {
 
       {/* Success Alert Overlay */}
       {showSuccessAlert && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl border border-gray-100 p-6 max-w-md w-full mx-4 transform animate-pulse">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full flex items-center justify-center">
-                  <CheckCircle className="w-6 h-6 text-white" />
-                </div>
-                <h3 className="text-lg font-semibold text-gray-900">
-                  Login Successful!
-                </h3>
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
+          <div className="bg-white rounded-3xl shadow-2xl border border-gray-100 p-8 max-w-sm w-full mx-4 transform transition-all duration-300 scale-100">
+            {/* Header with animated icon */}
+            <div className="text-center mb-6">
+              <div className="relative inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-violet-600 to-blue-600 rounded-full mb-4 shadow-lg">
+                <CheckCircle className="w-10 h-10 text-white animate-pulse" />
+                {/* Ripple effect */}
+                <div className="absolute inset-0 rounded-full bg-gradient-to-r from-violet-600 to-blue-600 animate-ping opacity-20"></div>
+                <div className="absolute inset-2 rounded-full bg-gradient-to-r from-violet-600 to-blue-600 animate-ping opacity-30 animation-delay-75"></div>
               </div>
+
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                Welcome Back!
+              </h3>
+              <p className="text-gray-600 text-sm leading-relaxed mb-6">
+                Login successful! You can now access your dashboard.
+              </p>
+            </div>
+
+            {/* Action buttons */}
+            {/* Action buttons */}
+            <div className="flex gap-3 justify-center">
               <button
-                onClick={closeSuccessAlert}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
+                onClick={() => {
+                  setShowSuccessAlert(false);
+                  // Navigate based on user role from state
+                  if (userRole === "Admin") {
+                    console.log("Navigating to admin dashboard");
+                    navigate("/dashboard");
+                  } else if (userRole === "Telecaller") {
+                    console.log("Navigating to telecaller dashboard");
+                    navigate("/telecallerdashboard");
+                  } else {
+                    console.log(
+                      "Unknown role, navigating to default dashboard"
+                    );
+                    navigate("/dashboard");
+                  }
+                }}
+                className="bg-gradient-to-r from-violet-600 to-blue-600 text-white px-6 py-3 rounded-xl font-medium transition-all duration-200 hover:from-violet-700 hover:to-blue-700 focus:outline-none focus:ring-2 focus:ring-violet-500 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
               >
-                <X className="w-5 h-5" />
+                Go to Dashboard
               </button>
             </div>
-            <p className="text-gray-600 mb-4">{successMessage}</p>
-            <div className="w-full bg-gray-200 rounded-full h-2">
-              <div className="bg-gradient-to-r from-violet-600 to-blue-600 h-2 rounded-full animate-pulse"></div>
+
+            {/* Floating particles effect */}
+            <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-3xl">
+              <div className="absolute top-4 left-4 w-2 h-2 bg-violet-400 rounded-full animate-bounce opacity-60"></div>
+              <div className="absolute top-8 right-6 w-1 h-1 bg-blue-400 rounded-full animate-bounce opacity-60 animation-delay-150"></div>
+              <div className="absolute bottom-8 left-6 w-1.5 h-1.5 bg-violet-300 rounded-full animate-bounce opacity-60 animation-delay-300"></div>
+              <div className="absolute bottom-4 right-4 w-1 h-1 bg-blue-300 rounded-full animate-bounce opacity-60 animation-delay-500"></div>
             </div>
+
+            {/* Close button - subtle */}
+            <button
+              onClick={closeSuccessAlert}
+              className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors p-1 rounded-full hover:bg-gray-100"
+            >
+              <X className="w-4 h-4" />
+            </button>
           </div>
         </div>
       )}
@@ -342,6 +367,30 @@ const LoginPage = () => {
           </p>
         </div>
       </div>
+
+      <style>{`
+  .animation-delay-75 {
+    animation-delay: 75ms;
+  }
+  
+  .animation-delay-150 {
+    animation-delay: 150ms;
+  }
+  
+  .animation-delay-300 {
+    animation-delay: 300ms;
+  }
+  
+  .animation-delay-500 {
+    animation-delay: 500ms;
+  }
+  
+  @media (max-width: 640px) {
+    .max-w-sm {
+      max-width: calc(100vw - 2rem);
+    }
+  }
+`}</style>
     </div>
   );
 };
