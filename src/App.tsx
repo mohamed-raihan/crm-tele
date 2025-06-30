@@ -1,11 +1,13 @@
-
 import RootLayout from "./app/layout";
 import { AppRouter } from "./app/router";
+import { AuthProvider } from "@/hooks/AuthContext";
 
 const App = () => (
-  <RootLayout>
-    <AppRouter />
-  </RootLayout>
+  <AuthProvider>
+    <RootLayout>
+      <AppRouter />
+    </RootLayout>
+  </AuthProvider>
 );
 
 export default App;
