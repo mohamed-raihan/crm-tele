@@ -1,4 +1,5 @@
 import { Routes, Route, Navigate } from "react-router-dom";
+// import { Routes, Route, Navigate } from "react-router-dom";
 import DashboardPage from "./dashboard/page";
 import CustomersPage from "./customers/page";
 import LeadsPage from "./leads/page";
@@ -7,11 +8,6 @@ import NotFound from "@/pages/NotFound";
 import LoginPage from "./login/page";
 import ForgotPasswordPage from "./forgot-password/page";
 import { useAuth } from "@/hooks/AuthContext";
-import ExecutivePage from "./executive/page";
-import JobListPage from "./job-list/page";
-import WalkInListPage from "./walk-in-list/page";
-import FollowUps from "./follow-ups/page";
-import CallRegisterPage from "./call-register/page";
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
@@ -27,11 +23,6 @@ export function AppRouter() {
       <Route path="/dashboard" element={<PrivateRoute><DashboardPage /></PrivateRoute>} />
       <Route path="/customers" element={<PrivateRoute><CustomersPage /></PrivateRoute>} />
       <Route path="/leads" element={<PrivateRoute><LeadsPage /></PrivateRoute>} />
-      <Route path="/executive" element={<PrivateRoute><ExecutivePage/></PrivateRoute>} />
-      <Route path="/job-list" element={<PrivateRoute><JobListPage/></PrivateRoute>} />
-      <Route path="/walk-in-list" element={<PrivateRoute><WalkInListPage/></PrivateRoute>} />
-      <Route path="/follow-ups" element={<PrivateRoute><FollowUps/></PrivateRoute>} />
-      <Route path="/call-register" element={<PrivateRoute><CallRegisterPage/></PrivateRoute>} />
       <Route path="/leads/profile/:id" element={<PrivateRoute><EnquiryProfilePage /></PrivateRoute>} />
       {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
       <Route path="*" element={<NotFound />} />
