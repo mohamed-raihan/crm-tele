@@ -1,15 +1,14 @@
-
 import {
-  Users,
-  BarChart3,
-  Settings,
   Home,
-  UserPlus,
   Phone,
-  Mail,
   Calendar,
   FileText,
-  Target
+  Target,
+  UserPlus,
+  Settings,
+  Headphones,
+  Clock,
+  CheckCircle
 } from "lucide-react"
 import { Link, useLocation } from "react-router-dom"
 import {
@@ -32,24 +31,14 @@ const navigationItems = [
     icon: Home,
   },
   {
-    title: "Enquiry",
+    title: "My Leads",
     url: "/leads",
     icon: Target,
   },
   {
-    title: "Executive",
-    url: "/executive",
-    icon: Users,
-  },
-  {
-    title: "Job List",
-    url: "/job-list",
+    title: "Call Queue",
+    url: "/call-queue",
     icon: Phone,
-  },
-  {
-    title: "Walk in List",
-    url: "/walk-in-list",
-    icon: Mail,
   },
   {
     title: "Follow Ups",
@@ -57,14 +46,19 @@ const navigationItems = [
     icon: Calendar,
   },
   {
-    title: "Call Register",
-    url: "/call-register",
-    icon: Calendar,
+    title: "Call History",
+    url: "/call-history",
+    icon: Headphones,
   },
   {
-    title: "Reports",
-    url: "/reports",
-    icon: BarChart3,
+    title: "My Schedule",
+    url: "/schedule",
+    icon: Clock,
+  },
+  {
+    title: "Completed Calls",
+    url: "/completed-calls",
+    icon: CheckCircle,
   },
   {
     title: "Documents",
@@ -75,8 +69,8 @@ const navigationItems = [
 
 const quickActions = [
   {
-    title: "Add Customer",
-    url: "/customers/new",
+    title: "New Lead",
+    url: "/leads/new",
     icon: UserPlus,
   },
   {
@@ -93,12 +87,12 @@ export function AppSidebar() {
     <Sidebar className="border-r border-gray-200">
       <SidebarHeader className="p-6">
         <div className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded-lg bg-blue-600 flex items-center justify-center">
-            <Phone className="h-4 w-4 text-white" />
+          <div className="h-8 w-8 rounded-lg bg-green-600 flex items-center justify-center">
+            <Headphones className="h-4 w-4 text-white" />
           </div>
           <div>
             <h1 className="text-lg font-semibold text-gray-900">TeleCRM</h1>
-            <p className="text-xs text-gray-500">Customer Management</p>
+            <p className="text-xs text-gray-500">Telecaller Portal</p>
           </div>
         </div>
       </SidebarHeader>
@@ -106,7 +100,7 @@ export function AppSidebar() {
       <SidebarContent className="px-3 py-4">
         <SidebarGroup>
           <SidebarGroupLabel className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">
-            Main Navigation
+            My Work
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
@@ -117,7 +111,7 @@ export function AppSidebar() {
                       to={item.url}
                       className={`flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
                         location.pathname === item.url
-                          ? "bg-blue-100 text-blue-900"
+                          ? "bg-green-100 text-green-900"
                           : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
                       }`}
                     >
@@ -144,7 +138,7 @@ export function AppSidebar() {
                       to={item.url}
                       className={`flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
                         location.pathname === item.url
-                          ? "bg-blue-100 text-blue-900"
+                          ? "bg-green-100 text-green-900"
                           : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
                       }`}
                     >
@@ -161,12 +155,12 @@ export function AppSidebar() {
 
       <SidebarFooter className="border-t border-gray-200 p-4">
         <div className="flex items-center gap-3">
-          <div className="h-8 w-8 rounded-full bg-gray-300 flex items-center justify-center">
-            <span className="text-sm font-medium text-gray-700">JD</span>
+          <div className="h-8 w-8 rounded-full bg-green-300 flex items-center justify-center">
+            <span className="text-sm font-medium text-green-700">TC</span>
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-gray-900 truncate">John Doe</p>
-            <p className="text-xs text-gray-500 truncate">Sales Manager</p>
+            <p className="text-sm font-medium text-gray-900 truncate">Telecaller</p>
+            <p className="text-xs text-gray-500 truncate">Active</p>
           </div>
         </div>
       </SidebarFooter>
