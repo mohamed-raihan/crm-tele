@@ -17,6 +17,7 @@ import AdminBranches from "../app/admin/branch/page";
 import Adminaddtelecallers from "../app/admin/addtelecallers/page";
 
 import NotAnswerPage from "./not-answer/page";
+import ReportPage from "./report/page";
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
@@ -73,7 +74,7 @@ export function AppRouter() {
         }
       />
       <Route path="/admin/not-answer" element={<AdminRoute><NotAnswerPage /></AdminRoute>} />
-      <Route path="/admin/reports" element={<AdminRoute><div>Reports Page</div></AdminRoute>} />
+      <Route path="/admin/reports" element={<AdminRoute><ReportPage /></AdminRoute>} />
       <Route path="/admin/settings" element={<AdminRoute><div>Settings Page</div></AdminRoute>} />
 
       {/* Telecaller Routes */}
