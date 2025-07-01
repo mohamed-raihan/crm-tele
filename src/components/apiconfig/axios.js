@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_BASE_URL = "http://localhost:8000/"; 
+const API_BASE_URL = "https://crm-tellecallers.onrender.com/"; 
 
 const axiosInstance = axios.create({
   baseURL: API_BASE_URL,
@@ -10,3 +10,6 @@ const axiosInstance = axios.create({
 });
 
 export default axiosInstance;
+
+// https://crm-tellecallers.onrender.com/
+// http://localhost:8000/
