@@ -43,10 +43,13 @@ export interface DynamicFormProps {
   sections: FormSection[];
   onSubmit: (data: any) => void;
   defaultValues?: Record<string, any>;
+  initialData?: Record<string, any>;
   submitLabel?: string;
   showCancel?: boolean;
   onCancel?: () => void;
   className?: string;
+  errors?: Record<string, string>; // Added errors prop
+  validationSchema?: z.ZodSchema<any>; // Added validationSchema for completeness
 }
 
 export function DynamicForm({

@@ -1,0 +1,31 @@
+export const API_URLS = {
+  REGISTRATION: {
+    POST_REGISTRATION: "api/register/",
+  },
+  LOGIN: {
+    POST_LOGIN: "/api/login/",
+  },
+
+   TELLE_CALLERS: {
+    GET_TELLE_CALLERS: "/api/telecallers/",
+        POST_TELLE_CALLERS: "/api/telecallers/",
+        PATCH_TELLE_CALLERS: (id)=>`/api/telecallers/${id}/`,
+        DELETE_TELLE_CALLERS: (id)=>`/api/telecallers/${id}/`,
+
+  },
+
+   FORGOT_PASSWORD: {
+    POST_FORGOT_PASSWORD:"/api/forgot-password/",
+  },
+
+   BRANCH: {
+    POST_BRANCH: "/api/branches/",
+        GET_BRANCH: "/api/branches/",
+    PATCH_BRANCH: (id)=>`api/branches/${id}/`,
+       DELETE_BRANCH: (id)=>`api/branches/${id}`,
+
+
+  },
+
+ 
+};
