@@ -14,8 +14,12 @@ import {
   PieChart,
   Activity,
   Database,
+  PhoneMissed,
+  ChevronDown,
+  ChevronRight,
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
+import { useState } from "react"
 import {
   Sidebar,
   SidebarContent,
@@ -28,61 +32,83 @@ import {
   SidebarHeader,
   SidebarFooter,
 } from "@/components/ui/sidebar";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "./ui/collapsible";
 
 const navigationItems = [
   {
     title: "Dashboard",
     url: "/admin",
     icon: Home,
+    type: "single"
   },
   {
     title: "All Enquiries",
     url: "/admin/enquiries",
     icon: Target,
+    type: "single"
   },
-
   {
-    title: "Branches",
-    url: "/admin/branches",
-    icon: Target,
+    title: "Job List",
+    icon: Building,
+    type: "collapsible",
+    key: "jobList",
+    basePath: "/admin/jobs",
+    subItems: [
+      {
+        title: "Remaining Jobs",
+        url: "/admin/jobs",
+        icon: Activity
+      },
+      {
+        title: "Completed Jobs",
+        url: "/admin/jobs/completed",
+        icon: PieChart
+      }
+    ]
   },
-
   {
-    title: "Telecallers",
+    title: "Executive",
     url: "/admin/telecallers",
     icon: Users,
+    type: "single"
   },
   {
-    title: "Job Management",
-    url: "/admin/jobs",
-    icon: Building,
-  },
-  {
-    title: "Walk-in Management",
+    title: "Walk-in List",
     url: "/admin/walk-ins",
     icon: Mail,
+    type: "single"
   },
   {
-    title: "Follow-up Reports",
+    title: "Follow-up",
     url: "/admin/follow-ups",
     icon: Calendar,
+    type: "single"
   },
   {
-    title: "Call Analytics",
+    title: "Call Register",
     url: "/admin/call-analytics",
     icon: Phone,
+    type: "single"
   },
   {
-    title: "Performance Reports",
+    title: "Not Answer",
+    url: "/admin/not-answer",
+    icon: PhoneMissed,
+    type: "single"
+  },
+  {
+    title: "Reports",
     url: "/admin/reports",
     icon: BarChart3,
+    type: "single"
   },
   {
-    title: "System Settings",
+    title: "Settings",
     url: "/admin/settings",
     icon: Settings,
+    type: "single"
   },
-];
+]
 
 const quickActions = [
   {
@@ -95,15 +121,123 @@ const quickActions = [
     url: "/admin/system",
     icon: Activity,
   },
+]
+
+const dataManagement = [
   {
-    title: "Database",
-    url: "/admin/database",
-    icon: Database,
+    title: "Data Management",
+    icon: Building,
+    type: "collapsible",
+    key: "datamanagement",
+    basePath: "/admin/jobs",
+    subItems: [
+      {
+        title: "All Jobs",
+        url: "/admin/jobs",
+        icon: FileText
+      },
+      {
+        title: "Active Jobs",
+        url: "/admin/jobs/active",
+        icon: Activity
+      },
+      {
+        title: "Completed Jobs",
+        url: "/admin/jobs/completed",
+        icon: PieChart
+      }
+    ]
   },
-];
+]
 
 export function AdminSidebar() {
   const location = useLocation();
+  
+  // State for collapsible sections
+  const [collapsedSections, setCollapsedSections] = useState({});
+  
+  // Toggle collapsible section
+  const toggleSection = (key) => {
+    setCollapsedSections(prev => ({
+      ...prev,
+      [key]: !prev[key]
+    }));
+  };
+  
+  // Check if a collapsible section is active
+  const isCollapsibleSectionActive = (basePath) => {
+    return location.pathname.startsWith(basePath);
+  };
+  
+  // Render single navigation item
+  const renderSingleItem = (item) => (
+    <SidebarMenuItem key={item.title}>
+      <SidebarMenuButton asChild>
+        <Link 
+          to={item.url}
+          className={`flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+            location.pathname === item.url
+              ? "bg-blue-100 text-blue-900"
+              : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+          }`}
+        >
+          <item.icon className="h-4 w-4" />
+          <span>{item.title}</span>
+        </Link>
+      </SidebarMenuButton>
+    </SidebarMenuItem>
+  );
+  
+  // Render collapsible navigation item
+  const renderCollapsibleItem = (item) => {
+    const isOpen = collapsedSections[item.key];
+    const isActive = isCollapsibleSectionActive(item.basePath);
+    
+    return (
+      <SidebarMenuItem key={item.title}>
+        <Collapsible open={isOpen} onOpenChange={() => toggleSection(item.key)}>
+          <CollapsibleTrigger asChild>
+            <SidebarMenuButton>
+              <div className={`flex items-center justify-between w-full px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                isActive
+                  ? "bg-blue-100 text-blue-900"
+                  : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+              }`}>
+                <div className="flex items-center gap-3">
+                  <item.icon className="h-4 w-4" />
+                  <span>{item.title}</span>
+                </div>
+                <div className="flex-shrink-0">
+                  {isOpen ? (
+                    <ChevronDown className="h-4 w-4" />
+                  ) : (
+                    <ChevronRight className="h-4 w-4" />
+                  )}
+                </div>
+              </div>
+            </SidebarMenuButton>
+          </CollapsibleTrigger>
+          <CollapsibleContent className="space-y-1 mt-1">
+            {item.subItems.map((subItem) => (
+              <SidebarMenuButton key={subItem.title} asChild>
+                <Link
+                  to={subItem.url}
+                  className={`flex items-center gap-3 pl-8 pr-3 py-2 text-sm rounded-md transition-colors ${
+                    location.pathname === subItem.url
+                      ? "bg-blue-100 text-blue-900"
+                      : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                  }`}
+                >
+                  <subItem.icon className="h-3 w-3" />
+                  <span>{subItem.title}</span>
+                </Link>
+              </SidebarMenuButton>
+            ))}
+          </CollapsibleContent>
+        </Collapsible>
+      </SidebarMenuItem>
+    );
+  };
 
   return (
     <Sidebar className="border-r border-gray-200">
@@ -118,18 +252,54 @@ export function AdminSidebar() {
           </div>
         </div>
       </SidebarHeader>
-
+      
       <SidebarContent className="px-3 py-4">
         <SidebarGroup>
           <SidebarGroupLabel className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">
             Administration
           </SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu>
-              {navigationItems.map((item) => (
+            <SidebarMenu className="space-y-1">
+              {navigationItems.map((item) => {
+                if (item.type === "single") {
+                  return renderSingleItem(item);
+                } else if (item.type === "collapsible") {
+                  return renderCollapsibleItem(item);
+                }
+                return null;
+              })}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">
+            Data Management
+          </SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu className="space-y-1">
+              {dataManagement.map((item) => {
+                if (item.type === "single") {
+                  return renderSingleItem(item);
+                } else if (item.type === "collapsible") {
+                  return renderCollapsibleItem(item);
+                }
+                return null;
+              })}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup className="mt-6">
+          <SidebarGroupLabel className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">
+            settings
+          </SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu className="space-y-1">
+              {quickActions.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild className="w-full">
-                    <Link
+                  <SidebarMenuButton asChild>
+                    <Link 
                       to={item.url}
                       className={`flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
                         location.pathname === item.url
@@ -147,32 +317,8 @@ export function AdminSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        <SidebarGroup className="mt-6">
-          <SidebarGroupLabel className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">
-            Quick Actions
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {quickActions.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild className="w-full">
-                    <Link
-                      to={item.url}
-                      className={`flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
-                        location.pathname === item.url
-                          ? "bg-blue-100 text-blue-900"
-                          : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
-                      }`}
-                    >
-                      <item.icon className="h-4 w-4" />
-                      <span>{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+        
+
       </SidebarContent>
 
       <SidebarFooter className="border-t border-gray-200 p-4">
@@ -181,15 +327,11 @@ export function AdminSidebar() {
             <span className="text-sm font-medium text-blue-700">AD</span>
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-gray-900 truncate">
-              Admin User
-            </p>
-            <p className="text-xs text-gray-500 truncate">
-              System Administrator
-            </p>
+            <p className="text-sm font-medium text-gray-900 truncate">Admin User</p>
+            <p className="text-xs text-gray-500 truncate">System Administrator</p>
           </div>
         </div>
       </SidebarFooter>
     </Sidebar>
-  );
+  )
 }
