@@ -112,11 +112,6 @@ const navigationItems = [
 
 const quickActions = [
   {
-    title: "Add Telecaller",
-    url: "/admin/addtelecallers",
-    icon: UserPlus,
-  },
-  {
     title: "System Health",
     url: "/admin/system",
     icon: Activity,
@@ -132,20 +127,15 @@ const dataManagement = [
     basePath: "/admin/jobs",
     subItems: [
       {
-        title: "All Jobs",
-        url: "/admin/jobs",
+        title: "Branch",
+        url: "/admin/branches",
         icon: FileText
       },
       {
-        title: "Active Jobs",
-        url: "/admin/jobs/active",
+        title: "Telecaller",
+        url: "/admin/addtelecallers",
         icon: Activity
       },
-      {
-        title: "Completed Jobs",
-        url: "/admin/jobs/completed",
-        icon: PieChart
-      }
     ]
   },
 ]
