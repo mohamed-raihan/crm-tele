@@ -13,6 +13,9 @@ import JobListPage from "./job-list/page";
 import WalkInListPage from "./walk-in-list/page";
 import FollowUps from "./follow-ups/page";
 import CallRegisterPage from "./call-register/page";
+import AdminBranches from "../app/admin/branch/page";
+import Adminaddtelecallers from "../app/admin/addtelecallers/page";
+
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
@@ -22,14 +25,16 @@ function PrivateRoute({ children }: { children: React.ReactNode }) {
 function AdminRoute({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
   if (!user) return <Navigate to="/login" replace />;
-  if (user.role !== 'admin') return <Navigate to="/" replace />;
+  // Fixed: Check for "Admin" (capitalized) instead of "admin"
+  if (user.role !== "Admin") return <Navigate to="/dashboard" replace />;
   return <>{children}</>;
 }
 
 function TelecallerRoute({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
   if (!user) return <Navigate to="/login" replace />;
-  if (user.role !== 'telecaller') return <Navigate to="/admin" replace />;
+  // Fixed: Check for "Telecaller" (capitalized) and redirect to admin if not telecaller
+  if (user.role !== "Telecaller") return <Navigate to="/admin" replace />;
   return <>{children}</>;
 }
 
@@ -40,44 +45,207 @@ export function AppRouter() {
     <Routes>
       <Route path="/login" element={<LoginPage />} />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-      
+
       {/* Admin Routes */}
-      <Route path="/admin" element={<AdminRoute><AdminDashboardPage /></AdminRoute>} />
-      <Route path="/admin/enquiries" element={<AdminRoute><LeadsPage /></AdminRoute>} />
-      <Route path="/admin/telecallers" element={<AdminRoute><ExecutivePage /></AdminRoute>} />
-      <Route path="/admin/jobs" element={<AdminRoute><JobListPage /></AdminRoute>} />
-      <Route path="/admin/walk-ins" element={<AdminRoute><WalkInListPage /></AdminRoute>} />
-      <Route path="/admin/follow-ups" element={<AdminRoute><FollowUps /></AdminRoute>} />
-      <Route path="/admin/call-analytics" element={<AdminRoute><CallRegisterPage /></AdminRoute>} />
-      <Route path="/admin/reports" element={<AdminRoute><div>Reports Page</div></AdminRoute>} />
-      <Route path="/admin/settings" element={<AdminRoute><div>Settings Page</div></AdminRoute>} />
-      
+      <Route
+        path="/admin"
+        element={
+          <AdminRoute>
+            <AdminDashboardPage />
+          </AdminRoute>
+        }
+      />
+      <Route
+        path="/admin/enquiries"
+        element={
+          <AdminRoute>
+            <LeadsPage />
+          </AdminRoute>
+        }
+      />
+      <Route
+        path="/admin/telecallers"
+        element={
+          <AdminRoute>
+            <ExecutivePage />
+          </AdminRoute>
+        }
+      />
+      <Route
+        path="/admin/jobs"
+        element={
+          <AdminRoute>
+            <JobListPage />
+          </AdminRoute>
+        }
+      />
+
+        <Route
+        path="/admin/branches"
+        element={
+          <AdminRoute>
+           <AdminBranches/>
+          </AdminRoute>
+        }
+      />
+
+       <Route
+        path="/admin/addtelecallers"
+        element={
+          <AdminRoute>
+           <Adminaddtelecallers/>
+          </AdminRoute>
+        }
+      />
+      <Route
+        path="/admin/walk-ins"
+        element={
+          <AdminRoute>
+            <WalkInListPage />
+          </AdminRoute>
+        }
+      />
+      <Route
+        path="/admin/follow-ups"
+        element={
+          <AdminRoute>
+            <FollowUps />
+          </AdminRoute>
+        }
+      />
+      <Route
+        path="/admin/call-analytics"
+        element={
+          <AdminRoute>
+            <CallRegisterPage />
+          </AdminRoute>
+        }
+      />
+      <Route
+        path="/admin/reports"
+        element={
+          <AdminRoute>
+            <div>Reports Page</div>
+          </AdminRoute>
+        }
+      />
+      <Route
+        path="/admin/settings"
+        element={
+          <AdminRoute>
+            <div>Settings Page</div>
+          </AdminRoute>
+        }
+      />
+
       {/* Telecaller Routes */}
-      <Route path="/" element={<TelecallerRoute><DashboardPage /></TelecallerRoute>} />
-      <Route path="/dashboard" element={<TelecallerRoute><DashboardPage /></TelecallerRoute>} />
-      <Route path="/leads" element={<TelecallerRoute><LeadsPage /></TelecallerRoute>} />
-      <Route path="/call-queue" element={<TelecallerRoute><div>Call Queue Page</div></TelecallerRoute>} />
-      <Route path="/follow-ups" element={<TelecallerRoute><FollowUps /></TelecallerRoute>} />
-      <Route path="/call-history" element={<TelecallerRoute><div>Call History Page</div></TelecallerRoute>} />
-      <Route path="/schedule" element={<TelecallerRoute><div>Schedule Page</div></TelecallerRoute>} />
-      <Route path="/completed-calls" element={<TelecallerRoute><div>Completed Calls Page</div></TelecallerRoute>} />
-      <Route path="/documents" element={<TelecallerRoute><div>Documents Page</div></TelecallerRoute>} />
-      <Route path="/leads/profile/:id" element={<TelecallerRoute><EnquiryProfilePage /></TelecallerRoute>} />
-      
+      <Route
+        path="/"
+        element={
+          <TelecallerRoute>
+            <DashboardPage />
+          </TelecallerRoute>
+        }
+      />
+      <Route
+        path="/dashboard"
+        element={
+          <TelecallerRoute>
+            <DashboardPage />
+          </TelecallerRoute>
+        }
+      />
+      <Route
+        path="/leads"
+        element={
+          <TelecallerRoute>
+            <LeadsPage />
+          </TelecallerRoute>
+        }
+      />
+      <Route
+        path="/call-queue"
+        element={
+          <TelecallerRoute>
+            <div>Call Queue Page</div>
+          </TelecallerRoute>
+        }
+      />
+      <Route
+        path="/follow-ups"
+        element={
+          <TelecallerRoute>
+            <FollowUps />
+          </TelecallerRoute>
+        }
+      />
+      <Route
+        path="/call-history"
+        element={
+          <TelecallerRoute>
+            <div>Call History Page</div>
+          </TelecallerRoute>
+        }
+      />
+      <Route
+        path="/schedule"
+        element={
+          <TelecallerRoute>
+            <div>Schedule Page</div>
+          </TelecallerRoute>
+        }
+      />
+      <Route
+        path="/completed-calls"
+        element={
+          <TelecallerRoute>
+            <div>Completed Calls Page</div>
+          </TelecallerRoute>
+        }
+      />
+      <Route
+        path="/documents"
+        element={
+          <TelecallerRoute>
+            <div>Documents Page</div>
+          </TelecallerRoute>
+        }
+      />
+      <Route
+        path="/leads/profile/:id"
+        element={
+          <TelecallerRoute>
+            <EnquiryProfilePage />
+          </TelecallerRoute>
+        }
+      />
+
       {/* Shared Routes */}
-      <Route path="/customers" element={<PrivateRoute><CustomersPage /></PrivateRoute>} />
-      
+      <Route
+        path="/customers"
+        element={
+          <PrivateRoute>
+            <CustomersPage />
+          </PrivateRoute>
+        }
+      />
+
       {/* Redirect based on user role */}
-      <Route path="/redirect" element={
-        user ? (
-          user.role === 'admin' ? 
-            <Navigate to="/admin" replace /> : 
-            <Navigate to="/" replace />
-        ) : (
-          <Navigate to="/login" replace />
-        )
-      } />
-      
+      <Route
+        path="/redirect"
+        element={
+          user ? (
+            user.role === "Admin" ? (
+              <Navigate to="/admin" replace />
+            ) : (
+              <Navigate to="/dashboard" replace />
+            )
+          ) : (
+            <Navigate to="/login" replace />
+          )
+        }
+      />
+
       {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
       <Route path="*" element={<NotFound />} />
     </Routes>
