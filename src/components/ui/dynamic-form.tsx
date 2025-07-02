@@ -50,6 +50,7 @@ export interface DynamicFormProps {
   className?: string;
   errors?: Record<string, string>; // Added errors prop
   validationSchema?: z.ZodSchema<any>; // Added validationSchema for completeness
+  submitButtonProps?: { disabled?: boolean };
 }
 
 export function DynamicForm({

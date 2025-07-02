@@ -6,6 +6,16 @@ export const API_URLS = {
     POST_LOGIN: "/api/login/",
   },
 
+
+  ROLES: {
+    GET_ROLES: "/api/roles/",
+  },
+
+
+   REPORTS: {
+    GET_REPORTS: "/api/calls-summary/",
+  },
+
   TELLE_CALLERS: {
     GET_TELLE_CALLERS: "/api/telecallers/",
     POST_TELLE_CALLERS: "/api/telecallers/",
