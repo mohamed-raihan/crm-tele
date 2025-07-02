@@ -136,6 +136,11 @@ const dataManagement = [
         url: "/admin/addtelecallers",
         icon: Activity
       },
+      {
+        title: "Ads",
+        url: "/admin/ads",
+        icon: Activity
+      },
     ]
   },
 ]
