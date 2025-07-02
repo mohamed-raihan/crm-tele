@@ -18,6 +18,7 @@ import Adminaddtelecallers from "../app/admin/addtelecallers/page";
 
 import NotAnswerPage from "./not-answer/page";
 import ReportPage from "./report/page";
+import AdsPage from "./admin/ads/page";
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
@@ -56,6 +57,7 @@ export function AppRouter() {
       <Route path="/admin/walk-ins" element={<AdminRoute><WalkInListPage /></AdminRoute>} />
       <Route path="/admin/follow-ups" element={<AdminRoute><FollowUps /></AdminRoute>} />
       <Route path="/admin/call-analytics" element={<AdminRoute><CallRegisterPage /></AdminRoute>} />
+      <Route path="/admin/ads" element={<AdminRoute><AdsPage /></AdminRoute>} />
       <Route
         path="/admin/branches"
         element={
