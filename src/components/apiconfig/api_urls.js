@@ -6,26 +6,29 @@ export const API_URLS = {
     POST_LOGIN: "/api/login/",
   },
 
-   TELLE_CALLERS: {
+  TELLE_CALLERS: {
     GET_TELLE_CALLERS: "/api/telecallers/",
-        POST_TELLE_CALLERS: "/api/telecallers/",
-        PATCH_TELLE_CALLERS: (id)=>`/api/telecallers/${id}/`,
-        DELETE_TELLE_CALLERS: (id)=>`/api/telecallers/${id}/`,
+    POST_TELLE_CALLERS: "/api/telecallers/",
+    PATCH_TELLE_CALLERS: (id) => `/api/telecallers/${id}/`,
+    DELETE_TELLE_CALLERS: (id) => `/api/telecallers/${id}/`,
 
   },
 
-   FORGOT_PASSWORD: {
-    POST_FORGOT_PASSWORD:"/api/forgot-password/",
+  FORGOT_PASSWORD: {
+    POST_FORGOT_PASSWORD: "/api/forgot-password/",
   },
 
-   BRANCH: {
+  BRANCH: {
     POST_BRANCH: "/api/branches/",
-        GET_BRANCH: "/api/branches/",
-    PATCH_BRANCH: (id)=>`api/branches/${id}/`,
-       DELETE_BRANCH: (id)=>`api/branches/${id}`,
-
-
+    GET_BRANCH: "/api/branches/",
+    PATCH_BRANCH: (id) => `api/branches/${id}/`,
+    DELETE_BRANCH: (id) => `api/branches/${id}/`,
   },
 
- 
+  ADS: {
+    POST_ADS: "/api/mettads/",
+    GET_ADS: "/api/mettads/",
+    PATCH_ADS: (id) => `/api/mettads/${id}/`,
+    DELETE_ADS: (id) => `/api/mettads/${id}/`,
+  }
 };

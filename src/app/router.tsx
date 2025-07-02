@@ -16,6 +16,9 @@ import CallRegisterPage from "./call-register/page";
 import AdminBranches from "../app/admin/branch/page";
 import Adminaddtelecallers from "../app/admin/addtelecallers/page";
 
+import NotAnswerPage from "./not-answer/page";
+import ReportPage from "./report/page";
+import AdsPage from "./admin/ads/page";
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
@@ -47,96 +50,34 @@ export function AppRouter() {
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
 
       {/* Admin Routes */}
+      <Route path="/admin" element={<AdminRoute><AdminDashboardPage /></AdminRoute>} />
+      <Route path="/admin/enquiries" element={<AdminRoute><LeadsPage /></AdminRoute>} />
+      <Route path="/admin/telecallers" element={<AdminRoute><ExecutivePage /></AdminRoute>} />
+      <Route path="/admin/jobs" element={<AdminRoute><JobListPage /></AdminRoute>} />
+      <Route path="/admin/walk-ins" element={<AdminRoute><WalkInListPage /></AdminRoute>} />
+      <Route path="/admin/follow-ups" element={<AdminRoute><FollowUps /></AdminRoute>} />
+      <Route path="/admin/call-analytics" element={<AdminRoute><CallRegisterPage /></AdminRoute>} />
+      <Route path="/admin/ads" element={<AdminRoute><AdsPage /></AdminRoute>} />
       <Route
-        path="/admin"
-        element={
-          <AdminRoute>
-            <AdminDashboardPage />
-          </AdminRoute>
-        }
-      />
-      <Route
-        path="/admin/enquiries"
-        element={
-          <AdminRoute>
-            <LeadsPage />
-          </AdminRoute>
-        }
-      />
-      <Route
-        path="/admin/telecallers"
-        element={
-          <AdminRoute>
-            <ExecutivePage />
-          </AdminRoute>
-        }
-      />
-      <Route
-        path="/admin/jobs"
-        element={
-          <AdminRoute>
-            <JobListPage />
-          </AdminRoute>
-        }
-      />
-
-        <Route
         path="/admin/branches"
         element={
           <AdminRoute>
-           <AdminBranches/>
+            <AdminBranches />
           </AdminRoute>
         }
       />
 
-       <Route
+      <Route
         path="/admin/addtelecallers"
         element={
           <AdminRoute>
-           <Adminaddtelecallers/>
+            <Adminaddtelecallers />
           </AdminRoute>
         }
       />
-      <Route
-        path="/admin/walk-ins"
-        element={
-          <AdminRoute>
-            <WalkInListPage />
-          </AdminRoute>
-        }
-      />
-      <Route
-        path="/admin/follow-ups"
-        element={
-          <AdminRoute>
-            <FollowUps />
-          </AdminRoute>
-        }
-      />
-      <Route
-        path="/admin/call-analytics"
-        element={
-          <AdminRoute>
-            <CallRegisterPage />
-          </AdminRoute>
-        }
-      />
-      <Route
-        path="/admin/reports"
-        element={
-          <AdminRoute>
-            <div>Reports Page</div>
-          </AdminRoute>
-        }
-      />
-      <Route
-        path="/admin/settings"
-        element={
-          <AdminRoute>
-            <div>Settings Page</div>
-          </AdminRoute>
-        }
-      />
+      <Route path="/admin/not-answer" element={<AdminRoute><NotAnswerPage /></AdminRoute>} />
+      <Route path="/admin/reports" element={<AdminRoute><ReportPage /></AdminRoute>} />
+      <Route path="/admin/settings" element={<AdminRoute><div>Settings Page</div></AdminRoute>} />
 
       {/* Telecaller Routes */}
       <Route

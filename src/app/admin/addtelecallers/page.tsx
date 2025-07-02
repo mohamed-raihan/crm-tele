@@ -653,13 +653,13 @@ export default function BranchManagementPage() {
       <div className="max-w-7xl mx-auto">
         {/* Breadcrumb */}
         <div className="text-xs text-gray-400 mb-1">
-          Branch Management {">"} All Branches
+        Data Management {">"} Add Telecaller
         </div>
 
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
           <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4 sm:mb-0">
-            Branch Management
+          Telecaller
           </h1>
           <Button
             onClick={openAddModal}
@@ -667,7 +667,7 @@ export default function BranchManagementPage() {
             disabled={loading}
           >
             <Plus className="mr-2 h-4 w-4" />
-            Add New Branch
+            Add Telecaller
           </Button>
         </div>
 

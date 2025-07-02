@@ -14,7 +14,7 @@ export function NewEnquiryForm() {
       columns: 4,
       fields: [
         {
-          name: 'candidateName',
+          name: 'candidate_name',
           label: 'Candidate Name',
           type: 'text',
           placeholder: 'Enter Name',
