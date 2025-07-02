@@ -38,6 +38,9 @@ interface AuthContextType {
   logout: () => void;
   resetPassword: (email: string, newPassword: string) => Promise<boolean>;
   token: string | null;
+    showTokenExpiredAlert: boolean; // Add this
+  setShowTokenExpiredAlert: (show: boolean) => void; // Add this
+
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -46,6 +49,20 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
   const [token, setToken] = useState<string | null>(null);
+  const [showTokenExpiredAlert, setShowTokenExpiredAlert] = useState(false);
+
+  const isTokenExpired = (token) => {
+    if (!token) return true;
+
+    try {
+      const payload = JSON.parse(atob(token.split(".")[1]));
+      const currentTime = Date.now() / 1000;
+      return payload.exp < currentTime;
+    } catch (error) {
+      console.error("Error parsing token:", error);
+      return true;
+    }
+  };
 
   // Check for existing login on app load
   useEffect(() => {
@@ -54,16 +71,45 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     const savedIsLoggedIn = localStorage.getItem("isLoggedIn");
 
     if (savedToken && savedUser && savedIsLoggedIn === "true") {
-      setToken(savedToken);
-      setUser(JSON.parse(savedUser));
-      setIsLoggedIn(true);
+      if (isTokenExpired(savedToken)) {
+        // Token expired, show alert and logout
+        setShowTokenExpiredAlert(true);
+        logout();
+      } else {
+        setToken(savedToken);
+        setUser(JSON.parse(savedUser));
+        setIsLoggedIn(true);
+
+        // Set up token expiry check
+        setupTokenExpiryCheck(savedToken);
+      }
     }
   }, []);
 
-  const login = async (
-    email: string,
-    password: string
-  ): Promise<{ success: boolean; error?: string; userRole?: string }> => {
+  const setupTokenExpiryCheck = (token) => {
+    if (!token) return;
+
+    try {
+      const payload = JSON.parse(atob(token.split(".")[1]));
+      const expiryTime = payload.exp * 1000; // Convert to milliseconds
+      const currentTime = Date.now();
+      const timeUntilExpiry = expiryTime - currentTime;
+
+      // Set timeout to show alert 5 minutes before expiry
+      const alertTime = Math.max(0, timeUntilExpiry - 5 * 60 * 1000);
+
+      setTimeout(() => {
+        if (isLoggedIn) {
+          setShowTokenExpiredAlert(true);
+          logout();
+        }
+      }, alertTime);
+    } catch (error) {
+      console.error("Error setting up token expiry check:", error);
+    }
+  };
+
+  const login = async (email, password) => {
     try {
       console.log("Making login request with:", { email, password });
 
@@ -76,21 +122,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const data = response.data;
 
       if (response.status === 200 && data.access) {
-        // Extract access token
         const accessToken = data.access;
 
-        // Create user object based on role from API response
-        const userData: User = {
+        const userData = {
           role: data.user.role,
           email: email,
           telecaller:
             data.user.role === "Telecaller" ? data.user.telecaller : undefined,
         };
 
-        // Save to localStorage
+        // Save to localStorage - FIX: Save user data properly
         localStorage.setItem("access_token", accessToken);
         localStorage.setItem("refresh_token", data.refresh);
-        // localStorage.setItem("user_data", JSON.stringify(userData));
+        localStorage.setItem("user_data", JSON.stringify(userData)); 
         localStorage.setItem("isLoggedIn", "true");
 
         // Update state
@@ -98,7 +142,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setUser(userData);
         setIsLoggedIn(true);
 
-        // Return success with user role for navigation
+        // Setup token expiry monitoring
+        setupTokenExpiryCheck(accessToken);
+
         return {
           success: true,
           userRole: data.user.role,
@@ -171,18 +217,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const logout = () => {
-    // Clear localStorage
     localStorage.removeItem("access_token");
     localStorage.removeItem("refresh_token");
-    // localStorage.removeItem("user_data");
+    // localStorage.removeItem("user_data"); 
     localStorage.removeItem("isLoggedIn");
 
-    // Clear state
     setUser(null);
     setToken(null);
     setIsLoggedIn(false);
-
-    // Note: Navigation should be handled by the component calling logout
   };
 
   // Password reset - implement with real API call when needed
@@ -212,12 +254,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         logout,
         resetPassword,
         token,
+        showTokenExpiredAlert,
+        setShowTokenExpiredAlert,
       }}
     >
       {children}
     </AuthContext.Provider>
   );
 };
+
+
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
