@@ -13,13 +13,14 @@ import axiosInstance from "../../../components/apiconfig/axios.js";
 import { z } from "zod";
 
 // Define Telecaller interface
+
 interface Telecaller {
   id: number;
   name: string;
   email: string;
   contact: string;
   address: string;
-  role: string;
+  role: number;
   password?: string;
   createdAt?: string;
   updatedAt?: string;
@@ -70,7 +71,7 @@ interface FormSection {
   className?: string;
 }
 
-// Zod Schema for validation - strict for POST (creating new telecaller)
+// Update the telecallerCreateSchema
 const telecallerCreateSchema = z.object({
   name: z
     .string()
@@ -85,11 +86,10 @@ const telecallerCreateSchema = z.object({
     .regex(/^[0-9]{10,15}$/, "Contact must be 10-15 digits")
     .min(1, "Contact is required"),
   address: z.string().min(5, "Address must be at least 5 characters"),
-  role: z.string().min(1, "Role is required"),
+  role: z.string().min(1, "Role is required"), // Keep as string for the ID
   password: z.string().min(6, "Password must be at least 6 characters"),
 });
 
-// Zod Schema for editing - only validate if field has content
 // Update the telecallerEditSchema
 const telecallerEditSchema = z.object({
   name: z
@@ -119,7 +119,6 @@ const telecallerEditSchema = z.object({
     .optional()
     .or(z.literal("")),
 });
-
 // Toast notification component
 const Toast = ({
   message,
@@ -264,7 +263,7 @@ export default function TelecallersManagementPage() {
     return errors;
   };
 
-  // Check for duplicates during editing (only for changed fields)
+  // Check for duplicates during editing
   const checkDuplicatesForEdit = (
     data: Partial<Telecaller>,
     currentTelecallerId: number
@@ -310,13 +309,17 @@ export default function TelecallersManagementPage() {
     }
     return errors;
   };
-
   const fetchroles = async () => {
     try {
-      const response = await axiosInstance.get(API_URLS.ROLES.GET_ROLES);
-      setroles(response.data);
+      // Use hardcoded roles as per your API requirements
+      const hardcodedRoles = [
+        { id: 1, name: "Admin" },
+        { id: 2, name: "Telecaller" },
+      ];
 
-      // Create form sections with role options
+      setroles(hardcodedRoles);
+
+      // Create form sections with role options (Admin disabled)
       const sections: FormSection[] = [
         {
           fields: [
@@ -352,15 +355,14 @@ export default function TelecallersManagementPage() {
               name: "role",
               label: "Role",
               type: "select",
-              options: response.data.map((role: Roles) => ({
-                value: role.id.toString(), // Store ID as value
-                label: role.name, // Display name as label
+              options: hardcodedRoles.map((role: Roles) => ({
+                value: role.id.toString(), // Use role ID as value
+                label: role.name,
+                disabled: role.name === "Admin", // Disable Admin role
               })),
               placeholder: "Select role",
               defaultValue: editingTelecaller
-                ? roles
-                    .find((r) => r.name === editingTelecaller.role)
-                    ?.id.toString() || ""
+                ? editingTelecaller.role.toString()
                 : "",
             },
             {
@@ -379,8 +381,25 @@ export default function TelecallersManagementPage() {
       setFormSections(sections);
     } catch (error) {
       console.error(error);
-      showToast("Failed to fetch roles", "error");
+      showToast("Failed to load roles", "error");
     }
+  };
+
+  // Helper function to get role ID from name
+  const getRoleIdFromName = (roleName: string): number => {
+    const roleMap: { [key: string]: number } = {
+      Admin: 1,
+      Telecaller: 2,
+    };
+    return roleMap[roleName] || 2; // Default to Telecaller if not found
+  };
+
+  const getRoleNameFromId = (roleId: number): string => {
+    const roleMap: { [key: number]: string } = {
+      1: "Admin",
+      2: "Telecaller",
+    };
+    return roleMap[roleId] || "Telecaller";
   };
 
   useEffect(() => {
@@ -462,7 +481,8 @@ export default function TelecallersManagementPage() {
       console.log("Creating telecaller with data:", data);
 
       // 1. Validate with Zod schema for creation
-      const result = telecallerCreateSchema.safeParse(data);
+      const validationData = { ...data, role: data.role.toString() };
+      const result = telecallerCreateSchema.safeParse(validationData);
       if (!result.success) {
         const errors = result.error.issues.reduce(
           (acc: Record<string, string>, issue) => {
@@ -478,8 +498,7 @@ export default function TelecallersManagementPage() {
         return;
       }
 
-      const validatedData = result.data;
-      console.log("Validated data:", validatedData);
+      const validatedData = data; // keep role as number for API
 
       // 2. Check for duplicates
       const duplicateErrors = checkDuplicatesForCreate(data);
@@ -494,18 +513,11 @@ export default function TelecallersManagementPage() {
       const authConfig = getAuthConfig();
       if (!authConfig) return;
 
-      console.log(
-        "Making API call to:",
-        API_URLS.TELLE_CALLERS.POST_TELLE_CALLERS
-      );
-
       const response = await axiosInstance.post(
         API_URLS.TELLE_CALLERS.POST_TELLE_CALLERS,
         validatedData,
         authConfig
       );
-
-      console.log("API Response:", response);
 
       if (response.data?.code === 200 || response.status === 201) {
         await fetchTelecallers(pagination.page, pagination.limit);
@@ -522,107 +534,119 @@ export default function TelecallersManagementPage() {
     } catch (error: any) {
       console.error("Error creating telecaller:", error);
 
-      if (error.response?.data?.errors) {
-        // API validation errors
-        setFormErrors(error.response.data.errors);
+      // Handle API errors with enhanced error parsing
+      const apiErrors = handleApiErrors(error);
+
+      if (Object.keys(apiErrors).length > 0) {
+        setFormErrors(apiErrors);
+
+        // Show specific toast for general errors
+        if (apiErrors.general) {
+          showToast(apiErrors.general, "error");
+        }
       } else {
-        const errorMessage =
-          error.response?.data?.message || "Failed to create telecaller";
-        showToast(errorMessage, "error");
+        showToast("Failed to create telecaller. Please try again.", "error");
       }
     } finally {
       setLoading(false);
       setIsSubmitting(false);
     }
   };
-
   // Update telecaller with minimal validation and duplicate checks
   const updateTelecaller = async (id: number, data: Partial<Telecaller>) => {
-  setLoading(true);
-  setIsSubmitting(true);
-  setFormErrors({});
+    setLoading(true);
+    setIsSubmitting(true);
+    setFormErrors({});
 
-  try {
-    console.log("Updating telecaller with data:", data);
+    try {
+      console.log("Updating telecaller with data:", data);
 
-    // Filter out empty strings and undefined values
-    const filteredData = Object.fromEntries(
-      Object.entries(data).filter(
-        ([_, value]) => value !== "" && value !== undefined && value !== null
-      )
-    );
-
-    console.log("Filtered data:", filteredData);
-
-    // 1. Validate with Zod schema for editing
-    const result = telecallerEditSchema.safeParse(filteredData);
-    if (!result.success) {
-      const errors = result.error.issues.reduce(
-        (acc: Record<string, string>, issue) => {
-          const field = issue.path[0] as string;
-          acc[field] = issue.message;
-          return acc;
-        },
-        {}
+      // Filter out empty strings and undefined values
+      const filteredData = Object.fromEntries(
+        Object.entries(data).filter(
+          ([_, value]) => value !== "" && value !== undefined && value !== null
+        )
       );
-      setFormErrors(errors);
+
+      // 1. Validate with Zod schema for editing
+      const result = telecallerEditSchema.safeParse(filteredData);
+      if (!result.success) {
+        const errors = result.error.issues.reduce(
+          (acc: Record<string, string>, issue) => {
+            const field = issue.path[0] as string;
+            acc[field] = issue.message;
+            return acc;
+          },
+          {}
+        );
+        setFormErrors(errors);
+        setLoading(false);
+        setIsSubmitting(false);
+        return;
+      }
+
+      const validatedData = result.data;
+
+      // 2. Check for duplicates on fields that have values
+      const fieldsToCheck: Partial<Telecaller> = {};
+      if (data.name && data.name.trim()) fieldsToCheck.name = data.name;
+      if (data.email && data.email.trim()) fieldsToCheck.email = data.email;
+      if (data.contact && data.contact.trim())
+        fieldsToCheck.contact = data.contact;
+
+      const duplicateErrors = checkDuplicatesForEdit(fieldsToCheck, id);
+      if (Object.keys(duplicateErrors).length > 0) {
+        setFormErrors(duplicateErrors);
+        setLoading(false);
+        setIsSubmitting(false);
+        return;
+      }
+
+      // 3. Make API call
+      const authConfig = getAuthConfig();
+      if (!authConfig) return;
+
+      const updateUrl = API_URLS.TELLE_CALLERS.PATCH_TELLE_CALLERS(id);
+      const response = await axiosInstance.patch(
+        updateUrl,
+        validatedData,
+        authConfig
+      );
+
+      if (response.data?.code === 200 || response.status === 200) {
+        await fetchTelecallers(pagination.page, pagination.limit);
+        await fetchAllTelecallers();
+        setIsModalOpen(false);
+        setEditingTelecaller(null);
+        resetForm();
+        showToast("Telecaller updated successfully!", "success");
+      } else {
+        showToast(
+          response.data?.message || "Failed to update telecaller",
+          "error"
+        );
+      }
+    } catch (error: any) {
+      console.error("Error updating telecaller:", error);
+
+      // Handle API errors with enhanced error parsing
+      const apiErrors = handleApiErrors(error);
+
+      if (Object.keys(apiErrors).length > 0) {
+        setFormErrors(apiErrors);
+
+        // Show specific toast for general errors
+        if (apiErrors.general) {
+          showToast(apiErrors.general, "error");
+        }
+      } else {
+        showToast("Failed to update telecaller. Please try again.", "error");
+      }
+    } finally {
       setLoading(false);
       setIsSubmitting(false);
-      return;
     }
-
-    const validatedData = result.data;
-    console.log("Validated data:", validatedData);
-
-    // 2. Check for duplicates on fields that have values
-    const fieldsToCheck: Partial<Telecaller> = {};
-    if (data.name && data.name.trim()) fieldsToCheck.name = data.name;
-    if (data.email && data.email.trim()) fieldsToCheck.email = data.email;
-    if (data.contact && data.contact.trim()) fieldsToCheck.contact = data.contact;
-
-    const duplicateErrors = checkDuplicatesForEdit(fieldsToCheck, id);
-    if (Object.keys(duplicateErrors).length > 0) {
-      setFormErrors(duplicateErrors);
-      setLoading(false);
-      setIsSubmitting(false);
-      return;
-    }
-
-    // 3. Make API call with proper URL construction
-    const authConfig = getAuthConfig();
-    if (!authConfig) return;
-
-    const updateUrl = API_URLS.TELLE_CALLERS.PATCH_TELLE_CALLERS(id);
-    console.log("Making API call to:", updateUrl);
-
-    const response = await axiosInstance.patch(updateUrl, validatedData, authConfig);
-    console.log("Update response:", response);
-
-    if (response.data?.code === 200 || response.status === 200) {
-      await fetchTelecallers(pagination.page, pagination.limit);
-      await fetchAllTelecallers();
-      setIsModalOpen(false);
-      setEditingTelecaller(null);
-      resetForm();
-      showToast("Telecaller updated successfully!", "success");
-    } else {
-      showToast(response.data?.message || "Failed to update telecaller", "error");
-    }
-  } catch (err: any) {
-    console.error("Error updating telecaller:", err);
-
-    if (err.response?.data?.errors) {
-      // API validation errors
-      setFormErrors(err.response.data.errors);
-    } else {
-      const errorMessage = err.response?.data?.message || "Failed to update telecaller";
-      showToast(errorMessage, "error");
-    }
-  } finally {
-    setLoading(false);
-    setIsSubmitting(false);
-  }
-};
+  };
 
   // Delete telecaller
   const deleteTelecaller = async (id: number) => {
@@ -687,7 +711,9 @@ export default function TelecallersManagementPage() {
           telecaller.email.toLowerCase().includes(term.toLowerCase()) ||
           telecaller.contact.includes(term) ||
           telecaller.address.toLowerCase().includes(term.toLowerCase()) ||
-          telecaller.role.toLowerCase().includes(term.toLowerCase()) ||
+          getRoleNameFromId(telecaller.role)
+            .toLowerCase()
+            .includes(term.toLowerCase()) ||
           telecaller.id.toString().includes(term)
       );
       setTelecallers(filtered);
@@ -712,36 +738,73 @@ export default function TelecallersManagementPage() {
   };
 
   // Form submission handler
+  // Form submission handler
   const handleFormSubmit = async (data: any) => {
     console.log("Form submitted with data:", data);
-
-    // Find role name if we have the ID
-    const roleName =
-      roles.find((r) => r.id.toString() === data.role)?.name || data.role;
 
     const submitData = {
       name: data.name?.toString() || "",
       email: data.email?.toString() || "",
       contact: data.contact?.toString() || "",
       address: data.address?.toString() || "",
-      role: roleName, // Use the role name for API
+      role: parseInt(data.role), // Save as number ID, not string name
       password: data.password?.toString() || "",
     };
 
-    // Rest of the submit logic remains the same
     if (editingTelecaller) {
       const editData: Partial<Telecaller> = {};
       if (submitData.name.trim()) editData.name = submitData.name;
       if (submitData.email.trim()) editData.email = submitData.email;
       if (submitData.contact.trim()) editData.contact = submitData.contact;
       if (submitData.address.trim()) editData.address = submitData.address;
-      if (submitData.role.trim()) editData.role = submitData.role;
+      if (submitData.role) editData.role = submitData.role; // Save as number
       if (submitData.password.trim()) editData.password = submitData.password;
 
       await updateTelecaller(editingTelecaller.id, editData);
     } else {
       await createTelecaller(submitData as Omit<Telecaller, "id">);
     }
+  };
+  const handleApiErrors = (error: any): Record<string, string> => {
+    const errors: Record<string, string> = {};
+
+    // Handle different error response formats
+    if (error.response?.data) {
+      const errorData = error.response.data;
+
+      // Check for validation errors in different formats
+      if (errorData.errors) {
+        // Format 1: { errors: { field: "message" } }
+        Object.assign(errors, errorData.errors);
+      } else if (errorData.message) {
+        // Format 2: Check message for specific error types
+        const message = errorData.message.toLowerCase();
+
+        if (message.includes("email") && message.includes("already")) {
+          errors.email = "This email address is already registered";
+        } else if (message.includes("phone") && message.includes("already")) {
+          errors.contact = "This phone number is already registered";
+        } else if (message.includes("contact") && message.includes("already")) {
+          errors.contact = "This contact number is already registered";
+        } else if (message.includes("name") && message.includes("already")) {
+          errors.name = "This name is already taken";
+        } else if (message.includes("role") && message.includes("invalid")) {
+          errors.role = "Please select a valid role";
+        } else {
+          // Generic error
+          errors.general = errorData.message;
+        }
+      }
+
+      // Check for field-specific errors in data
+      if (errorData.data?.role) {
+        errors.role = Array.isArray(errorData.data.role)
+          ? errorData.data.role[0]
+          : errorData.data.role;
+      }
+    }
+
+    return errors;
   };
 
   // Modal handlers
@@ -760,8 +823,8 @@ export default function TelecallersManagementPage() {
       email: telecaller.email || "",
       contact: telecaller.contact || "",
       address: telecaller.address || "",
-      role: telecaller.role || "",
-      password: telecaller.password,
+      role: telecaller.role.toString(),
+      password: "",
     });
     setFormErrors({});
     setIsModalOpen(true);
@@ -914,7 +977,7 @@ export default function TelecallersManagementPage() {
               <div className="p-6">
                 <DynamicForm
                   key={editingTelecaller?.id || "new"}
-                  sections={formSections as ImportedFormSection[]} // Type assertion to match imported type
+                  sections={formSections as ImportedFormSection[]}
                   onSubmit={handleFormSubmit}
                   submitLabel={
                     editingTelecaller ? "Update Telecaller" : "Add Telecaller"
@@ -928,10 +991,7 @@ export default function TelecallersManagementPage() {
                           email: editingTelecaller.email || "",
                           contact: editingTelecaller.contact || "",
                           address: editingTelecaller.address || "",
-                          role:
-                            roles
-                              .find((r) => r.name === editingTelecaller.role)
-                              ?.id.toString() || "",
+                          role: editingTelecaller.role.toString(),
                           password: "",
                         }
                       : {
@@ -939,7 +999,7 @@ export default function TelecallersManagementPage() {
                           email: "",
                           contact: "",
                           address: "",
-                          role: "",
+                          role: "2", // Default to Telecaller ID
                           password: "",
                         }
                   }
@@ -951,6 +1011,13 @@ export default function TelecallersManagementPage() {
                   }
                   submitButtonProps={{ disabled: isSubmitting }}
                 />
+
+                {/* Show general error message if exists */}
+                {formErrors.general && (
+                  <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md">
+                    <p className="text-sm text-red-600">{formErrors.general}</p>
+                  </div>
+                )}
               </div>
             </div>
           </div>
