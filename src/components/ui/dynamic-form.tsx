@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -61,7 +60,8 @@ export function DynamicForm({
   submitLabel = "Submit",
   showCancel = true,
   onCancel,
-  className
+  className,
+  errors
 }: DynamicFormProps) {
   // Create dynamic schema from fields
   const createSchema = () => {
@@ -100,6 +100,17 @@ export function DynamicForm({
     resolver: zodResolver(createSchema()),
     defaultValues,
   });
+
+  // Sync parent errors prop to react-hook-form errors
+  React.useEffect(() => {
+    if (form && errors) {
+      Object.entries(errors).forEach(([field, message]) => {
+        form.setError(field as any, { type: "manual", message });
+      });
+    }
+  }, [errors, form]);
+
+  
 
   const renderField = (field: FormField) => {
     return (

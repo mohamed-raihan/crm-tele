@@ -65,9 +65,12 @@ export default function ReportPage() {
         limit: limit.toString(),
       });
 
+      console.log(branch);
+
       if (branch) params.append("branch", branch);
       if (counselor) params.append("telecaller_name", counselor);
       if (search) params.append("search", search);
+      console.log(params);
 
       const response = await axiosInstance.get(
         `${API_URLS.REPORTS.GET_REPORTS}?${params.toString()}`,
@@ -106,7 +109,6 @@ export default function ReportPage() {
       );
 
       console.log(response);
-      
 
       if (response.data?.code === 200) {
         setBranches(response.data.data || []);
@@ -214,9 +216,10 @@ export default function ReportPage() {
     return () => clearTimeout(debounceTimer);
   }, [branch, counselor, search]);
 
-
   console.log(branch);
-  
+  console.log(reports);
+  console.log(telecallers);
+
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="mb-6">
@@ -265,48 +268,23 @@ export default function ReportPage() {
 
       <div className="bg-white rounded-xl shadow p-6">
         <div className="mb-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div className="flex gap-2 flex-wrap">
-            <button className="bg-violet-100 text-violet-700 px-4 py-2 rounded font-medium">
-              All time
-            </button>
-            <button className="bg-violet-100 text-violet-700 px-4 py-2 rounded font-medium flex items-center gap-1">
-              Recent <span className="text-lg">×</span>
-            </button>
-            <button className="border px-4 py-2 rounded font-medium flex items-center gap-2">
-              <span className="material-icons text-base">filter_list</span> More
-              filters
-            </button>
+          <div className="flex-1">
+            <input
+              type="text"
+              placeholder="Search by counselor name..."
+              className="border rounded px-3 py-2 w-full md:w-64"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
           </div>
-          <div className="flex gap-2 flex-wrap">
-            <button className="bg-green-100 text-green-700 px-3 py-1 rounded">
-              PDF
-            </button>
-            <button className="bg-green-100 text-green-700 px-3 py-1 rounded">
-              CSV
-            </button>
+          <div className="flex gap-2">
             <button
-              className="bg-green-100 text-green-700 px-3 py-1 rounded hover:bg-green-200"
+              className="bg-green-100 text-green-700 px-4 py-2 rounded hover:bg-green-200 font-medium"
               onClick={exportToExcel}
             >
-              EXCEL
-            </button>
-            <button className="bg-green-100 text-green-700 px-3 py-1 rounded">
-              COPY
-            </button>
-            <button className="bg-green-100 text-green-700 px-3 py-1 rounded">
-              COLUMNS
+              Export to Excel
             </button>
           </div>
-        </div>
-
-        <div className="mb-4">
-          <input
-            type="text"
-            placeholder="Search by counselor name..."
-            className="border rounded px-3 py-2 w-full md:w-64"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
         </div>
 
         <div>
@@ -352,6 +330,7 @@ export default function ReportPage() {
                             {report.contacted || 0}
                           </span>
                         </td>
+
                         <td className="px-4 py-2">
                           <span className="inline-block w-8 h-8 bg-red-100 text-red-600 rounded-full text-center text-sm font-bold leading-8">
                             {report.not_contacted || 0}
@@ -377,6 +356,7 @@ export default function ReportPage() {
                             {report.negative || 0}
                           </span>
                         </td>
+
                         <td className="px-4 py-2">
                           <span className="inline-block w-8 h-8 bg-blue-100 text-blue-600 rounded-full text-center text-sm font-bold leading-8">
                             {report.walk_in_list || 0}
@@ -420,6 +400,7 @@ export default function ReportPage() {
                 )}{" "}
                 of {pagination.totalRecords} entries
               </div>
+
               <div className="flex gap-2">
                 <button
                   className="px-3 py-1 border rounded disabled:opacity-50 disabled:cursor-not-allowed"
