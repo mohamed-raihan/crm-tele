@@ -1,9 +1,20 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { DynamicTable, TableColumn, TableAction, TableFilter } from "@/components/ui/dynamic-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Edit, RotateCcw, Eye } from "lucide-react";
+import axiosInstance from './apiconfig/axios';
+import { API_URLS } from './apiconfig/api_urls';
+import { error } from 'console';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationPrevious,
+  PaginationNext,
+} from "@/components/ui/pagination";
 
 // Mock data for active enquiries
 const activeEnquiries = [
@@ -72,6 +83,7 @@ const activeEnquiries = [
 export function ActiveEnquiryTable() {
   const navigate = useNavigate();
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
+  const [Enquiries,setEnquiry] = useState([])
   const [filters, setFilters] = useState<TableFilter[]>([
     {
       key: 'time',
@@ -86,45 +98,62 @@ export function ActiveEnquiryTable() {
       onRemove: () => removeFilter('recent')
     }
   ]);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(5); // Default to 5, update if API returns total
+  const pageSize = 10;
 
   const removeFilter = (key: string) => {
     setFilters(filters.filter(f => f.key !== key));
   };
 
+  const fetchEnquiry = async (pageNum = 1) => {
+    try {
+      const response = await axiosInstance.get(`${API_URLS.ENQUIRY.GET_ENQUIRY}?page=${pageNum}`);
+      setEnquiry(response.data.data);
+      // If API returns total count or total pages, update totalPages here
+      if (response.data.total_pages) {
+        setTotalPages(response.data.total_pages);
+      } else if (response.data.total) {
+        setTotalPages(Math.ceil(response.data.total / pageSize));
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  useEffect(() => {
+    fetchEnquiry(page);
+  }, [page]);
+
   const columns: TableColumn[] = [
     { 
-      key: 'id', 
-      label: 'ID', 
-      sortable: true,
-      render: (value) => <span className="font-medium">{value}</span>
+      key: 'id',
+      label: 'ID',
+      sortable: false,
+      render: (_value, _row, index) => (
+        <span className="font-medium">{(page - 1) * pageSize + index + 1}</span>
+      )
     },
-    { key: 'name', label: 'Name' },
+    { key: 'candidate_name', label: 'Name' },
     { key: 'phone', label: 'Phone' },
     { 
-      key: 'service', 
+      key: 'required_service', 
       label: 'Service',
       render: (value, row) => (
         <Badge className={row.serviceColor}>{value}</Badge>
       )
     },
     { 
-      key: 'exams', 
-      label: 'Exams',
+      key: 'preferred_course', 
+      label: 'Preferred Course',
       render: (value, row) => (
         <Badge className={row.examsColor}>{value}</Badge>
       )
     },
-    { key: 'source', label: 'Source' },
-    { key: 'branch', label: 'Branch' },
-    { 
-      key: 'job', 
-      label: 'Job',
-      render: (value) => (
-        <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white">
-          {value}
-        </Button>
-      )
-    }
+    { key: 'created_by_name', label: 'Created by' },
+    { key: 'branch_name', label: 'Branch' },
+    { key: 'mettad_name', label: 'Source'},
+    { key: 'assigned_by_name', label: 'Assigned to'}
   ];
 
   const actions: TableAction[] = [
@@ -155,11 +184,6 @@ export function ActiveEnquiryTable() {
 
   const exportActions = [
     {
-      label: 'PDF',
-      onClick: () => console.log('Export PDF'),
-      variant: 'outline' as const
-    },
-    {
       label: 'CSV',
       onClick: () => console.log('Export CSV'),
       variant: 'outline' as const
@@ -169,16 +193,6 @@ export function ActiveEnquiryTable() {
       onClick: () => console.log('Export Excel'),
       variant: 'outline' as const
     },
-    {
-      label: 'COPY',
-      onClick: () => console.log('Copy'),
-      variant: 'outline' as const
-    },
-    {
-      label: 'COLUMNS',
-      onClick: () => console.log('Columns'),
-      variant: 'outline' as const
-    }
   ];
 
   const handleSelectAll = (selected: boolean) => {
@@ -203,20 +217,60 @@ export function ActiveEnquiryTable() {
   };
 
   return (
-    <DynamicTable
-      data={activeEnquiries}
-      columns={columns}
-      actions={actions}
-      filters={filters}
-      searchPlaceholder="Search"
-      onSearch={handleSearch}
-      onSelectAll={handleSelectAll}
-      onSelectRow={handleSelectRow}
-      selectedRows={selectedRows}
-      rowIdKey="id"
-      showBulkActions={true}
-      bulkActions={bulkActions}
-      exportActions={exportActions}
-    />
+    <>
+      <DynamicTable
+        data={Enquiries}
+        columns={columns}
+        actions={actions}
+        filters={filters}
+        searchPlaceholder="Search"
+        onSearch={handleSearch}
+        onSelectAll={handleSelectAll}
+        onSelectRow={handleSelectRow}
+        selectedRows={selectedRows}
+        rowIdKey="id"
+        showBulkActions={true}
+        bulkActions={bulkActions}
+        exportActions={exportActions}
+      />
+      <Pagination className="mt-4">
+        <PaginationContent>
+          <PaginationItem>
+            <PaginationPrevious
+              href="#"
+              onClick={e => {
+                e.preventDefault();
+                if (page > 1) setPage(page - 1);
+              }}
+              className={page === 1 ? 'pointer-events-none opacity-50' : ''}
+            />
+          </PaginationItem>
+          {Array.from({ length: totalPages }, (_, i) => (
+            <PaginationItem key={i + 1}>
+              <PaginationLink
+                href="#"
+                isActive={page === i + 1}
+                onClick={e => {
+                  e.preventDefault();
+                  setPage(i + 1);
+                }}
+              >
+                {i + 1}
+              </PaginationLink>
+            </PaginationItem>
+          ))}
+          <PaginationItem>
+            <PaginationNext
+              href="#"
+              onClick={e => {
+                e.preventDefault();
+                if (page < totalPages) setPage(page + 1);
+              }}
+              className={page === totalPages ? 'pointer-events-none opacity-50' : ''}
+            />
+          </PaginationItem>
+        </PaginationContent>
+      </Pagination>
+    </>
   );
 }

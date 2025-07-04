@@ -23,7 +23,7 @@ const profileData = {
   interestLevel: "Partial 50%"
 };
 
-export function EnquiryProfile() {
+export function EnquiryProfile() { 
   return (
     <div className="space-y-6">
       {/* Profile Header Card */}
