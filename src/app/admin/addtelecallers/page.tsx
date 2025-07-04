@@ -3,7 +3,7 @@ import { DynamicTable, TableColumn } from "@/components/ui/dynamic-table";
 import {
   DynamicForm,
   FormField,
-  FormSection,
+  FormSection as ImportedFormSection,
 } from "@/components/ui/dynamic-form";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -12,23 +12,30 @@ import { API_URLS } from "../../../components/apiconfig/api_urls.js";
 import axiosInstance from "../../../components/apiconfig/axios.js";
 import { z } from "zod";
 
-// Define Branch interface
-interface Branch {
+// Define Telecaller interface
+
+interface Telecaller {
   id: number;
-  branch_name: string;
-  address: string;
-  city: string;
+  name: string;
   email: string;
   contact: string;
+  address: string;
+  role: number;
+  password?: string;
   createdAt?: string;
   updatedAt?: string;
+}
+
+interface Roles {
+  id: number;
+  name: string;
 }
 
 // Define ApiResponse interface
 interface ApiResponse {
   code: number;
   message: string;
-  data: Branch[];
+  data: Telecaller[];
   pagination: {
     total: number;
     page: number;
@@ -37,8 +44,9 @@ interface ApiResponse {
   };
 }
 
-// Define FormField with explicit validation type
+// Define CustomFormField interface
 interface CustomFormField extends Omit<FormField, "validation"> {
+  defaultValue?: string;
   validation?: {
     required?: string | boolean;
     minLength?: {
@@ -56,48 +64,61 @@ interface CustomFormField extends Omit<FormField, "validation"> {
   };
 }
 
-// Zod Schema for validation - strict for POST (creating new branch)
-const branchCreateSchema = z.object({
-  branch_name: z
+// Define FormSection interface as non-generic
+interface FormSection {
+  fields: CustomFormField[];
+  columns?: number;
+  className?: string;
+}
+
+// Update the telecallerCreateSchema
+const telecallerCreateSchema = z.object({
+  name: z
     .string()
-    .min(2, "Branch name must be at least 2 characters")
-    .max(50, "Branch name must not exceed 50 characters")
-    .nonempty("Branch name is required"),
+    .min(2, "Name must be at least 2 characters")
+    .max(50, "Name must not exceed 50 characters"),
+  email: z
+    .string()
+    .email("Please enter a valid email address")
+    .min(1, "Email is required"),
+  contact: z
+    .string()
+    .regex(/^[0-9]{10,15}$/, "Contact must be 10-15 digits")
+    .min(1, "Contact is required"),
+  address: z.string().min(5, "Address must be at least 5 characters"),
+  role: z.string().min(1, "Role is required"), // Keep as string for the ID
+  password: z.string().min(6, "Password must be at least 6 characters"),
+});
+
+// Update the telecallerEditSchema
+const telecallerEditSchema = z.object({
+  name: z
+    .string()
+    .min(2, "Name must be at least 2 characters")
+    .optional()
+    .or(z.literal("")),
+  email: z
+    .string()
+    .email("Please enter a valid email address")
+    .optional()
+    .or(z.literal("")),
+  contact: z
+    .string()
+    .regex(/^[0-9]{10,15}$/, "Contact must be 10-15 digits")
+    .optional()
+    .or(z.literal("")),
   address: z
     .string()
     .min(5, "Address must be at least 5 characters")
-    .nonempty("Address is required"),
-  city: z
-    .string()
-    .min(2, "City must be at least 2 characters")
-    .nonempty("City is required"),
-  email: z
-    .string()
-    .email("Please enter a valid email address")
-    .nonempty("Email is required"),
-  contact: z
-    .string()
-    .regex(/^[0-9]{10,15}$/, "Contact must be 10-15 digits")
-    .nonempty("Contact is required"),
-});
-
-// Zod Schema for editing - only validate if field has content
-const branchEditSchema = z.object({
-  branch_name: z.string().min(1).optional().or(z.literal("")),
-  address: z.string().min(1).optional().or(z.literal("")),
-  city: z.string().min(1).optional().or(z.literal("")),
-  email: z
-    .string()
-    .email("Please enter a valid email address")
     .optional()
     .or(z.literal("")),
-  contact: z
+  role: z.string().min(1, "Role is required").optional().or(z.literal("")),
+  password: z
     .string()
-    .regex(/^[0-9]{10,15}$/, "Contact must be 10-15 digits")
+    .min(6, "Password must be at least 6 characters")
     .optional()
     .or(z.literal("")),
 });
-
 // Toast notification component
 const Toast = ({
   message,
@@ -124,11 +145,10 @@ const Toast = ({
 
 const columns: TableColumn[] = [
   { key: "id", label: "ID", sortable: true, width: "w-16" },
-  { key: "branch_name", label: "Branch Name", sortable: true },
-  { key: "address", label: "Address", sortable: true },
-  { key: "city", label: "City", sortable: true },
+  { key: "name", label: "Name", sortable: true },
   { key: "email", label: "Email", sortable: true },
   { key: "contact", label: "Contact", sortable: true },
+  { key: "address", label: "Address", sortable: true },
   {
     key: "status",
     label: "Status",
@@ -140,55 +160,30 @@ const columns: TableColumn[] = [
   },
 ];
 
-// Update formSections to make fields optional for editing
-const formSections: FormSection[] = [
-  {
-    fields: [
-      {
-        name: "branch_name",
-        label: "Branch Name",
-        type: "text",
-        placeholder: "Enter branch name",
-      },
-      {
-        name: "address",
-        label: "Address",
-        type: "textarea",
-        placeholder: "Enter branch address",
-      },
-      {
-        name: "city",
-        label: "City",
-        type: "text",
-        placeholder: "Enter city",
-      },
-      {
-        name: "email",
-        label: "Email",
-        type: "email",
-        placeholder: "Enter email address",
-      },
-      {
-        name: "contact",
-        label: "Contact",
-        type: "text",
-        placeholder: "Enter contact number",
-      },
-    ] as FormField[], // Cast to FormField[] instead of CustomFormField[]
-    columns: 1,
-    className: "grid grid-cols-1 gap-4",
-  },
-];
-
-export default function BranchManagementPage() {
-  const [branches, setBranches] = useState<Branch[]>([]);
-  const [allBranches, setAllBranches] = useState<Branch[]>([]);
+export default function TelecallersManagementPage() {
+  const [telecallers, setTelecallers] = useState<Telecaller[]>([]);
+  const [allTelecallers, setAllTelecallers] = useState<Telecaller[]>([]);
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingBranch, setEditingBranch] = useState<Branch | null>(null);
+  const [roles, setroles] = useState<Roles[]>([]);
+  const [formSections, setFormSections] = useState<FormSection[]>([]);
+
+  const [editingTelecaller, setEditingTelecaller] = useState<Telecaller | null>(
+    null
+  );
+
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    contact: "",
+    address: "",
+    role: "",
+    password: "",
+  });
   const [loading, setLoading] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
   const [isSearching, setIsSearching] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false); // New state for form submission
   const [pagination, setPagination] = useState({
     total: 0,
     page: 1,
@@ -227,39 +222,39 @@ export default function BranchManagementPage() {
     setTimeout(() => setToast(null), 5000);
   };
 
-  console.log(allBranches);
+  console.log(allTelecallers);
 
   // Check for duplicates during creation
   const checkDuplicatesForCreate = (
-    data: Omit<Branch, "id">
+    data: Omit<Telecaller, "id">
   ): Record<string, string> => {
     const errors: Record<string, string> = {};
     const normalizedData = {
-      branch_name: data.branch_name.toLowerCase().trim(),
+      name: data.name.toLowerCase().trim(),
       email: data.email.toLowerCase().trim(),
       contact: data.contact.trim(),
     };
 
-    if (allBranches.length > 0) {
+    if (allTelecallers.length > 0) {
       if (
-        allBranches.some(
-          (branch) =>
-            branch.branch_name.toLowerCase().trim() ===
-            normalizedData.branch_name
+        allTelecallers.some(
+          (telecaller) =>
+            telecaller.name.toLowerCase().trim() === normalizedData.name
         )
       ) {
-        errors.branch_name = "Branch name already exists";
+        errors.name = "Telecaller name already exists";
       }
       if (
-        allBranches.some(
-          (branch) => branch.email.toLowerCase().trim() === normalizedData.email
+        allTelecallers.some(
+          (telecaller) =>
+            telecaller.email.toLowerCase().trim() === normalizedData.email
         )
       ) {
         errors.email = "Email already exists";
       }
       if (
-        allBranches.some(
-          (branch) => branch.contact.trim() === normalizedData.contact
+        allTelecallers.some(
+          (telecaller) => telecaller.contact.trim() === normalizedData.contact
         )
       ) {
         errors.contact = "Contact number already exists";
@@ -268,46 +263,45 @@ export default function BranchManagementPage() {
     return errors;
   };
 
-  // Check for duplicates during editing (only for changed fields)
+  // Check for duplicates during editing
   const checkDuplicatesForEdit = (
-    data: Partial<Branch>,
-    currentBranchId: number
+    data: Partial<Telecaller>,
+    currentTelecallerId: number
   ): Record<string, string> => {
     const errors: Record<string, string> = {};
     const normalizedData = {
-      branch_name: data.branch_name?.toLowerCase().trim(),
+      name: data.name?.toLowerCase().trim(),
       email: data.email?.toLowerCase().trim(),
       contact: data.contact?.trim(),
     };
 
-    if (allBranches.length > 0) {
+    if (allTelecallers.length > 0) {
       if (
-        normalizedData.branch_name &&
-        allBranches.some(
-          (branch) =>
-            branch.id !== currentBranchId &&
-            branch.branch_name.toLowerCase().trim() ===
-              normalizedData.branch_name
+        normalizedData.name &&
+        allTelecallers.some(
+          (telecaller) =>
+            telecaller.id !== currentTelecallerId &&
+            telecaller.name.toLowerCase().trim() === normalizedData.name
         )
       ) {
-        errors.branch_name = "Branch name already exists";
+        errors.name = "Telecaller name already exists";
       }
       if (
         normalizedData.email &&
-        allBranches.some(
-          (branch) =>
-            branch.id !== currentBranchId &&
-            branch.email.toLowerCase().trim() === normalizedData.email
+        allTelecallers.some(
+          (telecaller) =>
+            telecaller.id !== currentTelecallerId &&
+            telecaller.email.toLowerCase().trim() === normalizedData.email
         )
       ) {
         errors.email = "Email already exists";
       }
       if (
         normalizedData.contact &&
-        allBranches.some(
-          (branch) =>
-            branch.id !== currentBranchId &&
-            branch.contact.trim() === normalizedData.contact
+        allTelecallers.some(
+          (telecaller) =>
+            telecaller.id !== currentTelecallerId &&
+            telecaller.contact.trim() === normalizedData.contact
         )
       ) {
         errors.contact = "Contact number already exists";
@@ -315,32 +309,128 @@ export default function BranchManagementPage() {
     }
     return errors;
   };
+  const fetchroles = async () => {
+    try {
+      // Use hardcoded roles as per your API requirements
+      const hardcodedRoles = [
+        { id: 1, name: "Admin" },
+        { id: 2, name: "Telecaller" },
+      ];
 
-  // Fetch branches with pagination
-  const fetchBranches = async (page: number = 1, limit: number = 10) => {
+      setroles(hardcodedRoles);
+
+      // Create form sections with role options (Admin disabled)
+      const sections: FormSection[] = [
+        {
+          fields: [
+            {
+              name: "name",
+              label: "Name",
+              type: "text",
+              placeholder: "Enter telecaller name",
+              defaultValue: "",
+            },
+            {
+              name: "email",
+              label: "Email",
+              type: "email",
+              placeholder: "Enter email address",
+              defaultValue: "",
+            },
+            {
+              name: "contact",
+              label: "Contact",
+              type: "text",
+              placeholder: "Enter contact number",
+              defaultValue: "",
+            },
+            {
+              name: "address",
+              label: "Address",
+              type: "textarea",
+              placeholder: "Enter address",
+              defaultValue: "",
+            },
+            {
+              name: "role",
+              label: "Role",
+              type: "select",
+              options: hardcodedRoles.map((role: Roles) => ({
+                value: role.id.toString(), // Use role ID as value
+                label: role.name,
+                disabled: role.name === "Admin", // Disable Admin role
+              })),
+              placeholder: "Select role",
+              defaultValue: editingTelecaller
+                ? editingTelecaller.role.toString()
+                : "",
+            },
+            {
+              name: "password",
+              label: "Password",
+              type: "text",
+              placeholder: "Enter password",
+              defaultValue: "",
+            },
+          ],
+          columns: 1,
+          className: "grid grid-cols-1 gap-4",
+        },
+      ];
+
+      setFormSections(sections);
+    } catch (error) {
+      console.error(error);
+      showToast("Failed to load roles", "error");
+    }
+  };
+
+  // Helper function to get role ID from name
+  const getRoleIdFromName = (roleName: string): number => {
+    const roleMap: { [key: string]: number } = {
+      Admin: 1,
+      Telecaller: 2,
+    };
+    return roleMap[roleName] || 2; // Default to Telecaller if not found
+  };
+
+  const getRoleNameFromId = (roleId: number): string => {
+    const roleMap: { [key: number]: string } = {
+      1: "Admin",
+      2: "Telecaller",
+    };
+    return roleMap[roleId] || "Telecaller";
+  };
+
+  useEffect(() => {
+    fetchroles();
+  }, [editingTelecaller]); // Re-fetch roles when editingTelecaller changes to update defaultValue
+
+  // Fetch telecallers with pagination
+  const fetchTelecallers = async (page: number = 1, limit: number = 10) => {
     setLoading(true);
     try {
       const authConfig = getAuthConfig();
       if (!authConfig) return;
 
       const response = await axiosInstance.get(
-        `${API_URLS.BRANCH.GET_BRANCH}?page=${page}&limit=${limit}`,
+        `${API_URLS.TELLE_CALLERS.GET_TELLE_CALLERS}?page=${page}&limit=${limit}`,
         authConfig
       );
 
       if (response.data?.code === 200) {
-        setBranches(response.data.data || []);
+        setTelecallers(response.data.data || []);
         setPagination(response.data.pagination || pagination);
       } else {
-        showToast("Failed to fetch branches", "error");
+        showToast("Failed to fetch telecallers", "error");
       }
     } catch (err: any) {
-      console.error("Error fetching branches:", err);
+      console.error("Error fetching telecallers:", err);
       if (err.response?.status === 401) {
         showToast("Authentication failed. Please login again.", "error");
       } else {
         showToast(
-          err.response?.data?.message || "Failed to fetch branches",
+          err.response?.data?.message || "Failed to fetch telecallers",
           "error"
         );
       }
@@ -349,20 +439,20 @@ export default function BranchManagementPage() {
     }
   };
 
-  // Fetch all branches for search and duplicate checking
-  const fetchAllBranches = async () => {
+  // Fetch all telecallers for search and duplicate checking
+  const fetchAllTelecallers = async () => {
     setLoading(true);
     try {
       const authConfig = getAuthConfig();
       if (!authConfig) return;
 
-      let allData: Branch[] = [];
+      let allData: Telecaller[] = [];
       let currentPage = 1;
       const pageLimit = 1000;
 
       while (true) {
         const response = await axiosInstance.get(
-          `${API_URLS.BRANCH.GET_BRANCH}?page=${currentPage}&limit=${pageLimit}`,
+          `${API_URLS.TELLE_CALLERS.GET_TELLE_CALLERS}?page=${currentPage}&limit=${pageLimit}`,
           authConfig
         );
         if (response.data?.code === 200) {
@@ -373,28 +463,49 @@ export default function BranchManagementPage() {
           break;
         }
       }
-      setAllBranches(allData);
+      setAllTelecallers(allData);
     } catch (err: any) {
-      console.error("Error fetching all branches:", err);
+      console.error("Error fetching all telecallers:", err);
     } finally {
       setLoading(false);
     }
   };
 
-  // Create branch with full validation and duplicate checks
-  const createBranch = async (data: Omit<Branch, "id">) => {
+  // Create telecaller with full validation and duplicate checks
+  const createTelecaller = async (data: Omit<Telecaller, "id">) => {
     setLoading(true);
+    setIsSubmitting(true);
     setFormErrors({});
 
     try {
+      console.log("Creating telecaller with data:", data);
+
       // 1. Validate with Zod schema for creation
-      branchCreateSchema.parse(data);
+      const validationData = { ...data, role: data.role.toString() };
+      const result = telecallerCreateSchema.safeParse(validationData);
+      if (!result.success) {
+        const errors = result.error.issues.reduce(
+          (acc: Record<string, string>, issue) => {
+            const field = issue.path[0] as string;
+            acc[field] = issue.message;
+            return acc;
+          },
+          {}
+        );
+        setFormErrors(errors);
+        setLoading(false);
+        setIsSubmitting(false);
+        return;
+      }
+
+      const validatedData = data; // keep role as number for API
 
       // 2. Check for duplicates
       const duplicateErrors = checkDuplicatesForCreate(data);
       if (Object.keys(duplicateErrors).length > 0) {
         setFormErrors(duplicateErrors);
         setLoading(false);
+        setIsSubmitting(false);
         return;
       }
 
@@ -403,53 +514,82 @@ export default function BranchManagementPage() {
       if (!authConfig) return;
 
       const response = await axiosInstance.post(
-        API_URLS.BRANCH.POST_BRANCH,
-        data,
+        API_URLS.TELLE_CALLERS.POST_TELLE_CALLERS,
+        validatedData,
         authConfig
       );
 
       if (response.data?.code === 200 || response.status === 201) {
-        await fetchBranches(pagination.page, pagination.limit);
-        await fetchAllBranches();
+        await fetchTelecallers(pagination.page, pagination.limit);
+        await fetchAllTelecallers();
         setIsModalOpen(false);
-        showToast("Branch created successfully!", "success");
+        resetForm();
+        showToast("Telecaller created successfully!", "success");
       } else {
-        showToast(response.data?.message || "Failed to create branch", "error");
+        showToast(
+          response.data?.message || "Failed to create telecaller",
+          "error"
+        );
       }
     } catch (error: any) {
-      if (error.errors) {
-        const errors = error.errors.reduce(
-          (acc: Record<string, string>, curr: any) => {
-            acc[curr.path[0]] = curr.message;
+      console.error("Error creating telecaller:", error);
+
+      // Handle API errors with enhanced error parsing
+      const apiErrors = handleApiErrors(error);
+
+      if (Object.keys(apiErrors).length > 0) {
+        setFormErrors(apiErrors);
+
+        // Show specific toast for general errors
+        if (apiErrors.general) {
+          showToast(apiErrors.general, "error");
+        }
+      } else {
+        showToast("Failed to create telecaller. Please try again.", "error");
+      }
+    } finally {
+      setLoading(false);
+      setIsSubmitting(false);
+    }
+  };
+  // Update telecaller with minimal validation and duplicate checks
+  const updateTelecaller = async (id: number, data: Partial<Telecaller>) => {
+    setLoading(true);
+    setIsSubmitting(true);
+    setFormErrors({});
+
+    try {
+      console.log("Updating telecaller with data:", data);
+
+      // Filter out empty strings and undefined values
+      const filteredData = Object.fromEntries(
+        Object.entries(data).filter(
+          ([_, value]) => value !== "" && value !== undefined && value !== null
+        )
+      );
+
+      // 1. Validate with Zod schema for editing
+      const result = telecallerEditSchema.safeParse(filteredData);
+      if (!result.success) {
+        const errors = result.error.issues.reduce(
+          (acc: Record<string, string>, issue) => {
+            const field = issue.path[0] as string;
+            acc[field] = issue.message;
             return acc;
           },
           {}
         );
         setFormErrors(errors);
-      } else {
-        console.error("Error creating branch:", error);
-        const errorMessage =
-          error.response?.data?.message || "Failed to create branch";
-        showToast(errorMessage, "error");
+        setLoading(false);
+        setIsSubmitting(false);
+        return;
       }
-    } finally {
-      setLoading(false);
-    }
-  };
 
-  // Update branch with minimal validation and duplicate checks
-  const updateBranch = async (id: number, data: Partial<Branch>) => {
-    setLoading(true);
-    setFormErrors({});
-
-    try {
-      // 1. Validate with Zod schema for editing
-      branchEditSchema.parse(data);
+      const validatedData = result.data;
 
       // 2. Check for duplicates on fields that have values
-      const fieldsToCheck: Partial<Branch> = {};
-      if (data.branch_name && data.branch_name.trim())
-        fieldsToCheck.branch_name = data.branch_name;
+      const fieldsToCheck: Partial<Telecaller> = {};
+      if (data.name && data.name.trim()) fieldsToCheck.name = data.name;
       if (data.email && data.email.trim()) fieldsToCheck.email = data.email;
       if (data.contact && data.contact.trim())
         fieldsToCheck.contact = data.contact;
@@ -458,55 +598,59 @@ export default function BranchManagementPage() {
       if (Object.keys(duplicateErrors).length > 0) {
         setFormErrors(duplicateErrors);
         setLoading(false);
+        setIsSubmitting(false);
         return;
       }
 
-      // 3. Make API call with proper URL construction
+      // 3. Make API call
       const authConfig = getAuthConfig();
       if (!authConfig) return;
 
-      let updateUrl;
-      if (typeof API_URLS.BRANCH.PATCH_BRANCH === "function") {
-        updateUrl = API_URLS.BRANCH.PATCH_BRANCH(id);
-      } else {
-        updateUrl = API_URLS.BRANCH.PATCH_BRANCH.replace("{id}", id.toString());
-      }
-
-      const response = await axiosInstance.patch(updateUrl, data, authConfig);
+      const updateUrl = API_URLS.TELLE_CALLERS.PATCH_TELLE_CALLERS(id);
+      const response = await axiosInstance.patch(
+        updateUrl,
+        validatedData,
+        authConfig
+      );
 
       if (response.data?.code === 200 || response.status === 200) {
-        await fetchBranches(pagination.page, pagination.limit);
-        await fetchAllBranches();
+        await fetchTelecallers(pagination.page, pagination.limit);
+        await fetchAllTelecallers();
         setIsModalOpen(false);
-        setEditingBranch(null);
-        showToast("Branch updated successfully!", "success");
+        setEditingTelecaller(null);
+        resetForm();
+        showToast("Telecaller updated successfully!", "success");
       } else {
-        showToast(response.data?.message || "Failed to update branch", "error");
-      }
-    } catch (err: any) {
-      if (err.errors) {
-        const errors = err.errors.reduce(
-          (acc: Record<string, string>, curr: any) => {
-            acc[curr.path[0]] = curr.message;
-            return acc;
-          },
-          {}
+        showToast(
+          response.data?.message || "Failed to update telecaller",
+          "error"
         );
-        setFormErrors(errors);
+      }
+    } catch (error: any) {
+      console.error("Error updating telecaller:", error);
+
+      // Handle API errors with enhanced error parsing
+      const apiErrors = handleApiErrors(error);
+
+      if (Object.keys(apiErrors).length > 0) {
+        setFormErrors(apiErrors);
+
+        // Show specific toast for general errors
+        if (apiErrors.general) {
+          showToast(apiErrors.general, "error");
+        }
       } else {
-        console.error("Error updating branch:", err);
-        const errorMessage =
-          err.response?.data?.message || "Failed to update branch";
-        showToast(errorMessage, "error");
+        showToast("Failed to update telecaller. Please try again.", "error");
       }
     } finally {
       setLoading(false);
+      setIsSubmitting(false);
     }
   };
 
-  // Delete branch
-  const deleteBranch = async (id: number) => {
-    if (!window.confirm("Are you sure you want to delete this branch?")) {
+  // Delete telecaller
+  const deleteTelecaller = async (id: number) => {
+    if (!window.confirm("Are you sure you want to delete this telecaller?")) {
       return;
     }
 
@@ -515,35 +659,30 @@ export default function BranchManagementPage() {
       const authConfig = getAuthConfig();
       if (!authConfig) return;
 
-      let deleteUrl;
-      if (typeof API_URLS.BRANCH.DELETE_BRANCH === "function") {
-        deleteUrl = API_URLS.BRANCH.DELETE_BRANCH(id);
-      } else {
-        deleteUrl = API_URLS.BRANCH.DELETE_BRANCH.replace(
-          "{id}",
-          id.toString()
-        );
-      }
+      const deleteUrl = API_URLS.TELLE_CALLERS.DELETE_TELLE_CALLERS(id);
 
       const response = await axiosInstance.delete(deleteUrl, authConfig);
 
       if (response.data?.code === 200 || response.status === 204) {
-        await fetchBranches(pagination.page, pagination.limit);
-        await fetchAllBranches();
+        await fetchTelecallers(pagination.page, pagination.limit);
+        await fetchAllTelecallers();
         setSelectedRows((prev) =>
           prev.filter((rowId) => rowId !== id.toString())
         );
-        showToast("Branch deleted successfully!", "success");
+        showToast("Telecaller deleted successfully!", "success");
       } else {
-        showToast(response.data?.message || "Failed to delete branch", "error");
+        showToast(
+          response.data?.message || "Failed to delete telecaller",
+          "error"
+        );
       }
     } catch (err: any) {
-      console.error("Error deleting branch:", err);
+      console.error("Error deleting telecaller:", err);
       if (err.response?.status === 401) {
         showToast("Authentication failed. Please login again.", "error");
       } else {
         showToast(
-          err.response?.data?.message || "Failed to delete branch",
+          err.response?.data?.message || "Failed to delete telecaller",
           "error"
         );
       }
@@ -552,63 +691,155 @@ export default function BranchManagementPage() {
     }
   };
 
-  // Handle search
-  const handleSearch = (term: string) => {
+  // Handle search - searches across all data
+  const handleSearch = async (term: string) => {
     setSearchTerm(term);
     setIsSearching(!!term.trim());
 
     if (!term.trim()) {
-      setBranches(allBranches.slice(0, pagination.limit * pagination.page)); // Limit to paginated view
+      // Reset to paginated view when search is cleared
+      await fetchTelecallers(pagination.page, pagination.limit);
       return;
     }
 
-    const filtered = allBranches.filter(
-      (branch) =>
-        branch.branch_name.toLowerCase().includes(term.toLowerCase()) ||
-        branch.city.toLowerCase().includes(term.toLowerCase()) ||
-        branch.email.toLowerCase().includes(term.toLowerCase()) ||
-        branch.contact.includes(term) ||
-        branch.id.toString().includes(term)
-    );
-    setBranches(filtered);
+    setLoading(true);
+    try {
+      // Search across all telecallers data
+      const filtered = allTelecallers.filter(
+        (telecaller) =>
+          telecaller.name.toLowerCase().includes(term.toLowerCase()) ||
+          telecaller.email.toLowerCase().includes(term.toLowerCase()) ||
+          telecaller.contact.includes(term) ||
+          telecaller.address.toLowerCase().includes(term.toLowerCase()) ||
+          getRoleNameFromId(telecaller.role)
+            .toLowerCase()
+            .includes(term.toLowerCase()) ||
+          telecaller.id.toString().includes(term)
+      );
+      setTelecallers(filtered);
+    } catch (err) {
+      console.error("Error during search:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Reset form function
+  const resetForm = () => {
+    setFormData({
+      name: "",
+      email: "",
+      contact: "",
+      address: "",
+      role: "",
+      password: "",
+    });
+    setFormErrors({});
   };
 
   // Form submission handler
+  // Form submission handler
   const handleFormSubmit = async (data: any) => {
+    console.log("Form submitted with data:", data);
+
     const submitData = {
-      branch_name: data.branch_name || "",
-      address: data.address || "",
-      city: data.city || "",
-      email: data.email || "",
-      contact: data.contact || "",
+      name: data.name?.toString() || "",
+      email: data.email?.toString() || "",
+      contact: data.contact?.toString() || "",
+      address: data.address?.toString() || "",
+      role: parseInt(data.role), // Save as number ID, not string name
+      password: data.password?.toString() || "",
     };
-    if (editingBranch) {
-      await updateBranch(editingBranch.id, submitData);
+
+    if (editingTelecaller) {
+      const editData: Partial<Telecaller> = {};
+      if (submitData.name.trim()) editData.name = submitData.name;
+      if (submitData.email.trim()) editData.email = submitData.email;
+      if (submitData.contact.trim()) editData.contact = submitData.contact;
+      if (submitData.address.trim()) editData.address = submitData.address;
+      if (submitData.role) editData.role = submitData.role; // Save as number
+      if (submitData.password.trim()) editData.password = submitData.password;
+
+      await updateTelecaller(editingTelecaller.id, editData);
     } else {
-      await createBranch(submitData);
+      await createTelecaller(submitData as Omit<Telecaller, "id">);
     }
   };
+  const handleApiErrors = (error: any): Record<string, string> => {
+    const errors: Record<string, string> = {};
+
+    // Handle different error response formats
+    if (error.response?.data) {
+      const errorData = error.response.data;
+
+      // Check for validation errors in different formats
+      if (errorData.errors) {
+        // Format 1: { errors: { field: "message" } }
+        Object.assign(errors, errorData.errors);
+      } else if (errorData.message) {
+        // Format 2: Check message for specific error types
+        const message = errorData.message.toLowerCase();
+
+        if (message.includes("email") && message.includes("already")) {
+          errors.email = "This email address is already registered";
+        } else if (message.includes("phone") && message.includes("already")) {
+          errors.contact = "This phone number is already registered";
+        } else if (message.includes("contact") && message.includes("already")) {
+          errors.contact = "This contact number is already registered";
+        } else if (message.includes("name") && message.includes("already")) {
+          errors.name = "This name is already taken";
+        } else if (message.includes("role") && message.includes("invalid")) {
+          errors.role = "Please select a valid role";
+        } else {
+          // Generic error
+          errors.general = errorData.message;
+        }
+      }
+
+      // Check for field-specific errors in data
+      if (errorData.data?.role) {
+        errors.role = Array.isArray(errorData.data.role)
+          ? errorData.data.role[0]
+          : errorData.data.role;
+      }
+    }
+
+    return errors;
+  };
+
   // Modal handlers
   const openAddModal = () => {
-    setEditingBranch(null);
+    console.log("Opening add modal");
+    setEditingTelecaller(null);
+    resetForm();
+    setIsModalOpen(true);
+  };
+
+  const openEditModal = (telecaller: Telecaller) => {
+    console.log("Opening edit modal for:", telecaller);
+    setEditingTelecaller(telecaller);
+    setFormData({
+      name: telecaller.name || "",
+      email: telecaller.email || "",
+      contact: telecaller.contact || "",
+      address: telecaller.address || "",
+      role: telecaller.role.toString(),
+      password: "",
+    });
     setFormErrors({});
     setIsModalOpen(true);
   };
-  const openEditModal = (branch: Branch) => {
-    setEditingBranch(branch); // Set editingBranch
-    setFormErrors({});
-    setIsModalOpen(true);
-  };
+
   const closeModal = () => {
     setIsModalOpen(false);
-    setEditingBranch(null);
-    setFormErrors({});
+    setEditingTelecaller(null);
+    resetForm();
   };
 
   // Row selection handlers
   const handleSelectAll = (selected: boolean) => {
     setSelectedRows(
-      selected ? branches.map((branch) => branch.id.toString()) : []
+      selected ? telecallers.map((telecaller) => telecaller.id.toString()) : []
     );
   };
 
@@ -619,12 +850,12 @@ export default function BranchManagementPage() {
   };
 
   // Action handlers
-  const handleEdit = (branch: Branch) => {
-    openEditModal(branch);
+  const handleEdit = (telecaller: Telecaller) => {
+    openEditModal(telecaller);
   };
 
-  const handleDelete = (branch: Branch) => {
-    deleteBranch(branch.id);
+  const handleDelete = (telecaller: Telecaller) => {
+    deleteTelecaller(telecaller.id);
   };
 
   // Load initial data
@@ -634,12 +865,13 @@ export default function BranchManagementPage() {
       showToast("No access token found. Please login first.", "error");
       return;
     }
-    fetchBranches();
-    fetchAllBranches(); // Fetch all branches for duplicate checking
+    fetchTelecallers();
+    fetchAllTelecallers(); // Fetch all telecallers for search and duplicate checking
   }, []);
 
-  console.log(editingBranch);
-  
+  console.log("Current editing telecaller:", editingTelecaller);
+  console.log("Form sections:", formSections);
+
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-8">
       {toast && (
@@ -653,13 +885,13 @@ export default function BranchManagementPage() {
       <div className="max-w-7xl mx-auto">
         {/* Breadcrumb */}
         <div className="text-xs text-gray-400 mb-1">
-        Data Management {">"} Add Telecaller
+          Telecallers Management {">"} All Telecallers
         </div>
 
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
           <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4 sm:mb-0">
-          Telecaller
+            Telecallers Management
           </h1>
           <Button
             onClick={openAddModal}
@@ -667,7 +899,7 @@ export default function BranchManagementPage() {
             disabled={loading}
           >
             <Plus className="mr-2 h-4 w-4" />
-            Add Telecaller
+            Add New Telecaller
           </Button>
         </div>
 
@@ -677,7 +909,7 @@ export default function BranchManagementPage() {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             <input
               type="text"
-              placeholder="Search branches by name, city, email, contact, or ID..."
+              placeholder="Search telecallers by name, email, contact, address, role, or ID..."
               value={searchTerm}
               onChange={(e) => handleSearch(e.target.value)}
               className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -685,7 +917,7 @@ export default function BranchManagementPage() {
           </div>
           {isSearching && (
             <p className="text-sm text-gray-500 mt-2">
-              Showing {branches.length} results for "{searchTerm}"
+              Showing {telecallers.length} results for "{searchTerm}"
             </p>
           )}
         </div>
@@ -693,13 +925,12 @@ export default function BranchManagementPage() {
         {/* Table */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
           <DynamicTable
-            data={branches}
+            data={telecallers}
             columns={columns}
             onSelectAll={handleSelectAll}
             onSelectRow={handleSelectRow}
             selectedRows={selectedRows}
             rowIdKey="id"
-            // loading={loading}
             actions={[
               {
                 label: "Edit",
@@ -719,19 +950,19 @@ export default function BranchManagementPage() {
           {/* Pagination Info */}
           {!isSearching && (
             <div className="px-6 py-3 border-t border-gray-200 text-sm text-gray-500">
-              Showing {branches.length} of {pagination.total} branches (Page{" "}
-              {pagination.page} of {pagination.totalPages})
+              Showing {telecallers.length} of {pagination.total} telecallers
+              (Page {pagination.page} of {pagination.totalPages})
             </div>
           )}
         </div>
 
         {/* Add/Edit Modal */}
-        {isModalOpen && (
+        {isModalOpen && formSections.length > 0 && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
             <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
               <div className="flex items-center justify-between p-6 border-b border-gray-200">
                 <h2 className="text-lg font-semibold text-gray-900">
-                  {editingBranch ? "Edit Branch" : "Add New Branch"}
+                  {editingTelecaller ? "Edit Telecaller" : "Add New Telecaller"}
                 </h2>
                 <Button
                   variant="ghost"
@@ -745,27 +976,48 @@ export default function BranchManagementPage() {
 
               <div className="p-6">
                 <DynamicForm
-                  sections={formSections}
+                  key={editingTelecaller?.id || "new"}
+                  sections={formSections as ImportedFormSection[]}
                   onSubmit={handleFormSubmit}
-                  submitLabel={editingBranch ? "Update Branch" : "Add Branch"}
+                  submitLabel={
+                    editingTelecaller ? "Update Telecaller" : "Add Telecaller"
+                  }
                   showCancel={true}
                   onCancel={closeModal}
                   defaultValues={
-                    editingBranch
+                    editingTelecaller
                       ? {
-                          branch_name: editingBranch.branch_name || "",
-                          address: editingBranch.address || "",
-                          city: editingBranch.city || "",
-                          email: editingBranch.email || "",
-                          contact: editingBranch.contact || "",
+                          name: editingTelecaller.name || "",
+                          email: editingTelecaller.email || "",
+                          contact: editingTelecaller.contact || "",
+                          address: editingTelecaller.address || "",
+                          role: editingTelecaller.role.toString(),
+                          password: "",
                         }
-                      : {}
+                      : {
+                          name: "",
+                          email: "",
+                          contact: "",
+                          address: "",
+                          role: "2", // Default to Telecaller ID
+                          password: "",
+                        }
                   }
                   errors={formErrors}
                   validationSchema={
-                    editingBranch ? branchEditSchema : branchCreateSchema
+                    editingTelecaller
+                      ? telecallerEditSchema
+                      : telecallerCreateSchema
                   }
+                  submitButtonProps={{ disabled: isSubmitting }}
                 />
+
+                {/* Show general error message if exists */}
+                {formErrors.general && (
+                  <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md">
+                    <p className="text-sm text-red-600">{formErrors.general}</p>
+                  </div>
+                )}
               </div>
             </div>
           </div>
