@@ -4,7 +4,6 @@ import axiosInstance from "../../components/apiconfig/axios.js";
 
 const columns = [
   "Counselor",
-  "Branch",
   "Total Calls",
   "Contacted",
   "Not Contacted",
@@ -53,7 +52,7 @@ export default function ReportPage() {
     // Replace with your actual toast implementation
   };
 
-  const fetchAllReports = async (page = 1, limit = 20) => {
+  const fetchAllReports = async (page = 1, limit = 10) => {
     setLoading(true);
     try {
       const authConfig = getAuthConfig();
@@ -65,12 +64,9 @@ export default function ReportPage() {
         limit: limit.toString(),
       });
 
-      console.log(branch);
-
-      if (branch) params.append("branch", branch);
-      if (counselor) params.append("telecaller_name", counselor);
+      if (branch) params.append("branch_name", branch);
+      if (counselor) params.append("counsellor_name", counselor);
       if (search) params.append("search", search);
-      console.log(params);
 
       const response = await axiosInstance.get(
         `${API_URLS.REPORTS.GET_REPORTS}?${params.toString()}`,
@@ -210,7 +206,8 @@ export default function ReportPage() {
 
   useEffect(() => {
     const debounceTimer = setTimeout(() => {
-      handleFilterChange();
+      setPagination((prev) => ({ ...prev, currentPage: 1 }));
+      fetchAllReports(1, 10);
     }, 500);
 
     return () => clearTimeout(debounceTimer);
@@ -317,9 +314,6 @@ export default function ReportPage() {
                         <td className="px-4 py-2 font-medium text-gray-700 whitespace-nowrap">
                           {report.telecaller_name}
                         </td>
-                        <td className="px-4 py-2 text-gray-600">
-                          {report.branch_name}
-                        </td>
                         <td className="px-4 py-2">
                           <span className="inline-block w-8 h-8 bg-blue-100 text-blue-600 rounded-full text-center text-sm font-bold leading-8">
                             {report.total_calls || 0}
@@ -330,7 +324,6 @@ export default function ReportPage() {
                             {report.contacted || 0}
                           </span>
                         </td>
-
                         <td className="px-4 py-2">
                           <span className="inline-block w-8 h-8 bg-red-100 text-red-600 rounded-full text-center text-sm font-bold leading-8">
                             {report.not_contacted || 0}
@@ -356,7 +349,6 @@ export default function ReportPage() {
                             {report.negative || 0}
                           </span>
                         </td>
-
                         <td className="px-4 py-2">
                           <span className="inline-block w-8 h-8 bg-blue-100 text-blue-600 rounded-full text-center text-sm font-bold leading-8">
                             {report.walk_in_list || 0}

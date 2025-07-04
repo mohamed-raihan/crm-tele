@@ -40,5 +40,9 @@ export const API_URLS = {
     GET_ADS: "/api/mettads/",
     PATCH_ADS: (id) => `/api/mettads/${id}/`,
     DELETE_ADS: (id) => `/api/mettads/${id}/`,
-  }
+  },
+
+  DASHBOARD: {
+    GET_STATS: "/api/dashboard/",
+  },
 };
