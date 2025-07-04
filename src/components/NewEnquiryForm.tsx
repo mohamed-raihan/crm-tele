@@ -1,13 +1,32 @@
-
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { DynamicForm, FormSection, FormField } from "@/components/ui/dynamic-form";
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { z } from 'zod';
+import axiosInstance from './apiconfig/axios';
+import { API_URLS } from './apiconfig/api_urls';
 
 export function NewEnquiryForm() {
+const [telecaller,setTellecaller] = useState();
+const [formKey, setFormKey] = useState(0);
+
+  const fetchTelecaller = async()=>{
+    try{
+      const response = await axiosInstance.get(API_URLS.TELLE_CALLERS.GET_TELLE_CALLERS);
+      console.log(response);
+      // setTellecaller()
+    }catch(err){
+      console.log(err);
+    }
+
+  }
+
+  useEffect(()=>{
+    fetchTelecaller()
+  },[])
+
   // Define form fields configuration
   const enquiryFormSections: FormSection[] = [
     {
@@ -47,40 +66,21 @@ export function NewEnquiryForm() {
       ]
     },
     {
-      columns: 4,
+      columns: 3,
       fields: [
         {
-          name: 'enquirySource',
-          label: 'Enquiry Source',
+          name: 'assigned_by_id',
+          label: 'Counselor',
           type: 'select',
-          placeholder: 'Search Here',
-          required: true,
-          showAddButton: true,
-          onAddClick: () => console.log('Add enquiry source'),
-          options: [
-            { value: 'website', label: 'Website' },
-            { value: 'phone', label: 'Phone Call' },
-            { value: 'referral', label: 'Referral' },
-            { value: 'social', label: 'Social Media' }
-          ],
-          validation: z.string().min(1, 'Enquiry source is required')
-        },
-        {
-          name: 'branch',
-          label: 'Branch',
-          type: 'select',
-          placeholder: 'Search Here',
+          placeholder: 'Select Counsielor',
           required: true,
           options: [
-            { value: 'main', label: 'Main Branch' },
-            { value: 'north', label: 'North Branch' },
-            { value: 'south', label: 'South Branch' },
-            { value: 'east', label: 'East Branch' }
+            { value: '1', label: 'Bindya' },
           ],
           validation: z.string().min(1, 'Branch is required')
         },
         {
-          name: 'preferredCourse',
+          name: 'preferred_course',
           label: 'Preferred Course',
           type: 'select',
           placeholder: 'Search Here',
@@ -96,13 +96,11 @@ export function NewEnquiryForm() {
           validation: z.string().min(1, 'Preferred course is required')
         },
         {
-          name: 'requiredService',
+          name: 'required_service',
           label: 'Required Service',
           type: 'select',
           placeholder: 'Search Here',
           required: true,
-          showAddButton: true,
-          onAddClick: () => console.log('Add required service'),
           options: [
             { value: 'consultation', label: 'Consultation' },
             { value: 'admission', label: 'Admission Guidance' },
@@ -117,6 +115,26 @@ export function NewEnquiryForm() {
       columns: 2,
       fields: [
         {
+          name: 'follow_up_on',
+          label: 'Follow Up On',
+          type: 'date',
+          placeholder: 'Sep 30, 2025',
+          description: 'Set Follow up Date for Already Contacted Enquiries',
+          validation: z.date().optional()
+        },
+        {
+          name: 'enquiry_status',
+          label: 'Enquiry Status',
+          type: 'select',
+          placeholder: 'Select status',
+          required: true,
+          options: [
+            { value: 'Active', label: 'Active' },
+            { value: 'Closed', label: 'Closed' },
+          ],
+          validation: z.string().min(1, 'Required service is required')
+        },
+        {
           name: 'feedback',
           label: 'FeedBack',
           type: 'textarea',
@@ -124,26 +142,38 @@ export function NewEnquiryForm() {
           description: 'Provide Feed Back for Already Contacted Enquiries',
           validation: z.string().optional()
         },
-        {
-          name: 'followUpDate',
-          label: 'Follow Up On',
-          type: 'date',
-          placeholder: 'Sep 30, 2025',
-          description: 'Set Follow up Date for Already Contacted Enquiries',
-          validation: z.date().optional()
-        }
       ]
     }
   ];
 
-  const handleSubmit = (data: any) => {
+  const handleSubmit = async(data: any) => {
     console.log('Form submitted:', data);
+    // Format follow_up_on to YYYY-MM-DD if present
+    if (data.follow_up_on) {
+      const dateObj = new Date(data.follow_up_on);
+      if (!isNaN(dateObj.getTime())) {
+        const yyyy = dateObj.getFullYear();
+        const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
+        const dd = String(dateObj.getDate()).padStart(2, '0');
+        data.follow_up_on = `${yyyy}-${mm}-${dd}`;
+      }
+    }
+    try{
+      const response = await axiosInstance.post(API_URLS.ENQUIRY.POST_ENQUIRY,data)
+      console.log(response);
+      // Reset the form by changing the key
+      setFormKey(prev => prev + 1);
+    }catch(err){
+      console.log(err);
+      
+    }
     // Handle form submission here
   };
 
   return (
     <div className="space-y-6">
       <DynamicForm
+        key={formKey}
         title="NEW ENQUIRY"
         sections={enquiryFormSections}
         onSubmit={handleSubmit}

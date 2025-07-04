@@ -9,8 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Pencil, Trash2, X, Search } from "lucide-react";
 import { API_URLS } from "../../../components/apiconfig/api_urls.js";
-import axiosInstance from "../../../components/apiconfig/axios.js";
 import { z } from "zod";
+import axiosInstance from "@/components/apiconfig/axios.js";
 
 // Define Branch interface
 interface Branch {
@@ -327,7 +327,8 @@ export default function BranchManagementPage() {
         `${API_URLS.BRANCH.GET_BRANCH}?page=${page}&limit=${limit}`,
         authConfig
       );
-
+      console.log(response);
+      
       if (response.data?.code === 200) {
         setBranches(response.data.data || []);
         setPagination(response.data.pagination || pagination);

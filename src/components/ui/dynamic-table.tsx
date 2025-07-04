@@ -13,7 +13,7 @@ export interface TableColumn {
   key: string;
   label: string;
   sortable?: boolean;
-  render?: (value: any, row: any) => React.ReactNode;
+  render?: (value: any, row: any, index: number) => React.ReactNode;
   width?: string;
   type?: 'progress';
 }
@@ -192,7 +192,7 @@ export function DynamicTable({
                           </span>
                         </div>
                       ) : column.render ? (
-                        column.render(row[column.key], row)
+                        column.render(row[column.key], row, index)
                       ) : (
                         row[column.key]
                       )}

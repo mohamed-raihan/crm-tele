@@ -6,13 +6,11 @@ export const API_URLS = {
     POST_LOGIN: "/api/login/",
   },
 
-
   ROLES: {
     GET_ROLES: "/api/roles/",
   },
 
-
-   REPORTS: {
+  REPORTS: {
     GET_REPORTS: "/api/calls-summary/",
   },
 
@@ -40,5 +38,11 @@ export const API_URLS = {
     GET_ADS: "/api/mettads/",
     PATCH_ADS: (id) => `/api/mettads/${id}/`,
     DELETE_ADS: (id) => `/api/mettads/${id}/`,
+  },
+  ENQUIRY: {
+    POST_ENQUIRY: "/api/enquiries/",
+    GET_ENQUIRY: "/api/enquiries/",
+    PATCH_ENQUIRY: (id) => `/api/enquiries/${id}/`,
+    DELETE_ENQUIRY: (id) => `/api/enquiries/${id}/`,
   }
 };
