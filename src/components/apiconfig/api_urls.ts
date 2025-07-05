@@ -51,9 +51,15 @@ export const API_URLS = {
     DELETE_ENQUIRY: (id) => `/api/enquiries/${id}/`,
   },
   CALLS: {
+
+    GET_FOLLOW_UPS: "/api/calls/follow-ups/",
+    GET_NOT_ANSWERED: "/api/calls/not-answered/",
+    GET_WALKIN_LIST: "/api/calls/walk-in-list/",
+
     POST_CALLS: '/api/calls/',
     GET_CALLS:"/api/calls/",
     PATCH_CALLS: (id)=> `/api/calls/${id}/`,
     DELETE_CALLLS: (id)=> `/api/calls/${id}/`
+
   }
 };

@@ -8,113 +8,157 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { FileDown, Search, RefreshCw, PhoneOff } from "lucide-react";
 import axiosInstance from "@/components/apiconfig/axios";
+import { API_URLS } from "@/components/apiconfig/api_urls";
 
 interface NotAnsweredData {
   id: number;
-  customer_name: string;
-  phone_number: string;
-  email: string;
-  call_date: string;
-  call_time: string;
-  reason: string;
-  notes: string;
+  enquiry_details: {
+    id: number;
+    candidate_name: string;
+    phone: string;
+    email: string;
+    preferred_course: string;
+    enquiry_status: string;
+  };
   telecaller_name: string;
-  attempt_count: number;
-  last_attempt_date: string;
+  branch_name: string;
+  call_type: string;
+  call_status: string;
+  call_outcome: string;
+  call_duration: string | null;
+  call_duration_formatted: string | null;
+  call_start_time: string;
+  call_end_time: string | null;
+  notes: string | null;
+  follow_up_date: string | null;
+  next_action: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+interface Pagination {
+  currentPage: number;
+  totalPages: number;
+  totalRecords: number;
+  limit: number;
+}
+
+function formatDate(dateStr: string | null | undefined) {
+  if (!dateStr) return "";
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return dateStr;
+  return d.toLocaleString();
 }
 
 const NotAnsweredPage = () => {
   const [notAnswered, setNotAnswered] = useState<NotAnsweredData[]>([]);
   const [loading, setLoading] = useState(false);
   const [filters, setFilters] = useState({
-    customer_name: "",
-    phone_number: "",
+    candidate_name: "",
+    phone: "",
     email: "",
-    reason: "",
-    call_date: "",
+    call_status: "",
+    call_start_time: "",
     telecaller_name: "",
   });
+  const [pagination, setPagination] = useState<Pagination>({
+    currentPage: 1,
+    totalPages: 1,
+    totalRecords: 0,
+    limit: 10,
+  });
 
-  const fetchNotAnswered = async (params = {}) => {
+  const fetchNotAnswered = async (page = 1) => {
     setLoading(true);
     try {
       const token = localStorage.getItem("access_token");
       if (!token) return;
 
       const queryParams = new URLSearchParams();
-      
-      // Add filters to query params
-      Object.entries({ ...filters, ...params }).forEach(([key, value]) => {
-        if (value) {
-          queryParams.append(key, value);
-        }
+      queryParams.append("page", page.toString());
+      queryParams.append("limit", pagination.limit.toString());
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value) queryParams.append(key, value);
       });
 
-      const response = await axiosInstance.get(`/calls/not-answered/?${queryParams}`, {
+      const response = await axiosInstance.get(`${API_URLS.CALLS.GET_NOT_ANSWERED}?${queryParams}`, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
       });
 
-      if (response.data) {
-        setNotAnswered(response.data);
+      if (response.data?.code === 200) {
+        setNotAnswered(response.data.data || []);
+        if (response.data.pagination) {
+          setPagination((prev) => ({ ...prev, ...response.data.pagination }));
+        }
+      } else {
+        setNotAnswered([]);
       }
     } catch (error) {
-      console.error("Error fetching not answered calls:", error);
+      setNotAnswered([]);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchNotAnswered();
+    fetchNotAnswered(1);
   }, []);
 
   const handleFilterChange = (field: string, value: string) => {
-    setFilters(prev => ({
-      ...prev,
-      [field]: value
-    }));
+    setFilters((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleSearch = () => {
-    fetchNotAnswered();
+    fetchNotAnswered(1);
   };
 
   const handleReset = () => {
     setFilters({
-      customer_name: "",
-      phone_number: "",
+      candidate_name: "",
+      phone: "",
       email: "",
-      reason: "",
-      call_date: "",
+      call_status: "",
+      call_start_time: "",
       telecaller_name: "",
     });
-    fetchNotAnswered();
+    fetchNotAnswered(1);
+  };
+
+  const handlePageChange = (newPage: number) => {
+    fetchNotAnswered(newPage);
   };
 
   const exportToExcel = () => {
-    // Create CSV content
-    const headers = ["ID", "Customer Name", "Phone Number", "Email", "Call Date", "Call Time", "Reason", "Notes", "Telecaller Name", "Attempt Count", "Last Attempt Date"];
+    const headers = [
+      "ID",
+      "Candidate Name",
+      "Phone",
+      "Email",
+      "Call Status",
+      "Call Outcome",
+      "Call Start Time",
+      "Telecaller Name",
+      "Branch Name",
+      "Created At",
+    ];
     const csvContent = [
       headers.join(","),
-      ...notAnswered.map(item => [
+      ...notAnswered.map((item) => [
         item.id,
-        `"${item.customer_name}"`,
-        item.phone_number,
-        `"${item.email}"`,
-        item.call_date,
-        item.call_time,
-        `"${item.reason}"`,
-        `"${item.notes}"`,
-        `"${item.telecaller_name}"`,
-        item.attempt_count,
-        item.last_attempt_date
-      ].join(","))
+        `"${item.enquiry_details?.candidate_name || ""}"`,
+        item.enquiry_details?.phone || "",
+        `"${item.enquiry_details?.email || ""}"`,
+        item.call_status,
+        item.call_outcome,
+        item.call_start_time,
+        item.telecaller_name,
+        item.branch_name,
+        item.created_at,
+      ].join(",")),
     ].join("\n");
-
-    // Create and download file
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const link = document.createElement("a");
     const url = URL.createObjectURL(blob);
@@ -144,20 +188,20 @@ const NotAnsweredPage = () => {
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 <div>
-                  <Label htmlFor="customer_name">Customer Name</Label>
+                  <Label htmlFor="candidate_name">Candidate Name</Label>
                   <Input
-                    id="customer_name"
-                    value={filters.customer_name}
-                    onChange={(e) => handleFilterChange("customer_name", e.target.value)}
-                    placeholder="Enter customer name"
+                    id="candidate_name"
+                    value={filters.candidate_name}
+                    onChange={(e) => handleFilterChange("candidate_name", e.target.value)}
+                    placeholder="Enter candidate name"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="phone_number">Phone Number</Label>
+                  <Label htmlFor="phone">Phone</Label>
                   <Input
-                    id="phone_number"
-                    value={filters.phone_number}
-                    onChange={(e) => handleFilterChange("phone_number", e.target.value)}
+                    id="phone"
+                    value={filters.phone}
+                    onChange={(e) => handleFilterChange("phone", e.target.value)}
                     placeholder="Enter phone number"
                   />
                 </div>
@@ -171,27 +215,24 @@ const NotAnsweredPage = () => {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="reason">Reason</Label>
-                  <Select value={filters.reason} onValueChange={(value) => handleFilterChange("reason", value)}>
+                  <Label htmlFor="call_status">Call Status</Label>
+                  <Select value={filters.call_status} onValueChange={(value) => handleFilterChange("call_status", value)}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Select reason" />
+                      <SelectValue placeholder="Select status" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="no_answer">No Answer</SelectItem>
-                      <SelectItem value="busy">Busy</SelectItem>
-                      <SelectItem value="rejected">Rejected</SelectItem>
-                      <SelectItem value="wrong_number">Wrong Number</SelectItem>
-                      <SelectItem value="voicemail">Voicemail</SelectItem>
+                      <SelectItem value="not_answered">Not Answered</SelectItem>
+                      <SelectItem value="do_not_call">Do Not Call</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
                 <div>
-                  <Label htmlFor="call_date">Call Date</Label>
+                  <Label htmlFor="call_start_time">Call Start Time</Label>
                   <Input
-                    id="call_date"
+                    id="call_start_time"
                     type="date"
-                    value={filters.call_date}
-                    onChange={(e) => handleFilterChange("call_date", e.target.value)}
+                    value={filters.call_start_time}
+                    onChange={(e) => handleFilterChange("call_start_time", e.target.value)}
                   />
                 </div>
                 <div>
@@ -224,7 +265,7 @@ const NotAnsweredPage = () => {
           {/* Results Table */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Not Answered Calls ({notAnswered.length})</CardTitle>
+              <CardTitle className="text-lg">Not Answered Calls </CardTitle>
             </CardHeader>
             <CardContent>
               {loading ? (
@@ -238,58 +279,78 @@ const NotAnsweredPage = () => {
                     <TableHeader>
                       <TableRow>
                         <TableHead>ID</TableHead>
-                        <TableHead>Customer Name</TableHead>
-                        <TableHead>Phone Number</TableHead>
+                        <TableHead>Candidate Name</TableHead>
+                        <TableHead>Phone</TableHead>
                         <TableHead>Email</TableHead>
-                        <TableHead>Call Date</TableHead>
-                        <TableHead>Call Time</TableHead>
-                        <TableHead>Reason</TableHead>
-                        <TableHead>Notes</TableHead>
+                        <TableHead>Call Status</TableHead>
+                        <TableHead>Call Outcome</TableHead>
+                        <TableHead>Call Start Time</TableHead>
                         <TableHead>Telecaller Name</TableHead>
-                        <TableHead>Attempt Count</TableHead>
-                        <TableHead>Last Attempt</TableHead>
+                        <TableHead>Branch Name</TableHead>
+                        <TableHead>Created At</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {notAnswered.length === 0 ? (
                         <TableRow>
-                          <TableCell colSpan={11} className="text-center py-8 text-gray-500">
+                          <TableCell colSpan={10} className="text-center py-8 text-gray-500">
                             No not answered calls found
                           </TableCell>
                         </TableRow>
                       ) : (
-                        notAnswered.map((call) => (
-                          <TableRow key={call.id}>
-                            <TableCell>{call.id}</TableCell>
-                            <TableCell>{call.customer_name}</TableCell>
-                            <TableCell>{call.phone_number}</TableCell>
-                            <TableCell>{call.email}</TableCell>
-                            <TableCell>{call.call_date}</TableCell>
-                            <TableCell>{call.call_time}</TableCell>
-                            <TableCell>
-                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                                call.reason === 'no_answer' ? 'bg-gray-100 text-gray-800' :
-                                call.reason === 'busy' ? 'bg-yellow-100 text-yellow-800' :
-                                call.reason === 'rejected' ? 'bg-red-100 text-red-800' :
-                                call.reason === 'wrong_number' ? 'bg-orange-100 text-orange-800' :
-                                'bg-blue-100 text-blue-800'
-                              }`}>
-                                {call.reason.replace('_', ' ')}
-                              </span>
-                            </TableCell>
-                            <TableCell className="max-w-xs truncate">{call.notes}</TableCell>
-                            <TableCell>{call.telecaller_name}</TableCell>
-                            <TableCell>
-                              <span className="px-2 py-1 bg-gray-100 text-gray-800 rounded-full text-xs font-medium">
-                                {call.attempt_count}
-                              </span>
-                            </TableCell>
-                            <TableCell>{call.last_attempt_date}</TableCell>
+                        notAnswered.map((item) => (
+                          <TableRow key={item.id}>
+                            <TableCell>{item.id}</TableCell>
+                            <TableCell>{item.enquiry_details?.candidate_name}</TableCell>
+                            <TableCell>{item.enquiry_details?.phone}</TableCell>
+                            <TableCell>{item.enquiry_details?.email}</TableCell>
+                            <TableCell>{item.call_status}</TableCell>
+                            <TableCell>{item.call_outcome}</TableCell>
+                            <TableCell>{formatDate(item.call_start_time)}</TableCell>
+                            <TableCell>{item.telecaller_name}</TableCell>
+                            <TableCell>{item.branch_name}</TableCell>
+                            <TableCell>{formatDate(item.created_at)}</TableCell>
                           </TableRow>
                         ))
                       )}
                     </TableBody>
                   </Table>
+                </div>
+              )}
+              {/* Pagination */}
+              {pagination.totalPages > 1 && (
+                <div className="mt-6 flex justify-between items-center">
+                  <div className="text-sm text-gray-600">
+                    Showing {(pagination.currentPage - 1) * pagination.limit + 1} to {Math.min(pagination.currentPage * pagination.limit, pagination.totalRecords)} of {pagination.totalRecords} entries
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={pagination.currentPage === 1}
+                      onClick={() => handlePageChange(pagination.currentPage - 1)}
+                    >
+                      Previous
+                    </Button>
+                    {[...Array(pagination.totalPages)].map((_, index) => (
+                      <Button
+                        key={index}
+                        variant={pagination.currentPage === index + 1 ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => handlePageChange(index + 1)}
+                      >
+                        {index + 1}
+                      </Button>
+                    ))}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={pagination.currentPage === pagination.totalPages}
+                      onClick={() => handlePageChange(pagination.currentPage + 1)}
+                    >
+                      Next
+                    </Button>
+                  </div>
                 </div>
               )}
             </CardContent>
