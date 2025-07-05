@@ -1,37 +1,22 @@
 import React, { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { API_URLS } from "@/components/apiconfig/api_urls";
 import axiosInstance from "@/components/apiconfig/axios";
-import { RefreshCw, Download } from "lucide-react";
+import { RefreshCw } from "lucide-react";
 
-interface WalkInData {
-  id: number;
+interface JobData {
   enquiry_id: number;
-  enquiry_details: {
-    id: number;
-    candidate_name: string;
-    phone: string;
-    email: string;
-    preferred_course: string;
-    enquiry_status: string;
-  };
+  name: string;
+  contact: string;
+  email: string;
+  status: string;
+  outcome: string;
   telecaller_name: string;
-  branch_name: string;
-  call_type: string;
-  call_status: string;
-  call_outcome: string;
-  call_duration: string | null;
-  call_duration_formatted: string | null;
-  call_start_time: string;
-  call_end_time: string | null;
-  notes: string | null;
-  follow_up_date: string | null;
-  next_action: string | null;
-  created_at: string;
-  updated_at: string;
+  assigned_date: string;
 }
 
 interface Pagination {
@@ -40,13 +25,14 @@ interface Pagination {
   limit: number;
 }
 
-const WalkInListPage = () => {
-  const [walkIns, setWalkIns] = useState<WalkInData[]>([]);
+const MyJobPage = () => {
+  const { tab } = useParams<{ tab: string }>();
+  const [jobs, setJobs] = useState<JobData[]>([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
   const [pagination, setPagination] = useState<Pagination>({ total: 0, page: 1, limit: 10 });
 
-  const fetchWalkIns = async (page = 1, searchValue = search) => {
+  const fetchJobs = async (page = 1, status = tab || "remaining", name = search) => {
     setLoading(true);
     try {
       const token = localStorage.getItem("access_token");
@@ -54,77 +40,43 @@ const WalkInListPage = () => {
       const params = new URLSearchParams({
         page: page.toString(),
         limit: pagination.limit.toString(),
+        status,
       });
-      if (searchValue) params.append("search", searchValue);
-      const response = await axiosInstance.get(`${API_URLS.CALLS.GET_WALKIN_LIST}?${params.toString()}`, {
+      if (name) params.append("name", name);
+      const response = await axiosInstance.get(`/api/jobs-summary/?${params.toString()}`, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
       });
       if (response.data?.code === 200) {
-        setWalkIns(response.data.data || []);
+        setJobs(response.data.data || []);
         if (response.data.pagination) {
           setPagination((prev) => ({ ...prev, ...response.data.pagination }));
         } else {
           setPagination((prev) => ({ ...prev, total: response.data.data?.length || 0 }));
         }
       } else {
-        setWalkIns([]);
+        setJobs([]);
       }
     } catch {
-      setWalkIns([]);
+      setJobs([]);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchWalkIns(1);
+    fetchJobs(1, tab, search);
     // eslint-disable-next-line
-  }, []);
+  }, [tab]);
 
   const handleSearch = () => {
-    fetchWalkIns(1, search);
+    fetchJobs(1, tab, search);
   };
 
   const handlePageChange = (newPage: number) => {
-    fetchWalkIns(newPage, search);
-  };
-
-  const exportToExcel = async () => {
-    try {
-      const token = localStorage.getItem("access_token");
-      if (!token) return;
-      const params = new URLSearchParams({
-        page: pagination.page.toString(),
-        limit: pagination.limit.toString(),
-      });
-      if (search) params.append("search", search);
-      params.append("export", "excel");
-      const response = await axiosInstance.get(`${API_URLS.CALLS.GET_WALKIN_LIST}?${params.toString()}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        responseType: "blob",
-      });
-      // Create blob and download
-      const blob = new Blob([response.data], {
-        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      });
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `walkin_list_${new Date().toISOString().split("T")[0]}.xlsx`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-    } catch (err) {
-      // Optionally show a toast or error
-      console.error("Failed to export walk-in list", err);
-    }
+    fetchJobs(newPage, tab, search);
   };
 
   return (
@@ -132,13 +84,13 @@ const WalkInListPage = () => {
       <div className="max-w-7xl mx-auto w-full">
         <Card className="mb-6">
           <CardHeader>
-            <CardTitle className="text-2xl font-bold">Walk-in List</CardTitle>
+            <CardTitle className="text-2xl font-bold">My Job - {tab === "completed" ? "Completed" : "Remaining"}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex flex-row items-center gap-2 mb-4">
               <Input
                 type="text"
-                placeholder="Search by candidate name or phone..."
+                placeholder="Search by name..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="w-full md:w-64"
@@ -147,54 +99,45 @@ const WalkInListPage = () => {
               <Button onClick={handleSearch} variant="outline" className="w-auto">
                 Search
               </Button>
-              <Button onClick={exportToExcel} variant="outline" className="w-auto flex items-center gap-1">
-                <Download className="w-4 h-4" /> Export to Excel
-              </Button>
             </div>
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead>ID</TableHead>
-                    <TableHead>Candidate Name</TableHead>
-                    <TableHead>Phone</TableHead>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Contact</TableHead>
                     <TableHead>Email</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Outcome</TableHead>
                     <TableHead>Telecaller</TableHead>
-                    <TableHead>Branch</TableHead>
-                    <TableHead>Call Type</TableHead>
-                    <TableHead>Call Status</TableHead>
-                    <TableHead>Call Outcome</TableHead>
-                    <TableHead>Start Time</TableHead>
-                    <TableHead>Created At</TableHead>
+                    <TableHead>Assigned Date</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {loading ? (
                     <TableRow>
-                      <TableCell colSpan={11} className="text-center py-8">
+                      <TableCell colSpan={8} className="text-center py-8">
                         <RefreshCw className="w-6 h-6 animate-spin mx-auto" />
                       </TableCell>
                     </TableRow>
-                  ) : walkIns.length === 0 ? (
+                  ) : jobs.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={11} className="text-center py-8 text-gray-500">
-                        No walk-in data found
+                      <TableCell colSpan={8} className="text-center py-8 text-gray-500">
+                        No jobs found
                       </TableCell>
                     </TableRow>
                   ) : (
-                    walkIns.map((item) => (
-                      <TableRow key={item.id}>
-                        <TableCell>{item.id}</TableCell>
-                        <TableCell>{item.enquiry_details?.candidate_name}</TableCell>
-                        <TableCell>{item.enquiry_details?.phone}</TableCell>
-                        <TableCell>{item.enquiry_details?.email}</TableCell>
-                        <TableCell>{item.telecaller_name}</TableCell>
-                        <TableCell>{item.branch_name}</TableCell>
-                        <TableCell>{item.call_type}</TableCell>
-                        <TableCell>{item.call_status}</TableCell>
-                        <TableCell>{item.call_outcome}</TableCell>
-                        <TableCell>{item.call_start_time}</TableCell>
-                        <TableCell>{item.created_at}</TableCell>
+                    jobs.map((job) => (
+                      <TableRow key={job.enquiry_id}>
+                        <TableCell>{job.enquiry_id}</TableCell>
+                        <TableCell>{job.name}</TableCell>
+                        <TableCell>{job.contact}</TableCell>
+                        <TableCell>{job.email}</TableCell>
+                        <TableCell>{job.status}</TableCell>
+                        <TableCell>{job.outcome}</TableCell>
+                        <TableCell>{job.telecaller_name}</TableCell>
+                        <TableCell>{job.assigned_date}</TableCell>
                       </TableRow>
                     ))
                   )}
@@ -244,4 +187,4 @@ const WalkInListPage = () => {
   );
 };
 
-export default WalkInListPage;
+export default MyJobPage; 

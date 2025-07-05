@@ -21,6 +21,7 @@ import ReportPage from "./report/page";
 import AdsPage from "./admin/ads/page";
 import FollowUpsPage from "./calls/follow-ups/page";
 import NotAnsweredPage from "./calls/not-answered/page";
+import MyJobPage from "./my-job/page";
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
@@ -186,6 +187,18 @@ export function AppRouter() {
           </TelecallerRoute>
         }
       />
+      <Route
+        path="/my-job"
+        element={<Navigate to="/my-job/remaining" replace />}
+      />
+      <Route
+        path="/my-job/:tab"
+        element={
+          <TelecallerRoute>
+            <MyJobPage />
+          </TelecallerRoute>
+        }
+      />
 
       {/* Shared Routes */}
       <Route
@@ -214,6 +227,14 @@ export function AppRouter() {
       />
 
       {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+      <Route
+        path="/walk-in-list"
+        element={
+          <TelecallerRoute>
+            <WalkInListPage />
+          </TelecallerRoute>
+        }
+      />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
