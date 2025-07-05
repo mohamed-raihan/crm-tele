@@ -8,8 +8,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Pencil, Trash2, X, Search } from "lucide-react";
-import { API_URLS } from "../../../components/apiconfig/api_urls.js";
-import axiosInstance from "../../../components/apiconfig/axios.js";
+import { API_URLS } from "../../../components/apiconfig/api_urls.ts";
+import axiosInstance from "../../../components/apiconfig/axios.ts";
 import { z } from "zod";
 
 // Define Telecaller interface

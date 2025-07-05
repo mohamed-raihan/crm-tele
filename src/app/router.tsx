@@ -75,6 +75,14 @@ export function AppRouter() {
           </AdminRoute>
         }
       />
+      <Route
+        path="/leads/profile/:id"
+        element={
+          <AdminRoute>
+            <EnquiryProfilePage />
+          </AdminRoute>
+        }
+      />
       <Route path="/admin/not-answer" element={<AdminRoute><NotAnswerPage /></AdminRoute>} />
       <Route path="/admin/reports" element={<AdminRoute><ReportPage /></AdminRoute>} />
       <Route path="/admin/settings" element={<AdminRoute><div>Settings Page</div></AdminRoute>} />
