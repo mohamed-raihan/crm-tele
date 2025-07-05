@@ -1,8 +1,12 @@
 
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { EnquiryProfile } from "@/components/EnquiryProfile";
+import { useParams } from "react-router-dom";
 
 export default function EnquiryProfilePage() {
+  const { id } = useParams()
+  console.log(id);
+  
   return (
     <div className="flex-1 flex flex-col">
       <DashboardHeader />
@@ -19,7 +23,7 @@ export default function EnquiryProfilePage() {
           <h1 className="text-2xl font-semibold text-gray-900">Enquiry Profile</h1>
         </div>
 
-        <EnquiryProfile />
+        <EnquiryProfile id={id}/>
       </main>
     </div>
   );

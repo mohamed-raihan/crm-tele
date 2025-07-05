@@ -83,7 +83,7 @@ const activeEnquiries = [
 export function ActiveEnquiryTable() {
   const navigate = useNavigate();
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
-  const [Enquiries,setEnquiry] = useState([])
+  const [Enquiries, setEnquiry] = useState([]);
   const [filters, setFilters] = useState<TableFilter[]>([
     {
       key: 'time',
@@ -101,12 +101,14 @@ export function ActiveEnquiryTable() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(5); // Default to 5, update if API returns total
   const pageSize = 10;
+  const [loading, setLoading] = useState(false);
 
   const removeFilter = (key: string) => {
     setFilters(filters.filter(f => f.key !== key));
   };
 
   const fetchEnquiry = async (pageNum = 1) => {
+    setLoading(true);
     try {
       const response = await axiosInstance.get(`${API_URLS.ENQUIRY.GET_ENQUIRY}?page=${pageNum}`);
       setEnquiry(response.data.data);
@@ -118,6 +120,8 @@ export function ActiveEnquiryTable() {
       }
     } catch (err) {
       console.log(err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -218,21 +222,30 @@ export function ActiveEnquiryTable() {
 
   return (
     <>
-      <DynamicTable
-        data={Enquiries}
-        columns={columns}
-        actions={actions}
-        filters={filters}
-        searchPlaceholder="Search"
-        onSearch={handleSearch}
-        onSelectAll={handleSelectAll}
-        onSelectRow={handleSelectRow}
-        selectedRows={selectedRows}
-        rowIdKey="id"
-        showBulkActions={true}
-        bulkActions={bulkActions}
-        exportActions={exportActions}
-      />
+      {loading ? (
+        <div className="flex justify-center items-center min-h-[200px]">
+          <svg className="animate-spin h-8 w-8 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+          </svg>
+        </div>
+      ) : (
+        <DynamicTable
+          data={Enquiries}
+          columns={columns}
+          actions={actions}
+          filters={filters}
+          searchPlaceholder="Search"
+          onSearch={handleSearch}
+          onSelectAll={handleSelectAll}
+          onSelectRow={handleSelectRow}
+          selectedRows={selectedRows}
+          rowIdKey="id"
+          showBulkActions={true}
+          bulkActions={bulkActions}
+          exportActions={exportActions}
+        />
+      )}
       <Pagination className="mt-4">
         <PaginationContent>
           <PaginationItem>

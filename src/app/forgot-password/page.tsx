@@ -11,8 +11,9 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import axiosInstance from "../../components/apiconfig/axios.js";
-import { API_URLS } from "../../components/apiconfig/api_urls.js";
+import axiosInstance from "@/components/apiconfig/axios";
+import { API_URLS } from "@/components/apiconfig/api_urls";
+
 
 const ForgotPasswordPage = () => {
   const navigate = useNavigate();

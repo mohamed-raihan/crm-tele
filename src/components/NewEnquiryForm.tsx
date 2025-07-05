@@ -10,13 +10,23 @@ import { API_URLS } from './apiconfig/api_urls';
 
 export function NewEnquiryForm() {
 const [telecaller,setTellecaller] = useState();
+const [counselorOptions, setCounselorOptions] = useState<{ value: string, label: string }[]>([]);
 const [formKey, setFormKey] = useState(0);
 
   const fetchTelecaller = async()=>{
     try{
       const response = await axiosInstance.get(API_URLS.TELLE_CALLERS.GET_TELLE_CALLERS);
       console.log(response);
-      // setTellecaller()
+      setTellecaller(response.data.data)
+      // Map response to options for select
+      if (Array.isArray(response.data.data)) {
+        setCounselorOptions(
+          response.data.data.map((item: any) => ({
+            value: String(item.id),
+            label: item.name || item.username || item.email || `Counselor ${item.id}`
+          }))
+        );
+      }
     }catch(err){
       console.log(err);
     }
@@ -74,9 +84,7 @@ const [formKey, setFormKey] = useState(0);
           type: 'select',
           placeholder: 'Select Counsielor',
           required: true,
-          options: [
-            { value: '1', label: 'Bindya' },
-          ],
+          options: counselorOptions,
           validation: z.string().min(1, 'Branch is required')
         },
         {
@@ -85,7 +93,7 @@ const [formKey, setFormKey] = useState(0);
           type: 'select',
           placeholder: 'Search Here',
           required: true,
-          showAddButton: true,
+          // showAddButton: true,
           onAddClick: () => console.log('Add preferred course'),
           options: [
             { value: 'engineering', label: 'Engineering' },
