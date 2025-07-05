@@ -9,7 +9,9 @@ import {
   Headphones,
   Clock,
   CheckCircle,
-  PhoneOff
+  PhoneOff,
+  Briefcase,
+  ChevronDown
 } from "lucide-react"
 import { Link, useLocation } from "react-router-dom"
 import {
@@ -24,6 +26,7 @@ import {
   SidebarHeader,
   SidebarFooter,
 } from "@/components/ui/sidebar"
+import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible"
 
 const navigationItems = [
   {
@@ -32,14 +35,14 @@ const navigationItems = [
     icon: Home,
   },
   {
-    title: "My Leads",
+    title: "My Enquiry",
     url: "/leads",
     icon: Target,
   },
   {
-    title: "Call Queue",
-    url: "/call-queue",
-    icon: Phone,
+    title: "Walk-in List",
+    url: "/walk-in-list",
+    icon: Calendar,
   },
   {
     title: "Follow Ups",
@@ -56,39 +59,52 @@ const navigationItems = [
     url: "/calls/not-answered",
     icon: PhoneOff,
   },
-  {
-    title: "Call History",
-    url: "/call-history",
-    icon: Headphones,
-  },
+  // {
+  //   title: "Call History",
+  //   url: "/call-history",
+  //   icon: Headphones,
+  // },
   // {
   //   title: "My Schedule",
   //   url: "/schedule",
   //   icon: Clock,
   // },
-  {
-    title: "Completed Calls",
-    url: "/completed-calls",
-    icon: CheckCircle,
-  },
-  {
-    title: "Documents",
-    url: "/documents",
-    icon: FileText,
-  },
+  // {
+  //   title: "Completed Calls",
+  //   url: "/completed-calls",
+  //   icon: CheckCircle,
+  // },
+  // {
+  //   title: "Documents",
+  //   url: "/documents",
+  //   icon: FileText,
+  // },
 ]
 
+const myJobSubItems = [
+  {
+    title: "Remaining",
+    url: "/my-job/remaining",
+    icon: Briefcase,
+  },
+  {
+    title: "Completed",
+    url: "/my-job/completed",
+    icon: Briefcase,
+  },
+];
+
 const quickActions = [
-  {
-    title: "New Lead",
-    url: "/leads/new",
-    icon: UserPlus,
-  },
-  {
-    title: "Settings",
-    url: "/settings",
-    icon: Settings,
-  },
+  // {
+  //   title: "New Lead",
+  //   url: "/leads/new",
+  //   icon: UserPlus,
+  // },
+  // {
+  //   title: "Settings",
+  //   url: "/settings",
+  //   icon: Settings,
+  // },
 ]
 
 export function AppSidebar() {
@@ -107,7 +123,7 @@ export function AppSidebar() {
           </div>
         </div>
       </SidebarHeader>
-      
+        
       <SidebarContent className="px-3 py-4">
         <SidebarGroup>
           <SidebarGroupLabel className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">
@@ -132,13 +148,42 @@ export function AppSidebar() {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               ))}
+              {/* My Job Collapsible */}
+              <SidebarMenuItem>
+                <Collapsible>
+                  <CollapsibleTrigger asChild>
+                    <SidebarMenuButton className="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors">
+                      <Briefcase className="h-4 w-4" />
+                      <span>My Job</span>
+                      <ChevronDown className="ml-auto h-4 w-4 transition-transform data-[state=open]:rotate-180" />
+                    </SidebarMenuButton>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    {myJobSubItems.map((sub) => (
+                      <SidebarMenuButton asChild className="w-full pl-8" key={sub.title}>
+                        <Link
+                          to={sub.url}
+                          className={`flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                            location.pathname === sub.url
+                              ? "bg-green-100 text-green-900"
+                              : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                          }`}
+                        >
+                          <sub.icon className="h-4 w-4" />
+                          <span>{sub.title}</span>
+                        </Link>
+                      </SidebarMenuButton>
+                    ))}
+                  </CollapsibleContent>
+                </Collapsible>
+              </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
 
         <SidebarGroup className="mt-6">
           <SidebarGroupLabel className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">
-            Quick Actions
+            {/* Quick Actions */}
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
@@ -153,8 +198,8 @@ export function AppSidebar() {
                           : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
                       }`}
                     >
-                      <item.icon className="h-4 w-4" />
-                      <span>{item.title}</span>
+                      {/* <item.icon className="h-4 w-4" />
+                      <span>{item.title}</span> */}
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
