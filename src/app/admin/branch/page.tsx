@@ -8,10 +8,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Pencil, Trash2, X, Search } from "lucide-react";
-import { API_URLS } from "../../../components/apiconfig/api_urls.js";
 import { z } from "zod";
 import { useToast } from "@/components/ui/use-toast";
 import axiosInstance from "@/components/apiconfig/axios.js";
+import { API_URLS } from "@/components/apiconfig/api_urls";
 
 // Define Branch interface
 interface Branch {
