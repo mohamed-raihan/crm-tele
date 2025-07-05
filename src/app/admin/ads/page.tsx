@@ -7,9 +7,9 @@ import { Input } from "@/components/ui/input";
 import { DynamicTable, TableColumn, TableAction } from "@/components/ui/dynamic-table";
 import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { Plus, Edit, Trash2 } from "lucide-react";
-import axiosInstance from "@/components/apiconfig/axios.js";
+import axiosInstance from "@/components/apiconfig/axios.ts";
 import { useToast } from "@/components/ui/use-toast";
-import { API_URLS } from "@/components/apiconfig/api_urls.js";
+import { API_URLS } from "@/components/apiconfig/api_urls.ts";
 
 interface Ad {
   id: string;
@@ -57,7 +57,6 @@ export default function AdsPage() {
     try {
       if(ad.id){
         await axiosInstance.patch(API_URLS.ADS.PATCH_ADS(ad.id), { name: ad.name });
-        toast({ title: "Ad updated successfully" });
       }else{
         await axiosInstance.post(API_URLS.ADS.POST_ADS, { name: ad.name });
         toast({ title: "Ad added successfully" });

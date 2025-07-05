@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { API_URLS } from "../../components/apiconfig/api_urls.js";
-import axiosInstance from "../../components/apiconfig/axios.js";
+import axiosInstance from "../../components/apiconfig/axios.ts";
 
 const columns = [
   "Counselor",
