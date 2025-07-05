@@ -39,6 +39,10 @@ export const API_URLS = {
     PATCH_ADS: (id) => `/api/mettads/${id}/`,
     DELETE_ADS: (id) => `/api/mettads/${id}/`,
   },
+
+  DASHBOARD: {
+    GET_STATS: "/api/dashboard/",
+  },
   ENQUIRY: {
     POST_ENQUIRY: "/api/enquiries/",
     GET_ENQUIRY: "/api/enquiries/",

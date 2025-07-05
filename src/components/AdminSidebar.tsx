@@ -66,12 +66,12 @@ const navigationItems = [
       }
     ]
   },
-  {
-    title: "Executive",
-    url: "/admin/telecallers",
-    icon: Users,
-    type: "single"
-  },
+  // {
+  //   title: "Executive",
+  //   url: "/admin/telecallers",
+  //   icon: Users,
+  //   type: "single"
+  // },
   {
     title: "Walk-in List",
     url: "/admin/walk-ins",

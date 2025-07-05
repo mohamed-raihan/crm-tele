@@ -11,6 +11,7 @@ import { Plus, Pencil, Trash2, X, Search } from "lucide-react";
 import { API_URLS } from "../../../components/apiconfig/api_urls.ts";
 import axiosInstance from "../../../components/apiconfig/axios.ts";
 import { z } from "zod";
+import { useToast } from "@/components/ui/use-toast";
 
 // Define Telecaller interface
 
@@ -22,6 +23,7 @@ interface Telecaller {
   address: string;
   role: number;
   password?: string;
+  password_display?: string; // For preview only
   createdAt?: string;
   updatedAt?: string;
 }
@@ -86,7 +88,7 @@ const telecallerCreateSchema = z.object({
     .regex(/^[0-9]{10,15}$/, "Contact must be 10-15 digits")
     .min(1, "Contact is required"),
   address: z.string().min(5, "Address must be at least 5 characters"),
-  role: z.string().min(1, "Role is required"), // Keep as string for the ID
+  role: z.string().min(1, "Role is required"), 
   password: z.string().min(6, "Password must be at least 6 characters"),
 });
 
@@ -112,36 +114,16 @@ const telecallerEditSchema = z.object({
     .min(5, "Address must be at least 5 characters")
     .optional()
     .or(z.literal("")),
-  role: z.string().min(1, "Role is required").optional().or(z.literal("")),
+  role: z
+    .string()
+    .optional()
+    .or(z.literal("")), 
   password: z
     .string()
     .min(6, "Password must be at least 6 characters")
     .optional()
     .or(z.literal("")),
 });
-// Toast notification component
-const Toast = ({
-  message,
-  type,
-  onClose,
-}: {
-  message: string;
-  type: "success" | "error";
-  onClose: () => void;
-}) => (
-  <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 animate-in slide-in-from-top duration-300">
-    <div
-      className={`px-6 py-3 rounded-lg shadow-lg flex items-center space-x-2 ${
-        type === "success" ? "bg-green-500 text-white" : "bg-red-500 text-white"
-      }`}
-    >
-      <span>{message}</span>
-      <button onClick={onClose} className="ml-2 text-white hover:text-gray-200">
-        <X className="h-4 w-4" />
-      </button>
-    </div>
-  </div>
-);
 
 const columns: TableColumn[] = [
   { key: "id", label: "ID", sortable: true, width: "w-16" },
@@ -183,17 +165,14 @@ export default function TelecallersManagementPage() {
   const [loading, setLoading] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false); // New state for form submission
+  const [isSubmitting, setIsSubmitting] = useState(false); 
   const [pagination, setPagination] = useState({
     total: 0,
     page: 1,
     limit: 10,
     totalPages: 1,
   });
-  const [toast, setToast] = useState<{
-    message: string;
-    type: "success" | "error";
-  } | null>(null);
+  const { toast } = useToast();
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
   // Get access token from localStorage
@@ -205,7 +184,7 @@ export default function TelecallersManagementPage() {
   const getAuthConfig = () => {
     const token = getAccessToken();
     if (!token) {
-      showToast("Authentication required. Please login again.", "error");
+      toast({ title: "Authentication required. Please login again.", variant: "destructive" });
       return null;
     }
     return {
@@ -214,12 +193,6 @@ export default function TelecallersManagementPage() {
         "Content-Type": "application/json",
       },
     };
-  };
-
-  // Show toast notification
-  const showToast = (message: string, type: "success" | "error") => {
-    setToast({ message, type });
-    setTimeout(() => setToast(null), 5000);
   };
 
   console.log(allTelecallers);
@@ -329,6 +302,7 @@ export default function TelecallersManagementPage() {
               type: "text",
               placeholder: "Enter telecaller name",
               defaultValue: "",
+              required: true,
             },
             {
               name: "email",
@@ -336,6 +310,7 @@ export default function TelecallersManagementPage() {
               type: "email",
               placeholder: "Enter email address",
               defaultValue: "",
+              required: true,
             },
             {
               name: "contact",
@@ -343,6 +318,7 @@ export default function TelecallersManagementPage() {
               type: "text",
               placeholder: "Enter contact number",
               defaultValue: "",
+              required: true,
             },
             {
               name: "address",
@@ -350,20 +326,22 @@ export default function TelecallersManagementPage() {
               type: "textarea",
               placeholder: "Enter address",
               defaultValue: "",
+              required: true,
             },
             {
               name: "role",
               label: "Role",
               type: "select",
               options: hardcodedRoles.map((role: Roles) => ({
-                value: role.id.toString(), // Use role ID as value
+                value: role.id.toString(), 
                 label: role.name,
-                disabled: role.name === "Admin", // Disable Admin role
+                disabled: role.name === "Admin", 
               })),
               placeholder: "Select role",
               defaultValue: editingTelecaller
                 ? editingTelecaller.role.toString()
                 : "",
+              required: true,
             },
             {
               name: "password",
@@ -371,6 +349,7 @@ export default function TelecallersManagementPage() {
               type: "text",
               placeholder: "Enter password",
               defaultValue: "",
+              required: editingTelecaller ? false : true,
             },
           ],
           columns: 1,
@@ -381,7 +360,7 @@ export default function TelecallersManagementPage() {
       setFormSections(sections);
     } catch (error) {
       console.error(error);
-      showToast("Failed to load roles", "error");
+      toast({ title: "Failed to load roles", variant: "destructive" });
     }
   };
 
@@ -391,7 +370,7 @@ export default function TelecallersManagementPage() {
       Admin: 1,
       Telecaller: 2,
     };
-    return roleMap[roleName] || 2; // Default to Telecaller if not found
+    return roleMap[roleName] || 2; 
   };
 
   const getRoleNameFromId = (roleId: number): string => {
@@ -404,7 +383,7 @@ export default function TelecallersManagementPage() {
 
   useEffect(() => {
     fetchroles();
-  }, [editingTelecaller]); // Re-fetch roles when editingTelecaller changes to update defaultValue
+  }, [editingTelecaller]);
 
   // Fetch telecallers with pagination
   const fetchTelecallers = async (page: number = 1, limit: number = 10) => {
@@ -422,17 +401,14 @@ export default function TelecallersManagementPage() {
         setTelecallers(response.data.data || []);
         setPagination(response.data.pagination || pagination);
       } else {
-        showToast("Failed to fetch telecallers", "error");
+        toast({ title: "Failed to fetch telecallers", variant: "destructive" });
       }
     } catch (err: any) {
       console.error("Error fetching telecallers:", err);
       if (err.response?.status === 401) {
-        showToast("Authentication failed. Please login again.", "error");
+        toast({ title: "Authentication failed. Please login again.", variant: "destructive" });
       } else {
-        showToast(
-          err.response?.data?.message || "Failed to fetch telecallers",
-          "error"
-        );
+        toast({ title: err.response?.data?.message || "Failed to fetch telecallers", variant: "destructive" });
       }
     } finally {
       setLoading(false);
@@ -524,12 +500,9 @@ export default function TelecallersManagementPage() {
         await fetchAllTelecallers();
         setIsModalOpen(false);
         resetForm();
-        showToast("Telecaller created successfully!", "success");
+        toast({ title: "Telecaller created successfully!" });
       } else {
-        showToast(
-          response.data?.message || "Failed to create telecaller",
-          "error"
-        );
+        toast({ title: response.data?.message || "Failed to create telecaller", variant: "destructive" });
       }
     } catch (error: any) {
       console.error("Error creating telecaller:", error);
@@ -542,10 +515,10 @@ export default function TelecallersManagementPage() {
 
         // Show specific toast for general errors
         if (apiErrors.general) {
-          showToast(apiErrors.general, "error");
+          toast({ title: apiErrors.general, variant: "destructive" });
         }
       } else {
-        showToast("Failed to create telecaller. Please try again.", "error");
+        toast({ title: "Failed to create telecaller. Please try again.", variant: "destructive" });
       }
     } finally {
       setLoading(false);
@@ -568,8 +541,14 @@ export default function TelecallersManagementPage() {
         )
       );
 
+      // Convert role to string for validation
+      const validationData = { ...filteredData };
+      if (validationData.role) {
+        validationData.role = validationData.role.toString();
+      }
+
       // 1. Validate with Zod schema for editing
-      const result = telecallerEditSchema.safeParse(filteredData);
+      const result = telecallerEditSchema.safeParse(validationData);
       if (!result.success) {
         const errors = result.error.issues.reduce(
           (acc: Record<string, string>, issue) => {
@@ -585,14 +564,11 @@ export default function TelecallersManagementPage() {
         return;
       }
 
-      const validatedData = result.data;
-
       // 2. Check for duplicates on fields that have values
       const fieldsToCheck: Partial<Telecaller> = {};
       if (data.name && data.name.trim()) fieldsToCheck.name = data.name;
       if (data.email && data.email.trim()) fieldsToCheck.email = data.email;
-      if (data.contact && data.contact.trim())
-        fieldsToCheck.contact = data.contact;
+      if (data.contact && data.contact.trim()) fieldsToCheck.contact = data.contact;
 
       const duplicateErrors = checkDuplicatesForEdit(fieldsToCheck, id);
       if (Object.keys(duplicateErrors).length > 0) {
@@ -602,14 +578,14 @@ export default function TelecallersManagementPage() {
         return;
       }
 
-      // 3. Make API call
+      // 3. Make API call with original data (not validation data)
       const authConfig = getAuthConfig();
       if (!authConfig) return;
 
       const updateUrl = API_URLS.TELLE_CALLERS.PATCH_TELLE_CALLERS(id);
       const response = await axiosInstance.patch(
         updateUrl,
-        validatedData,
+        filteredData, // Use filteredData instead of validationData
         authConfig
       );
 
@@ -619,28 +595,20 @@ export default function TelecallersManagementPage() {
         setIsModalOpen(false);
         setEditingTelecaller(null);
         resetForm();
-        showToast("Telecaller updated successfully!", "success");
+        toast({ title: "Telecaller updated successfully!" });
       } else {
-        showToast(
-          response.data?.message || "Failed to update telecaller",
-          "error"
-        );
+        toast({ title: response.data?.message || "Failed to update telecaller", variant: "destructive" });
       }
     } catch (error: any) {
       console.error("Error updating telecaller:", error);
-
-      // Handle API errors with enhanced error parsing
       const apiErrors = handleApiErrors(error);
-
       if (Object.keys(apiErrors).length > 0) {
         setFormErrors(apiErrors);
-
-        // Show specific toast for general errors
         if (apiErrors.general) {
-          showToast(apiErrors.general, "error");
+          toast({ title: apiErrors.general, variant: "destructive" });
         }
       } else {
-        showToast("Failed to update telecaller. Please try again.", "error");
+        toast({ title: "Failed to update telecaller. Please try again.", variant: "destructive" });
       }
     } finally {
       setLoading(false);
@@ -669,22 +637,16 @@ export default function TelecallersManagementPage() {
         setSelectedRows((prev) =>
           prev.filter((rowId) => rowId !== id.toString())
         );
-        showToast("Telecaller deleted successfully!", "success");
+        toast({ title: "Telecaller deleted successfully!" });
       } else {
-        showToast(
-          response.data?.message || "Failed to delete telecaller",
-          "error"
-        );
+        toast({ title: response.data?.message || "Failed to delete telecaller", variant: "destructive" });
       }
     } catch (err: any) {
       console.error("Error deleting telecaller:", err);
       if (err.response?.status === 401) {
-        showToast("Authentication failed. Please login again.", "error");
+        toast({ title: "Authentication failed. Please login again.", variant: "destructive" });
       } else {
-        showToast(
-          err.response?.data?.message || "Failed to delete telecaller",
-          "error"
-        );
+        toast({ title: err.response?.data?.message || "Failed to delete telecaller", variant: "destructive" });
       }
     } finally {
       setLoading(false);
@@ -738,17 +700,22 @@ export default function TelecallersManagementPage() {
   };
 
   // Form submission handler
-  // Form submission handler
   const handleFormSubmit = async (data: any) => {
     console.log("Form submitted with data:", data);
+
+    let passwordToSave = data.password;
+    // Don't save password if it's the display value or empty
+    if (editingTelecaller && (passwordToSave === "••••••" || !passwordToSave?.trim())) {
+      passwordToSave = undefined; // Don't include password in update
+    }
 
     const submitData = {
       name: data.name?.toString() || "",
       email: data.email?.toString() || "",
       contact: data.contact?.toString() || "",
       address: data.address?.toString() || "",
-      role: parseInt(data.role), // Save as number ID, not string name
-      password: data.password?.toString() || "",
+      role: data.role?.toString() || "",
+      password: passwordToSave,
     };
 
     if (editingTelecaller) {
@@ -757,14 +724,22 @@ export default function TelecallersManagementPage() {
       if (submitData.email.trim()) editData.email = submitData.email;
       if (submitData.contact.trim()) editData.contact = submitData.contact;
       if (submitData.address.trim()) editData.address = submitData.address;
-      if (submitData.role) editData.role = submitData.role; // Save as number
-      if (submitData.password.trim()) editData.password = submitData.password;
+      if (submitData.role) editData.role = parseInt(submitData.role);
+      // Only include password if it's changed and not the display value
+      if (passwordToSave && passwordToSave !== "••••••") {
+        editData.password = passwordToSave;
+      }
 
       await updateTelecaller(editingTelecaller.id, editData);
     } else {
-      await createTelecaller(submitData as Omit<Telecaller, "id">);
+      await createTelecaller({
+        ...submitData,
+        role: parseInt(submitData.role),
+      } as Omit<Telecaller, "id">);
     }
   };
+
+
   const handleApiErrors = (error: any): Record<string, string> => {
     const errors: Record<string, string> = {};
 
@@ -815,16 +790,16 @@ export default function TelecallersManagementPage() {
     setIsModalOpen(true);
   };
 
-  const openEditModal = (telecaller: Telecaller) => {
-    console.log("Opening edit modal for:", telecaller);
+  const openEditModal = async (telecaller: Telecaller) => {
+    console.log("Editing telecaller object:", telecaller);
     setEditingTelecaller(telecaller);
     setFormData({
       name: telecaller.name || "",
       email: telecaller.email || "",
       contact: telecaller.contact || "",
       address: telecaller.address || "",
-      role: telecaller.role.toString(),
-      password: "",
+      role: telecaller.role ? telecaller.role.toString() : "",
+      password: telecaller.password_display || "••••••", // Use password_display from API
     });
     setFormErrors({});
     setIsModalOpen(true);
@@ -862,7 +837,7 @@ export default function TelecallersManagementPage() {
   useEffect(() => {
     const token = getAccessToken();
     if (!token) {
-      showToast("No access token found. Please login first.", "error");
+      toast({ title: "No access token found. Please login first.", variant: "destructive" });
       return;
     }
     fetchTelecallers();
@@ -874,14 +849,6 @@ export default function TelecallersManagementPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-8">
-      {toast && (
-        <Toast
-          message={toast.message}
-          type={toast.type}
-          onClose={() => setToast(null)}
-        />
-      )}
-
       <div className="max-w-7xl mx-auto">
         {/* Breadcrumb */}
         <div className="text-xs text-gray-400 mb-1">
@@ -902,6 +869,7 @@ export default function TelecallersManagementPage() {
             Add New Telecaller
           </Button>
         </div>
+
 
         {/* Search Bar */}
         <div className="mb-6">
@@ -959,7 +927,7 @@ export default function TelecallersManagementPage() {
         {/* Add/Edit Modal */}
         {isModalOpen && formSections.length > 0 && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto scrollbar-hide">
               <div className="flex items-center justify-between p-6 border-b border-gray-200">
                 <h2 className="text-lg font-semibold text-gray-900">
                   {editingTelecaller ? "Edit Telecaller" : "Add New Telecaller"}
@@ -987,21 +955,21 @@ export default function TelecallersManagementPage() {
                   defaultValues={
                     editingTelecaller
                       ? {
-                          name: editingTelecaller.name || "",
-                          email: editingTelecaller.email || "",
-                          contact: editingTelecaller.contact || "",
-                          address: editingTelecaller.address || "",
-                          role: editingTelecaller.role.toString(),
-                          password: "",
-                        }
+                        name: editingTelecaller.name || "",
+                        email: editingTelecaller.email || "",
+                        contact: editingTelecaller.contact || "",
+                        address: editingTelecaller.address || "",
+                        role: editingTelecaller.role.toString(),
+                        password: editingTelecaller.password_display || "••••••", // Use password_display
+                      }
                       : {
-                          name: "",
-                          email: "",
-                          contact: "",
-                          address: "",
-                          role: "2", // Default to Telecaller ID
-                          password: "",
-                        }
+                        name: "",
+                        email: "",
+                        contact: "",
+                        address: "",
+                        role: "2",
+                        password: "",
+                      }
                   }
                   errors={formErrors}
                   validationSchema={
