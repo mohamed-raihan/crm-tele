@@ -184,7 +184,10 @@ export default function BranchManagementPage() {
   const getAuthConfig = () => {
     const token = getAccessToken();
     if (!token) {
-      toast({ title: "Authentication required. Please login again.", variant: "destructive" });
+      toast({
+        title: "Authentication required. Please login again.",
+        variant: "destructive",
+      });
       return null;
     }
     return {
@@ -296,7 +299,7 @@ export default function BranchManagementPage() {
         authConfig
       );
       console.log(response);
-      
+
       if (response.data?.code === 200) {
         setBranches(response.data.data || []);
         setPagination(response.data.pagination || pagination);
@@ -306,9 +309,15 @@ export default function BranchManagementPage() {
     } catch (err: any) {
       console.error("Error fetching branches:", err);
       if (err.response?.status === 401) {
-        toast({ title: "Authentication failed. Please login again.", variant: "destructive" });
+        toast({
+          title: "Authentication failed. Please login again.",
+          variant: "destructive",
+        });
       } else {
-        toast({ title: err.response?.data?.message || "Failed to fetch branches", variant: "destructive" });
+        toast({
+          title: err.response?.data?.message || "Failed to fetch branches",
+          variant: "destructive",
+        });
       }
     } finally {
       setLoading(false);
@@ -380,7 +389,10 @@ export default function BranchManagementPage() {
         setIsModalOpen(false);
         toast({ title: "Branch created successfully!" });
       } else {
-        toast({ title: response.data?.message || "Failed to create branch", variant: "destructive" });
+        toast({
+          title: response.data?.message || "Failed to create branch",
+          variant: "destructive",
+        });
       }
     } catch (error: any) {
       if (error.errors) {
@@ -431,12 +443,7 @@ export default function BranchManagementPage() {
       const authConfig = getAuthConfig();
       if (!authConfig) return;
 
-      let updateUrl;
-      if (typeof API_URLS.BRANCH.PATCH_BRANCH === "function") {
-        updateUrl = API_URLS.BRANCH.PATCH_BRANCH(id);
-      } else {
-        updateUrl = API_URLS.BRANCH.PATCH_BRANCH.replace("{id}", id.toString());
-      }
+      const updateUrl = API_URLS.BRANCH.PATCH_BRANCH(id);
 
       const response = await axiosInstance.patch(updateUrl, data, authConfig);
 
@@ -447,7 +454,10 @@ export default function BranchManagementPage() {
         setEditingBranch(null);
         toast({ title: "Branch updated successfully!" });
       } else {
-        toast({ title: response.data?.message || "Failed to update branch", variant: "destructive" });
+        toast({
+          title: response.data?.message || "Failed to update branch",
+          variant: "destructive",
+        });
       }
     } catch (err: any) {
       if (err.errors) {
@@ -481,15 +491,7 @@ export default function BranchManagementPage() {
       const authConfig = getAuthConfig();
       if (!authConfig) return;
 
-      let deleteUrl;
-      if (typeof API_URLS.BRANCH.DELETE_BRANCH === "function") {
-        deleteUrl = API_URLS.BRANCH.DELETE_BRANCH(id);
-      } else {
-        deleteUrl = API_URLS.BRANCH.DELETE_BRANCH.replace(
-          "{id}",
-          id.toString()
-        );
-      }
+      const deleteUrl = API_URLS.BRANCH.DELETE_BRANCH(id);
 
       const response = await axiosInstance.delete(deleteUrl, authConfig);
 
@@ -501,14 +503,23 @@ export default function BranchManagementPage() {
         );
         toast({ title: "Branch deleted successfully!" });
       } else {
-        toast({ title: response.data?.message || "Failed to delete branch", variant: "destructive" });
+        toast({
+          title: response.data?.message || "Failed to delete branch",
+          variant: "destructive",
+        });
       }
     } catch (err: any) {
       console.error("Error deleting branch:", err);
       if (err.response?.status === 401) {
-        toast({ title: "Authentication failed. Please login again.", variant: "destructive" });
+        toast({
+          title: "Authentication failed. Please login again.",
+          variant: "destructive",
+        });
       } else {
-        toast({ title: err.response?.data?.message || "Failed to delete branch", variant: "destructive" });
+        toast({
+          title: err.response?.data?.message || "Failed to delete branch",
+          variant: "destructive",
+        });
       }
     } finally {
       setLoading(false);
@@ -594,7 +605,10 @@ export default function BranchManagementPage() {
   useEffect(() => {
     const token = getAccessToken();
     if (!token) {
-      toast({ title: "No access token found. Please login first.", variant: "destructive" });
+      toast({
+        title: "No access token found. Please login first.",
+        variant: "destructive",
+      });
       return;
     }
     fetchBranches();
@@ -602,7 +616,7 @@ export default function BranchManagementPage() {
   }, []);
 
   console.log(editingBranch);
-  
+
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-8">
       <div className="max-w-7xl mx-auto">

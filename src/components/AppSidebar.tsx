@@ -8,7 +8,8 @@ import {
   Settings,
   Headphones,
   Clock,
-  CheckCircle
+  CheckCircle,
+  PhoneOff
 } from "lucide-react"
 import { Link, useLocation } from "react-router-dom"
 import {
@@ -42,19 +43,29 @@ const navigationItems = [
   },
   {
     title: "Follow Ups",
-    url: "/follow-ups",
+    url: "/calls/follow-ups",
     icon: Calendar,
+  },
+  // {
+  //   title: "Follow-ups Management",
+  //   url: "/calls/follow-ups",
+  //   icon: Calendar,
+  // },
+  {
+    title: "Not Answered",
+    url: "/calls/not-answered",
+    icon: PhoneOff,
   },
   {
     title: "Call History",
     url: "/call-history",
     icon: Headphones,
   },
-  {
-    title: "My Schedule",
-    url: "/schedule",
-    icon: Clock,
-  },
+  // {
+  //   title: "My Schedule",
+  //   url: "/schedule",
+  //   icon: Clock,
+  // },
   {
     title: "Completed Calls",
     url: "/completed-calls",
