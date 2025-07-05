@@ -11,7 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { format } from 'date-fns';
-import { CalendarIcon, Plus } from 'lucide-react';
+import { CalendarIcon, Plus, Eye, EyeOff } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export type FieldType = 'text' | 'email' | 'phone' | 'textarea' | 'select' | 'date';
@@ -22,7 +22,7 @@ export interface FormField {
   type: FieldType;
   placeholder?: string;
   required?: boolean;
-  options?: Array<{ value: string; label: string }>;
+  options?: Array<{ value: string; label: string; disabled?: boolean }>;
   validation?: z.ZodTypeAny;
   description?: string;
   showAddButton?: boolean;
@@ -61,7 +61,8 @@ export function DynamicForm({
   showCancel = true,
   onCancel,
   className,
-  errors
+  errors,
+  submitButtonProps
 }: DynamicFormProps) {
   // Create dynamic schema from fields
   const createSchema = () => {
@@ -99,6 +100,8 @@ export function DynamicForm({
   const form = useForm({
     resolver: zodResolver(createSchema()),
     defaultValues,
+    mode: "onBlur",
+    reValidateMode: "onChange",
   });
 
   // Sync parent errors prop to react-hook-form errors
@@ -110,9 +113,18 @@ export function DynamicForm({
     }
   }, [errors, form]);
 
-  
+  // Password visibility state per field
+  const [passwordVisibility, setPasswordVisibility] = React.useState<Record<string, boolean>>({});
+
+  const togglePasswordVisibility = (fieldName: string) => {
+    setPasswordVisibility((prev) => ({
+      ...prev,
+      [fieldName]: !prev[fieldName],
+    }));
+  };
 
   const renderField = (field: FormField) => {
+    const isPasswordField = field.label.toLowerCase() === 'password';
     return (
       <FormField
         key={field.name}
@@ -123,7 +135,23 @@ export function DynamicForm({
             <FormLabel>{field.label}</FormLabel>
             <div className="flex gap-2">
               <FormControl className="flex-1">
-                {field.type === 'textarea' ? (
+                {isPasswordField ? (
+                  <div className="relative">
+                    <Input
+                      placeholder={field.placeholder}
+                      type={passwordVisibility[field.name] ? 'text' : 'password'}
+                      {...formField}
+                    />
+                    <button
+                      type="button"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                      tabIndex={-1}
+                      onClick={() => togglePasswordVisibility(field.name)}
+                    >
+                      {passwordVisibility[field.name] ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                ) : field.type === 'textarea' ? (
                   <Textarea 
                     placeholder={field.placeholder}
                     className="min-h-[100px]"
@@ -136,7 +164,7 @@ export function DynamicForm({
                     </SelectTrigger>
                     <SelectContent>
                       {field.options?.map(option => (
-                        <SelectItem key={option.value} value={option.value}>
+                        <SelectItem key={option.value} value={option.value} disabled={option.disabled}>
                           {option.label}
                         </SelectItem>
                       ))}
@@ -234,8 +262,8 @@ export function DynamicForm({
                   Cancel
                 </Button>
               )}
-              <Button type="submit" className='bg-violet-500'>
-                {submitLabel}
+              <Button type="submit" className='bg-violet-500' disabled={form.formState.isSubmitting || submitButtonProps?.disabled}>
+                {form.formState.isSubmitting ? "Submitting..." : submitLabel}
               </Button>
             </div>
           </form>

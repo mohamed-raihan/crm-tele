@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_BASE_URL = "https://crm-tellecallers.onrender.com/";
+const API_BASE_URL = "http://127.0.0.1:8000";
 
 const axiosInstance = axios.create({
   baseURL: API_BASE_URL,
@@ -8,6 +8,9 @@ const axiosInstance = axios.create({
     "Content-Type": "application/json",
   },
 });
+
+//http://127.0.0.1:8000
+//https://crm-tellecallers.onrender.com/
 
 // Request interceptor to add auth header conditionally
 axiosInstance.interceptors.request.use(

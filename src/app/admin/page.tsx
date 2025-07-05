@@ -1,8 +1,17 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { DashboardStats } from "@/components/DashboardStats";
+import { SystemOverview } from "@/components/SystemOverview";
+import { UserPlus, BarChart3, Settings } from "lucide-react";
 
 const AdminDashboardPage = () => {
+  const navigate = useNavigate();
+
+  const handleQuickAction = (path: string) => {
+    navigate(path);
+  };
+
   return (
     <div className="flex-1 flex flex-col min-h-0">
       <DashboardHeader />
@@ -16,38 +25,46 @@ const AdminDashboardPage = () => {
           <DashboardStats />
           
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
-            <div className="bg-white rounded-lg shadow p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">System Overview</h3>
-              <div className="space-y-3">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Total Telecallers</span>
-                  <span className="font-medium">12</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Active Sessions</span>
-                  <span className="font-medium">8</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">System Status</span>
-                  <span className="text-green-600 font-medium">Online</span>
-                </div>
-              </div>
-            </div>
+            <SystemOverview />
             
             <div className="bg-white rounded-lg shadow p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
               <div className="space-y-3">
-                <button className="w-full text-left p-3 rounded-md border border-gray-200 hover:bg-gray-50 transition-colors">
-                  <div className="font-medium text-gray-900">Add New Telecaller</div>
-                  <div className="text-sm text-gray-500">Create a new user account</div>
+                <button 
+                  onClick={() => handleQuickAction("/admin/addtelecallers")}
+                  className="w-full text-left p-3 rounded-md border border-gray-200 hover:bg-gray-50 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <UserPlus className="w-5 h-5 text-gray-500" />
+                    <div>
+                      <div className="font-medium text-gray-900">Add New Telecaller</div>
+                      <div className="text-sm text-gray-500">Create a new user account</div>
+                    </div>
+                  </div>
+                </button> 
+                <button 
+                  onClick={() => handleQuickAction("/admin/reports")}
+                  className="w-full text-left p-3 rounded-md border border-gray-200 hover:bg-gray-50 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <BarChart3 className="w-5 h-5 text-gray-500" />
+                    <div>
+                      <div className="font-medium text-gray-900">Generate Reports</div>
+                      <div className="text-sm text-gray-500">View performance analytics</div>
+                    </div>
+                  </div>
                 </button>
-                <button className="w-full text-left p-3 rounded-md border border-gray-200 hover:bg-gray-50 transition-colors">
-                  <div className="font-medium text-gray-900">Generate Reports</div>
-                  <div className="text-sm text-gray-500">View performance analytics</div>
-                </button>
-                <button className="w-full text-left p-3 rounded-md border border-gray-200 hover:bg-gray-50 transition-colors">
-                  <div className="font-medium text-gray-900">System Settings</div>
-                  <div className="text-sm text-gray-500">Configure application settings</div>
+                <button 
+                  onClick={() => handleQuickAction("/admin/settings")}
+                  className="w-full text-left p-3 rounded-md border border-gray-200 hover:bg-gray-50 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <Settings className="w-5 h-5 text-gray-500" />
+                    <div>
+                      <div className="font-medium text-gray-900">System Settings</div>
+                      <div className="text-sm text-gray-500">Configure application settings</div>
+                    </div>
+                  </div>
                 </button>
               </div>
             </div>

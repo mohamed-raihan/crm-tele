@@ -1,75 +1,114 @@
-
+import { useEffect, useState } from "react";
+import axiosInstance from "@/components/apiconfig/axios";
+import { API_URLS } from "@/components/apiconfig/api_urls";
 import { TrendingUp, TrendingDown, Users, Target, DollarSign, Phone } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 
-const stats = [
-  {
-    title: "Total Customers",
-    value: "2,543",
-    change: "+12%",
-    trend: "up",
-    icon: Users,
-    description: "from last month"
-  },
-  {
-    title: "Active Leads",
-    value: "186",
-    change: "+8%",
-    trend: "up",
-    icon: Target,
-    description: "conversion rate: 24%"
-  },
-  {
-    title: "Revenue",
-    value: "$45,231",
-    change: "-3%",
-    trend: "down",
-    icon: DollarSign,
-    description: "this month"
-  },
-  {
-    title: "Calls Made",
-    value: "1,204",
-    change: "+15%",
-    trend: "up",
-    icon: Phone,
-    description: "this week"
-  }
-]
-
 export function DashboardStats() {
+  const [stats, setStats] = useState({
+    dashboard_type: "",
+    total_calls: 0,
+    total_leads: 0,
+    pending_followups: 0,
+    walkin_list: 0,
+    total_telecallers: 0,
+  });
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      const token = localStorage.getItem("access_token");
+      if (!token) return;
+      try {
+        const response = await axiosInstance.get(API_URLS.DASHBOARD.GET_STATS, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+        if (response.data) {
+          setStats(response.data);
+        }
+      } catch (err) {
+        // Optionally handle error
+      }
+    };
+    fetchStats();
+  }, []);
+
+  
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-      {stats.map((stat) => (
-        <Card key={stat.title} className="relative overflow-hidden">
+      <Card className="relative overflow-hidden">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium text-gray-600">
+            Total Calls
+          </CardTitle>
+          <Phone className="h-4 w-4 text-gray-400" />
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold text-gray-900 mb-1">
+            {stats.total_calls}
+          </div>
+        </CardContent>
+      </Card>
+      <Card className="relative overflow-hidden">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium text-gray-600">
+            Total Leads
+          </CardTitle>
+          <Users className="h-4 w-4 text-gray-400" />
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold text-gray-900 mb-1">
+            {stats.total_leads}
+          </div>
+        </CardContent>
+      </Card>
+      {stats.dashboard_type === "admin" ? (
+        <Card className="relative overflow-hidden">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-gray-600">
-              {stat.title}
+              Total Telecallers
             </CardTitle>
-            <stat.icon className="h-4 w-4 text-gray-400" />
+            <Users className="h-4 w-4 text-gray-400" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-gray-900 mb-1">
-              {stat.value}
-            </div>
-            <div className="flex items-center gap-1">
-              {stat.trend === "up" ? (
-                <TrendingUp className="h-3 w-3 text-green-500" />
-              ) : (
-                <TrendingDown className="h-3 w-3 text-red-500" />
-              )}
-              <span className={`text-xs font-medium ${
-                stat.trend === "up" ? "text-green-600" : "text-red-600"
-              }`}>
-                {stat.change}
-              </span>
-              <span className="text-xs text-gray-500 ml-1">
-                {stat.description}
-              </span>
+              {stats.total_telecallers}
             </div>
           </CardContent>
         </Card>
-      ))}
+      ) : (
+        <>
+          <Card className="relative overflow-hidden">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-gray-600">
+                Pending Followups
+              </CardTitle>
+              <Target className="h-4 w-4 text-gray-400" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-gray-900 mb-1">
+                {stats.pending_followups}
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="relative overflow-hidden">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-gray-600">
+                Walk-in List
+              </CardTitle>
+              <TrendingUp className="h-4 w-4 text-gray-400" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-gray-900 mb-1">
+                {stats.walkin_list}
+              </div>
+            </CardContent>
+          </Card>
+        </>
+      )}
     </div>
-  )
+  );
 }

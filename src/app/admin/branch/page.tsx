@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, Pencil, Trash2, X, Search } from "lucide-react";
 import { API_URLS } from "../../../components/apiconfig/api_urls.js";
 import { z } from "zod";
+import { useToast } from "@/components/ui/use-toast";
 import axiosInstance from "@/components/apiconfig/axios.js";
 
 // Define Branch interface
@@ -98,30 +99,6 @@ const branchEditSchema = z.object({
     .or(z.literal("")),
 });
 
-// Toast notification component
-const Toast = ({
-  message,
-  type,
-  onClose,
-}: {
-  message: string;
-  type: "success" | "error";
-  onClose: () => void;
-}) => (
-  <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 animate-in slide-in-from-top duration-300">
-    <div
-      className={`px-6 py-3 rounded-lg shadow-lg flex items-center space-x-2 ${
-        type === "success" ? "bg-green-500 text-white" : "bg-red-500 text-white"
-      }`}
-    >
-      <span>{message}</span>
-      <button onClick={onClose} className="ml-2 text-white hover:text-gray-200">
-        <X className="h-4 w-4" />
-      </button>
-    </div>
-  </div>
-);
-
 const columns: TableColumn[] = [
   { key: "id", label: "ID", sortable: true, width: "w-16" },
   { key: "branch_name", label: "Branch Name", sortable: true },
@@ -195,10 +172,7 @@ export default function BranchManagementPage() {
     limit: 10,
     totalPages: 1,
   });
-  const [toast, setToast] = useState<{
-    message: string;
-    type: "success" | "error";
-  } | null>(null);
+  const { toast } = useToast();
   const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
   // Get access token from localStorage
@@ -210,7 +184,10 @@ export default function BranchManagementPage() {
   const getAuthConfig = () => {
     const token = getAccessToken();
     if (!token) {
-      showToast("Authentication required. Please login again.", "error");
+      toast({
+        title: "Authentication required. Please login again.",
+        variant: "destructive",
+      });
       return null;
     }
     return {
@@ -219,12 +196,6 @@ export default function BranchManagementPage() {
         "Content-Type": "application/json",
       },
     };
-  };
-
-  // Show toast notification
-  const showToast = (message: string, type: "success" | "error") => {
-    setToast({ message, type });
-    setTimeout(() => setToast(null), 5000);
   };
 
   console.log(allBranches);
@@ -328,22 +299,25 @@ export default function BranchManagementPage() {
         authConfig
       );
       console.log(response);
-      
+
       if (response.data?.code === 200) {
         setBranches(response.data.data || []);
         setPagination(response.data.pagination || pagination);
       } else {
-        showToast("Failed to fetch branches", "error");
+        toast({ title: "Failed to fetch branches", variant: "destructive" });
       }
     } catch (err: any) {
       console.error("Error fetching branches:", err);
       if (err.response?.status === 401) {
-        showToast("Authentication failed. Please login again.", "error");
+        toast({
+          title: "Authentication failed. Please login again.",
+          variant: "destructive",
+        });
       } else {
-        showToast(
-          err.response?.data?.message || "Failed to fetch branches",
-          "error"
-        );
+        toast({
+          title: err.response?.data?.message || "Failed to fetch branches",
+          variant: "destructive",
+        });
       }
     } finally {
       setLoading(false);
@@ -413,9 +387,12 @@ export default function BranchManagementPage() {
         await fetchBranches(pagination.page, pagination.limit);
         await fetchAllBranches();
         setIsModalOpen(false);
-        showToast("Branch created successfully!", "success");
+        toast({ title: "Branch created successfully!" });
       } else {
-        showToast(response.data?.message || "Failed to create branch", "error");
+        toast({
+          title: response.data?.message || "Failed to create branch",
+          variant: "destructive",
+        });
       }
     } catch (error: any) {
       if (error.errors) {
@@ -431,7 +408,7 @@ export default function BranchManagementPage() {
         console.error("Error creating branch:", error);
         const errorMessage =
           error.response?.data?.message || "Failed to create branch";
-        showToast(errorMessage, "error");
+        toast({ title: errorMessage, variant: "destructive" });
       }
     } finally {
       setLoading(false);
@@ -466,12 +443,7 @@ export default function BranchManagementPage() {
       const authConfig = getAuthConfig();
       if (!authConfig) return;
 
-      let updateUrl;
-      if (typeof API_URLS.BRANCH.PATCH_BRANCH === "function") {
-        updateUrl = API_URLS.BRANCH.PATCH_BRANCH(id);
-      } else {
-        updateUrl = API_URLS.BRANCH.PATCH_BRANCH.replace("{id}", id.toString());
-      }
+      const updateUrl = API_URLS.BRANCH.PATCH_BRANCH(id);
 
       const response = await axiosInstance.patch(updateUrl, data, authConfig);
 
@@ -480,9 +452,12 @@ export default function BranchManagementPage() {
         await fetchAllBranches();
         setIsModalOpen(false);
         setEditingBranch(null);
-        showToast("Branch updated successfully!", "success");
+        toast({ title: "Branch updated successfully!" });
       } else {
-        showToast(response.data?.message || "Failed to update branch", "error");
+        toast({
+          title: response.data?.message || "Failed to update branch",
+          variant: "destructive",
+        });
       }
     } catch (err: any) {
       if (err.errors) {
@@ -498,7 +473,7 @@ export default function BranchManagementPage() {
         console.error("Error updating branch:", err);
         const errorMessage =
           err.response?.data?.message || "Failed to update branch";
-        showToast(errorMessage, "error");
+        toast({ title: errorMessage, variant: "destructive" });
       }
     } finally {
       setLoading(false);
@@ -516,15 +491,7 @@ export default function BranchManagementPage() {
       const authConfig = getAuthConfig();
       if (!authConfig) return;
 
-      let deleteUrl;
-      if (typeof API_URLS.BRANCH.DELETE_BRANCH === "function") {
-        deleteUrl = API_URLS.BRANCH.DELETE_BRANCH(id);
-      } else {
-        deleteUrl = API_URLS.BRANCH.DELETE_BRANCH.replace(
-          "{id}",
-          id.toString()
-        );
-      }
+      const deleteUrl = API_URLS.BRANCH.DELETE_BRANCH(id);
 
       const response = await axiosInstance.delete(deleteUrl, authConfig);
 
@@ -534,19 +501,25 @@ export default function BranchManagementPage() {
         setSelectedRows((prev) =>
           prev.filter((rowId) => rowId !== id.toString())
         );
-        showToast("Branch deleted successfully!", "success");
+        toast({ title: "Branch deleted successfully!" });
       } else {
-        showToast(response.data?.message || "Failed to delete branch", "error");
+        toast({
+          title: response.data?.message || "Failed to delete branch",
+          variant: "destructive",
+        });
       }
     } catch (err: any) {
       console.error("Error deleting branch:", err);
       if (err.response?.status === 401) {
-        showToast("Authentication failed. Please login again.", "error");
+        toast({
+          title: "Authentication failed. Please login again.",
+          variant: "destructive",
+        });
       } else {
-        showToast(
-          err.response?.data?.message || "Failed to delete branch",
-          "error"
-        );
+        toast({
+          title: err.response?.data?.message || "Failed to delete branch",
+          variant: "destructive",
+        });
       }
     } finally {
       setLoading(false);
@@ -632,7 +605,10 @@ export default function BranchManagementPage() {
   useEffect(() => {
     const token = getAccessToken();
     if (!token) {
-      showToast("No access token found. Please login first.", "error");
+      toast({
+        title: "No access token found. Please login first.",
+        variant: "destructive",
+      });
       return;
     }
     fetchBranches();
@@ -640,17 +616,9 @@ export default function BranchManagementPage() {
   }, []);
 
   console.log(editingBranch);
-  
+
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-8">
-      {toast && (
-        <Toast
-          message={toast.message}
-          type={toast.type}
-          onClose={() => setToast(null)}
-        />
-      )}
-
       <div className="max-w-7xl mx-auto">
         {/* Breadcrumb */}
         <div className="text-xs text-gray-400 mb-1">
@@ -729,7 +697,7 @@ export default function BranchManagementPage() {
         {/* Add/Edit Modal */}
         {isModalOpen && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto scrollbar-hide">
               <div className="flex items-center justify-between p-6 border-b border-gray-200">
                 <h2 className="text-lg font-semibold text-gray-900">
                   {editingBranch ? "Edit Branch" : "Add New Branch"}

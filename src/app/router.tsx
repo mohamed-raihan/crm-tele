@@ -19,6 +19,8 @@ import Adminaddtelecallers from "../app/admin/addtelecallers/page";
 import NotAnswerPage from "./not-answer/page";
 import ReportPage from "./report/page";
 import AdsPage from "./admin/ads/page";
+import FollowUpsPage from "./calls/follow-ups/page";
+import NotAnsweredPage from "./calls/not-answered/page";
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
@@ -125,6 +127,22 @@ export function AppRouter() {
         element={
           <TelecallerRoute>
             <FollowUps />
+          </TelecallerRoute>
+        }
+      />
+      <Route
+        path="/calls/follow-ups"
+        element={
+          <TelecallerRoute>
+            <FollowUpsPage />
+          </TelecallerRoute>
+        }
+      />
+      <Route
+        path="/calls/not-answered"
+        element={
+          <TelecallerRoute>
+            <NotAnsweredPage />
           </TelecallerRoute>
         }
       />
