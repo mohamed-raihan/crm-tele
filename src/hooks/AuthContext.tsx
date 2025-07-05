@@ -1,3 +1,5 @@
+import { API_URLS } from "@/components/apiconfig/api_urls";
+import axiosInstance from "@/components/apiconfig/axios";
 import React, {
   createContext,
   useContext,
@@ -5,8 +7,6 @@ import React, {
   useEffect,
   ReactNode,
 } from "react";
-import axiosInstance from "../components/apiconfig/axios.js";
-import { API_URLS } from "../components/apiconfig/api_urls.js";
 
 interface User {
   role: string;
