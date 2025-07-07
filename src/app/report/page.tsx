@@ -1,10 +1,8 @@
 import { API_URLS } from "@/components/apiconfig/api_urls";
 import axiosInstance from "@/components/apiconfig/axios";
 import React, { useEffect, useState } from "react";
-import * as XLSX from 'xlsx';
+import * as XLSX from "xlsx";
 import { RefreshCw } from "lucide-react";
-
-
 
 const columns = [
   "Counselor",
@@ -16,7 +14,7 @@ const columns = [
   "Positive",
   "Negative",
   "Walk-in List",
-  "Follow-ups"
+  "Follow-ups",
 ];
 
 export default function ReportPage() {
@@ -69,7 +67,7 @@ export default function ReportPage() {
       });
       if (branch) params.append("branch_name", branch);
       if (counselor) params.append("telecaller_name", counselor);
-      if (search) params.append("search", search); 
+      if (search) params.append("search", search);
 
       const response = await axiosInstance.get(
         `${API_URLS.REPORTS.GET_REPORTS}?${params.toString()}`,
@@ -96,7 +94,7 @@ export default function ReportPage() {
       setLoading(false);
     }
   };
- 
+
   const fetchAllBranches = async () => {
     try {
       const authConfig = getAuthConfig();
@@ -155,23 +153,27 @@ export default function ReportPage() {
         return;
       }
       // Prepare export data (filtered if search is active)
-      const filteredData = filteredReports.length > 0 || search ? filteredReports : reports;
-      const exportData = filteredData.map(report => ({
-        'Counselor': report.telecaller_name || '',
-        'Total Calls': report.total_calls || 0,
-        'Contacted': report.contacted || 0,
-        'Not Contacted': report.not_contacted || 0,
-        'Answered': report.answered || 0,
-        'Not Answered': report.not_answered || 0,
-        'Positive': report.positive || 0,
-        'Negative': report.negative || 0,
-        'Walk-in List': report.walk_in_list || 0,
-        'Follow-ups': report.total_follow_ups || 0
+      const filteredData =
+        filteredReports.length > 0 || search ? filteredReports : reports;
+      const exportData = filteredData.map((report) => ({
+        Counselor: report.telecaller_name || "",
+        "Total Calls": report.total_calls || 0,
+        Contacted: report.contacted || 0,
+        "Not Contacted": report.not_contacted || 0,
+        Answered: report.answered || 0,
+        "Not Answered": report.not_answered || 0,
+        Positive: report.positive || 0,
+        Negative: report.negative || 0,
+        "Walk-in List": report.walk_in_list || 0,
+        "Follow-ups": report.total_follow_ups || 0,
       }));
       const worksheet = XLSX.utils.json_to_sheet(exportData);
       const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, 'Reports');
-      XLSX.writeFile(workbook, `counselor_reports_${new Date().toISOString().split('T')[0]}.xlsx`);
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Reports");
+      XLSX.writeFile(
+        workbook,
+        `counselor_reports_${new Date().toISOString().split("T")[0]}.xlsx`
+      );
       showToast("Report exported successfully", "success");
     } catch (err) {
       console.error("Error exporting report:", err);
@@ -211,8 +213,8 @@ export default function ReportPage() {
       setFilteredReports(reports);
     } else {
       setFilteredReports(
-        reports.filter(r =>
-          (r.telecaller_name || '').toLowerCase().includes(search.toLowerCase())
+        reports.filter((r) =>
+          (r.telecaller_name || "").toLowerCase().includes(search.toLowerCase())
         )
       );
     }
@@ -231,7 +233,7 @@ export default function ReportPage() {
             <div className="flex-1">
               <label className="block text-gray-700 mb-1">Branch</label>
               <select
-                className="w-full border rounded px-3 py-2"
+                className="w-full border rounded px-3 py-2 bg-gray-100 text-gray-700"
                 value={branch}
                 onChange={(e) => setBranch(e.target.value)}
               >
@@ -249,7 +251,7 @@ export default function ReportPage() {
             <div className="flex-1">
               <label className="block text-gray-700 mb-1">Counselor</label>
               <select
-                className="w-full border rounded px-3 py-2"
+                className="w-full border rounded px-3 py-2 bg-gray-100 text-gray-700"
                 value={counselor}
                 onChange={(e) => setCounselor(e.target.value)}
               >
@@ -274,14 +276,14 @@ export default function ReportPage() {
             <input
               type="text"
               placeholder="Search by counselor name..."
-              className="border rounded px-3 py-2 w-full md:w-64"
+              className="border rounded px-3 py-2 w-full md:w-64 bg-gray-100 text-gray-700"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
           <div className="flex gap-2">
             <button
-              className="bg-green-100 text-green-700 px-4 py-2 rounded hover:bg-green-200 font-medium"
+              className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded font-medium"
               onClick={exportToExcel}
             >
               Export to Excel

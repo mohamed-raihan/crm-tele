@@ -702,7 +702,7 @@ export default function TelecallersManagementPage() {
         await fetchAllTelecallers();
         setIsModalOpen(false);
         resetForm();
-        toast({ title: "Telecaller created successfully!" });
+        toast({ title: "Telecaller created successfully!", variant: "success" });
       } else {
         toast({
           title: response.data?.message || "Failed to create telecaller",
@@ -817,7 +817,7 @@ export default function TelecallersManagementPage() {
         setIsModalOpen(false);
         setEditingTelecaller(null);
         resetForm();
-        toast({ title: "Telecaller updated successfully!" });
+        toast({ title: "Telecaller updated successfully!", variant: "success" });
       } else {
         toast({
           title: response.data?.message || "Failed to update telecaller",
@@ -865,7 +865,7 @@ export default function TelecallersManagementPage() {
         setSelectedRows((prev) =>
           prev.filter((rowId) => rowId !== id.toString())
         );
-        toast({ title: "Telecaller deleted successfully!" });
+        toast({ title: "Telecaller deleted successfully!", variant: "success" });
       } else {
         toast({
           title: response.data?.message || "Failed to delete telecaller",

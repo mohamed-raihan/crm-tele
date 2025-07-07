@@ -226,6 +226,7 @@ export function ActiveEnquiryTable() {
     }
   };
 
+
   const handleSearch = (term: string) => {
     console.log('Search:', term);
     // Implement search functionality

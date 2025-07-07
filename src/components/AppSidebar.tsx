@@ -95,7 +95,7 @@ const myJobSubItems = [
   {
     title: "Completed",
     url: "/my-job/completed",
-    icon: Briefcase,
+    icon: CheckCircle,
   },
 ];
 
@@ -115,20 +115,38 @@ const quickActions = [
 export function AppSidebar() {
   const location = useLocation();
 
+  // Fetch telecaller name from localStorage
+  let telecallerName = "Telecaller";
+  if (typeof window !== "undefined") {
+    try {
+      const userData = localStorage.getItem("user_data");
+      if (userData) {
+        const parsed = JSON.parse(userData);
+        if (parsed.telecaller && parsed.telecaller.name) {
+          telecallerName = parsed.telecaller.name;
+        }
+      }
+    } catch (e) {
+      // fallback to default
+    }
+  }
+
   return (
     <Sidebar className="border-r border-gray-200">
       <SidebarHeader className="p-6">
         <div className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded-lg bg-green-600 flex items-center justify-center">
-            <Headphones className="h-4 w-4 text-white" />
-          </div>
-          <div>
-            <h1 className="text-lg font-semibold text-gray-900">TeleCRM</h1>
-            <p className="text-xs text-gray-500">Telecaller Portal</p>
-          </div>
+          <Link to="/" className="flex items-center gap-2 hover:bg-gray-100 rounded-lg p-1">
+            <div className="h-8 w-8 rounded-lg bg-green-600 flex items-center justify-center">
+              <Headphones className="h-4 w-4 text-white" />
+            </div>
+            <div className="flex items-center gap-1">
+              <h1 className="text-lg font-semibold text-gray-900">TeleCRM</h1>
+            </div>
+            {/* <p className="text-xs text-gray-500">Telecaller Portal</p> */}
+          </Link>
         </div>
       </SidebarHeader>
-        
+
       <SidebarContent className="px-3 py-4">
         <SidebarGroup>
           <SidebarGroupLabel className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">
@@ -139,13 +157,12 @@ export function AppSidebar() {
               {navigationItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild className="w-full">
-                    <Link 
+                    <Link
                       to={item.url}
-                      className={`flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
-                        location.pathname === item.url
+                      className={`flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors ${location.pathname === item.url
                           ? "bg-green-100 text-green-900"
                           : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
-                      }`}
+                        }`}
                     >
                       <item.icon className="h-4 w-4" />
                       <span>{item.title}</span>
@@ -168,11 +185,10 @@ export function AppSidebar() {
                       <SidebarMenuButton asChild className="w-full pl-8" key={sub.title}>
                         <Link
                           to={sub.url}
-                          className={`flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
-                            location.pathname === sub.url
+                          className={`flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors ${location.pathname === sub.url
                               ? "bg-green-100 text-green-900"
                               : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
-                          }`}
+                            }`}
                         >
                           <sub.icon className="h-4 w-4" />
                           <span>{sub.title}</span>
@@ -195,13 +211,12 @@ export function AppSidebar() {
               {quickActions.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild className="w-full">
-                    <Link 
+                    <Link
                       to={item.url}
-                      className={`flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
-                        location.pathname === item.url
+                      className={`flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors ${location.pathname === item.url
                           ? "bg-green-100 text-green-900"
                           : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
-                      }`}
+                        }`}
                     >
                       {/* <item.icon className="h-4 w-4" />
                       <span>{item.title}</span> */}
@@ -220,7 +235,7 @@ export function AppSidebar() {
             <span className="text-sm font-medium text-green-700">TC</span>
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-gray-900 truncate">Telecaller</p>
+            <p className="text-sm font-medium text-gray-900 truncate">{telecallerName}</p>
             <p className="text-xs text-gray-500 truncate">Active</p>
           </div>
         </div>

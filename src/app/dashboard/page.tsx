@@ -110,132 +110,47 @@ export default function DashboardPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
             <SystemOverview />
             <div className="bg-white rounded-lg shadow p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Menu</h3>
               <div className="space-y-3">
                 <button 
-                  onClick={() => handleQuickAction("/admin/addtelecallers")}
+                  onClick={() => handleQuickAction("/leads")}
                   className="w-full text-left p-3 rounded-md border border-gray-200 hover:bg-gray-50 transition-colors"
                 >
-                  <div className="flex items-center gap-3">
-                    <UserPlus className="w-5 h-5 text-gray-500" />
-                    <div>
-                      <div className="font-medium text-gray-900">Add New Telecaller</div>
-                      <div className="text-sm text-gray-500">Create a new user account</div>
-                    </div>
-                  </div>
-                </button>
-                 
-                <button 
-                  onClick={() => handleQuickAction("/admin/reports")}
-                  className="w-full text-left p-3 rounded-md border border-gray-200 hover:bg-gray-50 transition-colors"
-                >
-                  <div className="flex items-center gap-3">
-                    <BarChart3 className="w-5 h-5 text-gray-500" />
-                    <div>
-                      <div className="font-medium text-gray-900">Generate Reports</div>
-                      <div className="text-sm text-gray-500">View performance analytics</div>
-                    </div>
-                  </div>
-                </button>
-                <button 
-                  onClick={() => handleQuickAction("/admin/enquiries")}
-                  className="w-full text-left p-3 rounded-md border border-gray-200 hover:bg-gray-50 transition-colors"
-                >
-                  <div className="flex items-center gap-3">
+                  <div className="flex flex-row items-center gap-3">
                     <FileText className="w-5 h-5 text-gray-500" />
-                    <div>
-                      <div className="font-medium text-gray-900">Enquiries</div>
-                      <div className="text-sm text-gray-500">View all enquiries</div>
+                    <div className="flex flex-col justify-center">
+                      <div className="font-medium text-gray-900">My Enquiry</div>
+                      <div className="text-sm text-gray-500">View and manage your enquiries</div>
+                    </div>
+                  </div>
+                </button>
+                <button 
+                  onClick={() => handleQuickAction("/calls")}
+                  className="w-full text-left p-3 rounded-md border border-gray-200 hover:bg-gray-50 transition-colors"
+                >
+                  <div className="flex flex-row items-center gap-3">
+                    <BarChart3 className="w-5 h-5 text-gray-500" />
+                    <div className="flex flex-col justify-center">
+                      <div className="font-medium text-gray-900">Calls</div>
+                      <div className="text-sm text-gray-500">View and manage calls</div>
+                    </div>
+                  </div>
+                </button>
+                <button 
+                  onClick={() => handleQuickAction("/walk-in-list")}
+                  className="w-full text-left p-3 rounded-md border border-gray-200 hover:bg-gray-50 transition-colors"
+                >
+                  <div className="flex flex-row items-center gap-3">
+                    <UserPlus className="w-5 h-5 text-gray-500" />
+                    <div className="flex flex-col justify-center">
+                      <div className="font-medium text-gray-900">Walk in List</div>
+                      <div className="text-sm text-gray-500">View walk-in candidates</div>
                     </div>
                   </div>
                 </button>
               </div>
             </div>
           </div>
-          {/* Calls Table for Telecaller */}
-          {dashboardType !== "admin" && (
-            <div className="bg-white rounded-lg shadow p-6 mt-8 overflow-x-auto">
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
-                <h3 className="text-lg font-semibold text-gray-900">Calls</h3>
-                <input
-                  type="text"
-                  className="border rounded px-3 py-2 w-full md:w-64"
-                  placeholder="Search by candidate name or phone..."
-                  value={callsSearchInput}
-                  onChange={e => setCallsSearchInput(e.target.value)}
-                />
-              </div>
-              <div className="overflow-x-auto">
-                <table className="min-w-full border rounded-xl overflow-hidden text-sm">
-                  <thead>
-                    <tr className="bg-gray-100">
-                      <th className="px-4 py-2 text-left font-semibold text-gray-600 whitespace-nowrap">#</th>
-                      <th className="px-4 py-2 text-left font-semibold text-gray-600 whitespace-nowrap">Candidate Name</th>
-                      <th className="px-4 py-2 text-left font-semibold text-gray-600 whitespace-nowrap">Phone</th>
-                      <th className="px-4 py-2 text-left font-semibold text-gray-600 whitespace-nowrap">Call Status</th>
-                      <th className="px-4 py-2 text-left font-semibold text-gray-600 whitespace-nowrap">Call Outcome</th>
-                      <th className="px-4 py-2 text-left font-semibold text-gray-600 whitespace-nowrap">Start Time</th>
-                      <th className="px-4 py-2 text-left font-semibold text-gray-600 whitespace-nowrap">Telecaller</th>
-                      <th className="px-4 py-2 text-left font-semibold text-gray-600 whitespace-nowrap">Branch</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {callsLoading ? (
-                      <tr><td colSpan={8} className="text-center py-8 text-gray-500">Loading...</td></tr>
-                    ) : calls.length === 0 ? (
-                      <tr><td colSpan={8} className="text-center py-8 text-gray-500">No calls found</td></tr>
-                    ) : (
-                      calls.map((call, idx) => (
-                        <tr key={call.id || idx} className="border-t">
-                          <td className="px-4 py-2">{(callsPage - 1) * 10 + idx + 1}</td>
-                          <td className="px-4 py-2">{call.candidate_name || call.enquiry_details?.candidate_name || "-"}</td>
-                          <td className="px-4 py-2">{call.phone || call.enquiry_details?.phone || "-"}</td>
-                          <td className="px-4 py-2">{call.call_status || "-"}</td>
-                          <td className="px-4 py-2">{call.call_outcome || "-"}</td>
-                          <td className="px-4 py-2">{call.call_start_time || "-"}</td>
-                          <td className="px-4 py-2">{call.telecaller_name || "-"}</td>
-                          <td className="px-4 py-2">{call.branch_name || "-"}</td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
-              {/* Pagination */}
-              {callsTotalPages > 1 && (
-                <div className="mt-6 flex justify-between items-center">
-                  <div className="text-sm text-gray-600">
-                    Showing {(callsPage - 1) * 10 + 1} to {Math.min(callsPage * 10, callsTotalRecords)} of {callsTotalRecords} entries
-                  </div>
-                  <div className="flex gap-2">
-                    <button
-                      className="px-3 py-1 border rounded disabled:opacity-50 disabled:cursor-not-allowed"
-                      disabled={callsPage === 1}
-                      onClick={() => setCallsPage(callsPage - 1)}
-                    >
-                      Previous
-                    </button>
-                    {[...Array(callsTotalPages)].map((_, index) => (
-                      <button
-                        key={index}
-                        className={`px-3 py-1 border rounded ${callsPage === index + 1 ? "bg-violet-100 text-violet-700 border-violet-300" : "hover:bg-gray-50"}`}
-                        onClick={() => setCallsPage(index + 1)}
-                      >
-                        {index + 1}
-                      </button>
-                    ))}
-                    <button
-                      className="px-3 py-1 border rounded disabled:opacity-50 disabled:cursor-not-allowed"
-                      disabled={callsPage === callsTotalPages}
-                      onClick={() => setCallsPage(callsPage + 1)}
-                    >
-                      Next
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
         </div>
       </main>
     </div>

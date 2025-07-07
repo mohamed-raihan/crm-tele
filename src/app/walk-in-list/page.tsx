@@ -147,7 +147,7 @@ const WalkInListPage = () => {
               <Button onClick={handleSearch} variant="outline" className="w-auto">
                 Search
               </Button>
-              <Button onClick={exportToExcel} variant="outline" className="w-auto flex items-center gap-1">
+              <Button onClick={exportToExcel} className="w-auto flex items-center gap-1 bg-green-600 hover:bg-green-700 text-white">
                 <Download className="w-4 h-4" /> Export to Excel
               </Button>
             </div>

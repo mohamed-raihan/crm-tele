@@ -113,6 +113,11 @@ export function DynamicTable({
                     variant={action.variant || "outline"}
                     size="sm"
                     onClick={action.onClick}
+                    className={
+                      action.label === 'EXCEL' || action.label === 'Export Excel' || action.label === 'Export to Excel'
+                        ? 'bg-green-600 hover:bg-green-700 text-white'
+                        : ''
+                    }
                   >
                     {action.label}
                   </Button>
