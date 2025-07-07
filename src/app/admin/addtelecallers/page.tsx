@@ -933,29 +933,26 @@ export default function TelecallersManagementPage() {
 
 
   const columns: TableColumn[] = [
-  { key: "id", label: "ID", sortable: true, width: "w-16" },
-  { key: "name", label: "Name", sortable: true },
-  { key: "email", label: "Email", sortable: true },
-  { key: "contact", label: "Contact", sortable: true },
-  { key: "address", label: "Address", sortable: true },
-  { 
-    key: "branch", 
-    label: "Branch", 
-    sortable: true,
-    render: (value: any, row: Telecaller) => (
-      <span>{getBranchNameFromId(row.branch)}</span>
-    )
-  },
-  {
-    key: "status",
-    label: "Status",
-    render: () => (
-      <Badge variant="secondary" className="bg-green-100 text-green-800">
-        Active
-      </Badge>
-    ),
-  },
-];
+    {
+      key: "serial",
+      label: "ID",
+      sortable: false,
+      render: (_: any, __: Telecaller, index: number) => index + 1,
+      width: "w-16",
+    },
+    { key: "name", label: "Name", sortable: true },
+    { key: "email", label: "Email", sortable: true },
+    { key: "contact", label: "Contact", sortable: true },
+    { key: "address", label: "Address", sortable: true },
+    { 
+      key: "branch", 
+      label: "Branch", 
+      sortable: true,
+      render: (value: any, row: Telecaller) => (
+        <span>{getBranchNameFromId(row.branch)}</span>
+      )
+    },
+  ];
   // Reset form function
   const resetForm = () => {
     setFormData({
@@ -1174,9 +1171,6 @@ export default function TelecallersManagementPage() {
           <DynamicTable
             data={telecallers}
             columns={columns}
-            onSelectAll={handleSelectAll}
-            onSelectRow={handleSelectRow}
-            selectedRows={selectedRows}
             rowIdKey="id"
             actions={[
               {

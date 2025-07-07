@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { DashboardStats } from "@/components/DashboardStats";
 import { SystemOverview } from "@/components/SystemOverview";
-import { UserPlus, BarChart3, Settings } from "lucide-react";
+import { UserPlus, BarChart3, FileText } from "lucide-react";
 
 const AdminDashboardPage = () => {
   const navigate = useNavigate();
@@ -55,14 +55,14 @@ const AdminDashboardPage = () => {
                   </div>
                 </button>
                 <button 
-                  onClick={() => handleQuickAction("/admin/settings")}
+                  onClick={() => handleQuickAction("/admin/enquiries")}
                   className="w-full text-left p-3 rounded-md border border-gray-200 hover:bg-gray-50 transition-colors"
                 >
                   <div className="flex items-center gap-3">
-                    <Settings className="w-5 h-5 text-gray-500" />
+                    <FileText className="w-5 h-5 text-gray-500" />
                     <div>
-                      <div className="font-medium text-gray-900">System Settings</div>
-                      <div className="text-sm text-gray-500">Configure application settings</div>
+                      <div className="font-medium text-gray-900">Enquiries</div>
+                      <div className="text-sm text-gray-500">View all enquiries</div>
                     </div>
                   </div>
                 </button>
