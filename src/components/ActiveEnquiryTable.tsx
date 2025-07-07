@@ -111,6 +111,8 @@ export function ActiveEnquiryTable() {
     setLoading(true);
     try {
       const response = await axiosInstance.get(`${API_URLS.ENQUIRY.GET_ENQUIRY}?page=${pageNum}`);
+      console.log(response);
+      const filtered = response.data.data 
       setEnquiry(response.data.data);
       // If API returns total count or total pages, update totalPages here
       if (response.data.total_pages) {
@@ -164,7 +166,16 @@ export function ActiveEnquiryTable() {
     {
       label: 'View Profile',
       icon: <Eye className="h-4 w-4 mr-2" />,
-      onClick: (row) => navigate(`/leads/profile/${row.id}`)
+      onClick: (row) => {
+        const userData = localStorage.getItem("user_data");
+        const user = userData ? JSON.parse(userData) : null;
+        
+        if (user && user.role === "Telecaller") {
+          navigate(`/telecaller-leads/profile/${row.id}`);
+        } else {
+          navigate(`/leads/profile/${row.id}`);
+        }
+      }
     },
     {
       label: 'Edit',
