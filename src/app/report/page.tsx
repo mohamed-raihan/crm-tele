@@ -1,6 +1,8 @@
 import { API_URLS } from "@/components/apiconfig/api_urls";
 import axiosInstance from "@/components/apiconfig/axios";
 import React, { useEffect, useState } from "react";
+import * as XLSX from "xlsx";
+import { RefreshCw } from "lucide-react";
 
 const columns = [
   "Counselor",
@@ -13,7 +15,6 @@ const columns = [
   "Negative",
   "Walk-in List",
   "Follow-ups",
-  "Actions",
 ];
 
 export default function ReportPage() {
@@ -30,6 +31,7 @@ export default function ReportPage() {
     totalRecords: 0,
     limit: 20,
   });
+  const [filteredReports, setFilteredReports] = useState([]);
 
   // Get auth config helper function
   const getAuthConfig = () => {
@@ -63,9 +65,8 @@ export default function ReportPage() {
         page: page.toString(),
         limit: limit.toString(),
       });
-
       if (branch) params.append("branch_name", branch);
-      if (counselor) params.append("counsellor_name", counselor);
+      if (counselor) params.append("telecaller_name", counselor);
       if (search) params.append("search", search);
 
       const response = await axiosInstance.get(
@@ -144,41 +145,35 @@ export default function ReportPage() {
     }
   };
 
-  // Export to Excel function
+  // Export to Excel using XLSX from frontend state
   const exportToExcel = async () => {
     try {
-      const authConfig = getAuthConfig();
-      if (!authConfig) return;
-
-      // Build query parameters for export
-      const params = new URLSearchParams();
-      if (branch) params.append("branch", branch);
-      if (counselor) params.append("telecaller_name", counselor);
-      if (search) params.append("search", search);
-      params.append("export", "excel");
-
-      const response = await axiosInstance.get(
-        `${API_URLS.REPORTS.GET_REPORTS}?${params.toString()}`,
-        {
-          ...authConfig,
-          responseType: "blob",
-        }
+      if (!reports || reports.length === 0) {
+        showToast("No data to export", "error");
+        return;
+      }
+      // Prepare export data (filtered if search is active)
+      const filteredData =
+        filteredReports.length > 0 || search ? filteredReports : reports;
+      const exportData = filteredData.map((report) => ({
+        Counselor: report.telecaller_name || "",
+        "Total Calls": report.total_calls || 0,
+        Contacted: report.contacted || 0,
+        "Not Contacted": report.not_contacted || 0,
+        Answered: report.answered || 0,
+        "Not Answered": report.not_answered || 0,
+        Positive: report.positive || 0,
+        Negative: report.negative || 0,
+        "Walk-in List": report.walk_in_list || 0,
+        "Follow-ups": report.total_follow_ups || 0,
+      }));
+      const worksheet = XLSX.utils.json_to_sheet(exportData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Reports");
+      XLSX.writeFile(
+        workbook,
+        `counselor_reports_${new Date().toISOString().split("T")[0]}.xlsx`
       );
-
-      // Create blob and download
-      const blob = new Blob([response.data], {
-        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      });
-
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `reports_${new Date().toISOString().split("T")[0]}.xlsx`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-
       showToast("Report exported successfully", "success");
     } catch (err) {
       console.error("Error exporting report:", err);
@@ -213,6 +208,18 @@ export default function ReportPage() {
     return () => clearTimeout(debounceTimer);
   }, [branch, counselor, search]);
 
+  useEffect(() => {
+    if (!search) {
+      setFilteredReports(reports);
+    } else {
+      setFilteredReports(
+        reports.filter((r) =>
+          (r.telecaller_name || "").toLowerCase().includes(search.toLowerCase())
+        )
+      );
+    }
+  }, [search, reports]);
+
   console.log(branch);
   console.log(reports);
   console.log(telecallers);
@@ -226,7 +233,7 @@ export default function ReportPage() {
             <div className="flex-1">
               <label className="block text-gray-700 mb-1">Branch</label>
               <select
-                className="w-full border rounded px-3 py-2"
+                className="w-full border rounded px-3 py-2 bg-gray-100 text-gray-700"
                 value={branch}
                 onChange={(e) => setBranch(e.target.value)}
               >
@@ -244,7 +251,7 @@ export default function ReportPage() {
             <div className="flex-1">
               <label className="block text-gray-700 mb-1">Counselor</label>
               <select
-                className="w-full border rounded px-3 py-2"
+                className="w-full border rounded px-3 py-2 bg-gray-100 text-gray-700"
                 value={counselor}
                 onChange={(e) => setCounselor(e.target.value)}
               >
@@ -269,17 +276,29 @@ export default function ReportPage() {
             <input
               type="text"
               placeholder="Search by counselor name..."
-              className="border rounded px-3 py-2 w-full md:w-64"
+              className="border rounded px-3 py-2 w-full md:w-64 bg-gray-100 text-gray-700"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
           <div className="flex gap-2">
             <button
-              className="bg-green-100 text-green-700 px-4 py-2 rounded hover:bg-green-200 font-medium"
+              className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded font-medium"
               onClick={exportToExcel}
             >
               Export to Excel
+            </button>
+            <button
+              className="bg-gray-100 text-gray-700 px-4 py-2 rounded hover:bg-gray-200 font-medium flex items-center gap-1"
+              onClick={() => {
+                setBranch("");
+                setCounselor("");
+                setSearch("");
+                fetchAllReports(1, pagination.limit);
+              }}
+              title="Refresh Report"
+            >
+              <RefreshCw className="w-4 h-4" />
             </button>
           </div>
         </div>
@@ -308,8 +327,8 @@ export default function ReportPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {reports.length > 0 ? (
-                    reports.map((report, i) => (
+                  {filteredReports.length > 0 ? (
+                    filteredReports.map((report, i) => (
                       <tr key={report.telecaller_id || i} className="border-t">
                         <td className="px-4 py-2 font-medium text-gray-700 whitespace-nowrap">
                           {report.telecaller_name}
@@ -358,11 +377,6 @@ export default function ReportPage() {
                           <span className="inline-block w-8 h-8 bg-purple-100 text-purple-600 rounded-full text-center text-sm font-bold leading-8">
                             {report.total_follow_ups || 0}
                           </span>
-                        </td>
-                        <td className="px-4 py-2 text-center">
-                          <button className="text-gray-500 hover:text-gray-700">
-                            <span className="material-icons">more_vert</span>
-                          </button>
                         </td>
                       </tr>
                     ))

@@ -22,6 +22,7 @@ import AdsPage from "./admin/ads/page";
 import FollowUpsPage from "./calls/follow-ups/page";
 import NotAnsweredPage from "./calls/not-answered/page";
 import MyJobPage from "./my-job/page";
+import CallsPage from "./calls/page";
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
@@ -243,6 +244,7 @@ export function AppRouter() {
           </TelecallerRoute>
         }
       />
+      <Route path="/calls" element={<CallsPage />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );

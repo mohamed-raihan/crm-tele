@@ -134,12 +134,12 @@ const dataManagement = [
       {
         title: "Telecaller",
         url: "/admin/addtelecallers",
-        icon: Activity
+        icon: Users
       },
       {
         title: "Ads",
         url: "/admin/ads",
-        icon: Activity
+        icon: PieChart
       },
     ]
   },
@@ -147,10 +147,10 @@ const dataManagement = [
 
 export function AdminSidebar() {
   const location = useLocation();
-  
+
   // State for collapsible sections
   const [collapsedSections, setCollapsedSections] = useState({});
-  
+
   // Toggle collapsible section
   const toggleSection = (key) => {
     setCollapsedSections(prev => ({
@@ -158,23 +158,22 @@ export function AdminSidebar() {
       [key]: !prev[key]
     }));
   };
-  
+
   // Check if a collapsible section is active
   const isCollapsibleSectionActive = (basePath) => {
     return location.pathname.startsWith(basePath);
   };
-  
+
   // Render single navigation item
   const renderSingleItem = (item) => (
     <SidebarMenuItem key={item.title}>
       <SidebarMenuButton asChild>
-        <Link 
+        <Link
           to={item.url}
-          className={`flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
-            location.pathname === item.url
+          className={`flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors ${location.pathname === item.url
               ? "bg-blue-100 text-blue-900"
               : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
-          }`}
+            }`}
         >
           <item.icon className="h-4 w-4" />
           <span>{item.title}</span>
@@ -182,22 +181,21 @@ export function AdminSidebar() {
       </SidebarMenuButton>
     </SidebarMenuItem>
   );
-  
+
   // Render collapsible navigation item
   const renderCollapsibleItem = (item) => {
     const isOpen = collapsedSections[item.key];
     const isActive = isCollapsibleSectionActive(item.basePath);
-    
+
     return (
       <SidebarMenuItem key={item.title}>
         <Collapsible open={isOpen} onOpenChange={() => toggleSection(item.key)}>
           <CollapsibleTrigger asChild>
             <SidebarMenuButton>
-              <div className={`flex items-center justify-between w-full px-3 py-2 text-sm font-medium rounded-md transition-colors ${
-                isActive
+              <div className={`flex items-center justify-between w-full px-3 py-2 text-sm font-medium rounded-md transition-colors ${isActive
                   ? "bg-blue-100 text-blue-900"
                   : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
-              }`}>
+                }`}>
                 <div className="flex items-center gap-3">
                   <item.icon className="h-4 w-4" />
                   <span>{item.title}</span>
@@ -217,11 +215,10 @@ export function AdminSidebar() {
               <SidebarMenuButton key={subItem.title} asChild>
                 <Link
                   to={subItem.url}
-                  className={`flex items-center gap-3 pl-8 pr-3 py-2 text-sm rounded-md transition-colors ${
-                    location.pathname === subItem.url
+                  className={`flex items-center gap-3 pl-8 pr-3 py-2 text-sm rounded-md transition-colors ${location.pathname === subItem.url
                       ? "bg-blue-100 text-blue-900"
                       : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
-                  }`}
+                    }`}
                 >
                   <subItem.icon className="h-3 w-3" />
                   <span>{subItem.title}</span>
@@ -238,16 +235,18 @@ export function AdminSidebar() {
     <Sidebar className="border-r border-gray-200">
       <SidebarHeader className="p-6">
         <div className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded-lg bg-blue-600 flex items-center justify-center">
-            <Shield className="h-4 w-4 text-white" />
-          </div>
-          <div>
-            <h1 className="text-lg font-semibold text-gray-900">TeleCRM</h1>
-            <p className="text-xs text-gray-500">Admin Portal</p>
-          </div>
+          <Link to="/admin" className="flex items-center gap-2 hover:bg-gray-100 rounded-lg p-1 transition-colors">
+            <div className="h-8 w-8 rounded-lg bg-blue-600 flex items-center justify-center">
+              <Shield className="h-4 w-4 text-white" />
+            </div>
+            <div>
+              <h1 className="text-lg font-semibold text-gray-900">TeleCRM</h1>
+              <p className="text-xs text-gray-500">Admin Portal</p>
+            </div>
+          </Link>
         </div>
       </SidebarHeader>
-      
+
       <SidebarContent className="px-3 py-4">
         <SidebarGroup>
           <SidebarGroupLabel className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">
@@ -312,7 +311,7 @@ export function AdminSidebar() {
           </SidebarGroupContent>
         </SidebarGroup> */}
 
-        
+
 
       </SidebarContent>
 

@@ -387,7 +387,7 @@ export default function BranchManagementPage() {
         await fetchBranches(pagination.page, pagination.limit);
         await fetchAllBranches();
         setIsModalOpen(false);
-        toast({ title: "Branch created successfully!" });
+        toast({ title: "Branch created successfully!", variant: "success" });
       } else {
         toast({
           title: response.data?.message || "Failed to create branch",
@@ -452,7 +452,7 @@ export default function BranchManagementPage() {
         await fetchAllBranches();
         setIsModalOpen(false);
         setEditingBranch(null);
-        toast({ title: "Branch updated successfully!" });
+        toast({ title: "Branch updated successfully!", variant: "success" });
       } else {
         toast({
           title: response.data?.message || "Failed to update branch",
@@ -501,7 +501,7 @@ export default function BranchManagementPage() {
         setSelectedRows((prev) =>
           prev.filter((rowId) => rowId !== id.toString())
         );
-        toast({ title: "Branch deleted successfully!" });
+        toast({ title: "Branch deleted successfully!", variant: "success" });
       } else {
         toast({
           title: response.data?.message || "Failed to delete branch",
