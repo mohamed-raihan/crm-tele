@@ -15,6 +15,7 @@ import {
   PaginationPrevious,
   PaginationNext,
 } from "@/components/ui/pagination";
+import * as XLSX from 'xlsx';
 
 // Mock data for active enquiries
 const activeEnquiries = [
@@ -189,23 +190,43 @@ export function ActiveEnquiryTable() {
     }
   ];
 
-  const bulkActions = [
-    {
-      label: 'Bulk Actions',
-      onClick: (selectedIds: string[]) => console.log('Bulk action:', selectedIds),
-      variant: 'outline' as const
+  const handleExportExcel = () => {
+    if (!Enquiries || Enquiries.length === 0) {
+      return;
     }
-  ];
+    // Prepare data for export (flatten objects, remove unwanted fields)
+    const exportData = Enquiries.map(({ id, candidate_name, phone, required_service, preferred_course, created_by_name, branch_name, mettad_name, assigned_by_name }) => ({
+      ID: id,
+      Name: candidate_name,
+      Phone: phone,
+      Service: required_service,
+      'Preferred Course': preferred_course,
+      'Created by': created_by_name,
+      Branch: branch_name,
+      Source: mettad_name,
+      'Assigned to': assigned_by_name
+    }));
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Enquiries');
+
+    // Make header row bold
+    const headerRange = XLSX.utils.decode_range(worksheet['!ref']);
+    for (let C = headerRange.s.c; C <= headerRange.e.c; ++C) {
+      const cellAddress = XLSX.utils.encode_cell({ r: 0, c: C });
+      if (!worksheet[cellAddress]) continue;
+      if (!worksheet[cellAddress].s) worksheet[cellAddress].s = {};
+      worksheet[cellAddress].s.font = { bold: true };
+    }
+    workbook.Sheets['Enquiries'] = worksheet;
+    workbook.SheetNames = ['Enquiries'];
+    XLSX.writeFile(workbook, `enquiries_${new Date().toISOString().split('T')[0]}.xlsx`);
+  };
 
   const exportActions = [
     {
-      label: 'CSV',
-      onClick: () => console.log('Export CSV'),
-      variant: 'outline' as const
-    },
-    {
       label: 'EXCEL',
-      onClick: () => console.log('Export Excel'),
+      onClick: handleExportExcel,
       variant: 'outline' as const
     },
   ];
@@ -256,7 +277,6 @@ export function ActiveEnquiryTable() {
               selectedRows={selectedRows}
               rowIdKey="id"
               showBulkActions={true}
-              bulkActions={bulkActions}
               exportActions={exportActions}
             />
           </div>

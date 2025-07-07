@@ -22,10 +22,10 @@ export function ActiveEnquirySection() {
         <div>
           <h2 className="text-xl font-semibold text-gray-900">Active Enquiry</h2>
         </div>
-        <Button className="bg-blue-600 hover:bg-blue-700">
+        {/* <Button className="bg-blue-600 hover:bg-blue-700">
           <Plus className="h-4 w-4 mr-2" />
           Add New Enquiry
-        </Button>
+        </Button> */}
       </div>
 
       {/* Filtration Section */}
