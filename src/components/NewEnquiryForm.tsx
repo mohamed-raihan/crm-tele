@@ -7,14 +7,20 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { z } from 'zod';
 import axiosInstance from './apiconfig/axios';
 import { API_URLS } from './apiconfig/api_urls';
+import { toast } from '@/hooks/use-toast';
 
 export function NewEnquiryForm() {
-const [telecaller,setTellecaller] = useState();
-const [counselorOptions, setCounselorOptions] = useState<{ value: string, label: string }[]>([]);
-const [formKey, setFormKey] = useState(0);
+  const userData = typeof window !== 'undefined' ? localStorage.getItem("user_data") : null;
+  const user = userData ? JSON.parse(userData) : null;
+  const isTelecaller = user && user.role === "Telecaller";
+  const telecallerId = isTelecaller ? user.telecaller.id : undefined;
+  const [telecaller, setTellecaller] = useState();
+  const [counselorOptions, setCounselorOptions] = useState<{ value: string, label: string }[]>([]);
+  const [formKey, setFormKey] = useState(0);
+  const [source, setSource] = useState<{ value: string, label: string }[]>([])
 
-  const fetchTelecaller = async()=>{
-    try{
+  const fetchTelecaller = async () => {
+    try {
       const response = await axiosInstance.get(API_URLS.TELLE_CALLERS.GET_TELLE_CALLERS);
       console.log(response);
       setTellecaller(response.data.data)
@@ -27,15 +33,38 @@ const [formKey, setFormKey] = useState(0);
           }))
         );
       }
-    }catch(err){
+    } catch (err) {
       console.log(err);
     }
 
-  }
+  };
 
-  useEffect(()=>{
-    fetchTelecaller()
-  },[])
+  const fetchSource = async () => {
+    try {
+      const response = await axiosInstance.get(API_URLS.ADS.GET_ADS);
+      console.log(response);
+      // setSource(response.data.data)
+      // Map response to options for select
+      if (Array.isArray(response.data.data)) {
+        setSource(
+          response.data.data.map((item: any) => ({
+            value: String(item.id),
+            label: item.name || item.username || item.email || `Counselor ${item.id}`
+          }))
+        );
+      }
+    } catch (err) {
+      console.log(err);
+    }
+
+  };
+
+
+
+  useEffect(() => {
+    fetchTelecaller();
+    fetchSource();
+  }, [])
 
   // Define form fields configuration
   const enquiryFormSections: FormSection[] = [
@@ -84,8 +113,13 @@ const [formKey, setFormKey] = useState(0);
           type: 'select',
           placeholder: 'Select Counsielor',
           required: true,
-          options: counselorOptions,
-          validation: z.string().min(1, 'Branch is required')
+          options: !isTelecaller
+            ? counselorOptions
+            : telecallerId && user.telecaller.name
+              ? [{ value: String(telecallerId), label: user.telecaller.name }]
+              : [],
+          validation: z.string().min(1, 'Branch is required'),
+          // disabled: isTelecaller
         },
         {
           name: 'preferred_course',
@@ -120,7 +154,7 @@ const [formKey, setFormKey] = useState(0);
       ]
     },
     {
-      columns: 2,
+      columns: 3,
       fields: [
         {
           name: 'follow_up_on',
@@ -143,6 +177,20 @@ const [formKey, setFormKey] = useState(0);
           validation: z.string().min(1, 'Required service is required')
         },
         {
+          name: 'mettads',
+          label: 'Source',
+          type: 'select',
+          placeholder: 'Select Source',
+          required: true,
+          options: source,
+          validation: z.string().min(1, 'Branch is required')
+        },
+      ]
+    },
+    {
+      columns: 1,
+      fields: [
+        {
           name: 'feedback',
           label: 'FeedBack',
           type: 'textarea',
@@ -154,7 +202,7 @@ const [formKey, setFormKey] = useState(0);
     }
   ];
 
-  const handleSubmit = async(data: any) => {
+  const handleSubmit = async (data: any) => {
     console.log('Form submitted:', data);
     // Format follow_up_on to YYYY-MM-DD if present
     if (data.follow_up_on) {
@@ -166,14 +214,17 @@ const [formKey, setFormKey] = useState(0);
         data.follow_up_on = `${yyyy}-${mm}-${dd}`;
       }
     }
-    try{
-      const response = await axiosInstance.post(API_URLS.ENQUIRY.POST_ENQUIRY,data)
+    try {
+      console.log(data);
+
+      const response = await axiosInstance.post(API_URLS.ENQUIRY.POST_ENQUIRY, data)
       console.log(response);
       // Reset the form by changing the key
+      toast({ title: "Enquiry created successsfully", variant: "success" });
       setFormKey(prev => prev + 1);
-    }catch(err){
+    } catch (err) {
       console.log(err);
-      
+      toast({ title: "Error creating enquiry", variant: "destructive" });
     }
     // Handle form submission here
   };

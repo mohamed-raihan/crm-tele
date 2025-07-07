@@ -143,7 +143,6 @@ export function EnquiryProfile(id:id) {
               <div>
                 <div className="flex items-center gap-2 mb-1">
                   <h2 className="text-xl font-semibold">{enquiry.candidate_name}</h2>
-                  <Edit className="h-4 w-4 text-gray-400" />
                 </div>
                 <p className="text-gray-600">{enquiry.created_at.split('T')[0]}</p>
               </div>
@@ -174,6 +173,11 @@ export function EnquiryProfile(id:id) {
             <div>
               <h3 className="font-medium text-gray-900 mb-2">Follow Ups</h3>
               <p className="text-gray-600">{enquiry.follow_up_on}</p>
+            </div>
+
+            <div>
+              <h3 className="font-medium text-gray-900 mb-2">Source</h3>
+              <p className="text-gray-600">{enquiry.mettad_name}</p>
             </div>
 
             {/* Interested */}
@@ -340,7 +344,7 @@ export function EnquiryProfile(id:id) {
         </TabsList>
         
         <TabsContent value="profile-info" className="mt-6">
-          <ProfileInfoTab />
+          <ProfileInfoTab id={id.id}/>
         </TabsContent>
         
         <TabsContent value="activities" className="mt-6">
