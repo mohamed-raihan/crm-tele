@@ -47,25 +47,25 @@ const navigationItems = [
     icon: Target,
     type: "single"
   },
-  {
-    title: "Job List",
-    icon: Building,
-    type: "collapsible",
-    key: "jobList",
-    basePath: "/admin/jobs",
-    subItems: [
-      {
-        title: "Remaining Jobs",
-        url: "/admin/jobs",
-        icon: Activity
-      },
-      {
-        title: "Completed Jobs",
-        url: "/admin/jobs/completed",
-        icon: PieChart
-      }
-    ]
-  },
+  // {
+  //   title: "Job List",
+  //   icon: Building,
+  //   type: "collapsible",
+  //   key: "jobList",
+  //   basePath: "/admin/jobs",
+  //   subItems: [
+  //     {
+  //       title: "Remaining Jobs",
+  //       url: "/admin/jobs",
+  //       icon: Activity
+  //     },
+  //     {
+  //       title: "Completed Jobs",
+  //       url: "/admin/jobs/completed",
+  //       icon: PieChart
+  //     }
+  //   ]
+  // },
   // {
   //   title: "Executive",
   //   url: "/admin/telecallers",
@@ -84,12 +84,12 @@ const navigationItems = [
     icon: Calendar,
     type: "single"
   },
-  {
-    title: "Call Register",
-    url: "/admin/call-analytics",
-    icon: Phone,
-    type: "single"
-  },
+  // {
+  //   title: "Call Register",
+  //   url: "/admin/call-analytics",
+  //   icon: Phone,
+  //   type: "single"
+  // },
   {
     title: "Not Answer",
     url: "/admin/not-answer",
@@ -102,20 +102,20 @@ const navigationItems = [
     icon: BarChart3,
     type: "single"
   },
-  {
-    title: "Settings",
-    url: "/admin/settings",
-    icon: Settings,
-    type: "single"
-  },
+  // {
+  //   title: "Settings",
+  //   url: "/admin/settings",
+  //   icon: Settings,
+  //   type: "single"
+  // },
 ]
 
 const quickActions = [
-  {
-    title: "System Health",
-    url: "/admin/system",
-    icon: Activity,
-  },
+  // {
+  //   title: "System Health",
+  //   url: "/admin/system",
+  //   icon: Activity,
+  // },
 ]
 
 const dataManagement = [
@@ -285,7 +285,7 @@ export function AdminSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
 
-        <SidebarGroup className="mt-6">
+        {/* <SidebarGroup className="mt-6">
           <SidebarGroupLabel className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">
             settings
           </SidebarGroupLabel>
@@ -310,7 +310,7 @@ export function AdminSidebar() {
               ))}
             </SidebarMenu>
           </SidebarGroupContent>
-        </SidebarGroup>
+        </SidebarGroup> */}
 
         
 
