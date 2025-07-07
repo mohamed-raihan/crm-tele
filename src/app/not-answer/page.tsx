@@ -51,16 +51,27 @@ function formatDate(dateStr: string | null | undefined) {
 }
 
 const NotAnsweredPage = () => {
+  const [allNotAnswered, setAllNotAnswered] = useState<NotAnsweredData[]>([]);
   const [notAnswered, setNotAnswered] = useState<NotAnsweredData[]>([]);
   const [loading, setLoading] = useState(false);
-  const [filters, setFilters] = useState({
+  type FiltersType = {
+    candidate_name: string;
+    phone: string;
+    email: string;
+    call_status: string;
+    call_start_time: string;
+    telecaller_name: string;
+  };
+  const defaultFilters: FiltersType = {
     candidate_name: "",
     phone: "",
     email: "",
     call_status: "",
     call_start_time: "",
     telecaller_name: "",
-  });
+  };
+  const [filterInputs, setFilterInputs] = useState<FiltersType>(defaultFilters);
+  const [appliedFilters, setAppliedFilters] = useState<FiltersType>(defaultFilters);
   const [pagination, setPagination] = useState<Pagination>({
     currentPage: 1,
     totalPages: 1,
@@ -68,67 +79,90 @@ const NotAnsweredPage = () => {
     limit: 10,
   });
 
-  const fetchNotAnswered = async (page = 1) => {
+  // Fetch all not-answered calls once
+  const fetchAllNotAnswered = async () => {
     setLoading(true);
     try {
       const token = localStorage.getItem("access_token");
       if (!token) return;
-
-      const queryParams = new URLSearchParams();
-      queryParams.append("page", page.toString());
-      queryParams.append("limit", pagination.limit.toString());
-      Object.entries(filters).forEach(([key, value]) => {
-        if (value) queryParams.append(key, value);
-      });
-
-      const response = await axiosInstance.get(`${API_URLS.CALLS.GET_NOT_ANSWERED}?${queryParams}`, {
+      // Try to fetch a large number of records
+      const response = await axiosInstance.get(`${API_URLS.CALLS.GET_NOT_ANSWERED}?page=1&limit=10000`, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
       });
-
       if (response.data?.code === 200) {
-        setNotAnswered(response.data.data || []);
-        if (response.data.pagination) {
-          setPagination((prev) => ({ ...prev, ...response.data.pagination }));
-        }
+        setAllNotAnswered(response.data.data || []);
       } else {
-        setNotAnswered([]);
+        setAllNotAnswered([]);
       }
     } catch (error) {
-      setNotAnswered([]);
+      setAllNotAnswered([]);
     } finally {
       setLoading(false);
     }
   };
 
+  // Frontend filter logic
+  const applyFilters = (rawData: NotAnsweredData[], filters: FiltersType) => {
+    return rawData.filter((item) => {
+      const { candidate_name, phone, email, call_status, call_start_time, telecaller_name } = filters;
+      const matchesCandidate = candidate_name ? item.enquiry_details?.candidate_name?.toLowerCase().includes(candidate_name.toLowerCase()) : true;
+      const matchesPhone = phone ? item.enquiry_details?.phone?.includes(phone) : true;
+      const matchesEmail = email ? item.enquiry_details?.email?.toLowerCase().includes(email.toLowerCase()) : true;
+      const matchesCallStatus = call_status ? item.call_status === call_status : true;
+      const matchesCallStartTime = call_start_time ? (item.call_start_time ? item.call_start_time.slice(0, 10) === call_start_time : false) : true;
+      const matchesTelecaller = telecaller_name ? item.telecaller_name?.toLowerCase().includes(telecaller_name.toLowerCase()) : true;
+      return matchesCandidate && matchesPhone && matchesEmail && matchesCallStatus && matchesCallStartTime && matchesTelecaller;
+    });
+  };
+
+  // Frontend pagination logic
+  const paginate = (data: NotAnsweredData[], page: number, limit: number) => {
+    const totalRecords = data.length;
+    const totalPages = Math.max(1, Math.ceil(totalRecords / limit));
+    const start = (page - 1) * limit;
+    const end = start + limit;
+    return {
+      paginated: data.slice(start, end),
+      totalPages,
+      totalRecords,
+    };
+  };
+
+  // On mount, fetch all data
   useEffect(() => {
-    fetchNotAnswered(1);
+    fetchAllNotAnswered();
   }, []);
 
+  // When allNotAnswered, appliedFilters, or pagination changes, update displayed data
+  useEffect(() => {
+    setLoading(true);
+    const filtered = applyFilters(allNotAnswered, appliedFilters);
+    const { paginated, totalPages, totalRecords } = paginate(filtered, pagination.currentPage, pagination.limit);
+    setNotAnswered(paginated);
+    setPagination((prev) => ({ ...prev, totalPages, totalRecords }));
+    setLoading(false);
+  }, [allNotAnswered, appliedFilters, pagination.currentPage, pagination.limit]);
+
   const handleFilterChange = (field: string, value: string) => {
-    setFilters((prev) => ({ ...prev, [field]: value }));
+    setFilterInputs((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleSearch = () => {
-    fetchNotAnswered(1);
+    setAppliedFilters({ ...filterInputs });
+    setPagination((prev) => ({ ...prev, currentPage: 1 }));
   };
 
   const handleReset = () => {
-    setFilters({
-      candidate_name: "",
-      phone: "",
-      email: "",
-      call_status: "",
-      call_start_time: "",
-      telecaller_name: "",
-    });
-    fetchNotAnswered(1);
+    setFilterInputs(defaultFilters);
+    setAppliedFilters(defaultFilters);
+    setPagination((prev) => ({ ...prev, currentPage: 1 }));
   };
 
   const handlePageChange = (newPage: number) => {
-    fetchNotAnswered(newPage);
+    setPagination((prev) => ({ ...prev, currentPage: newPage }));
   };
 
   const exportToExcel = () => {
@@ -144,9 +178,11 @@ const NotAnsweredPage = () => {
       "Branch Name",
       "Created At",
     ];
+    // Export filtered data, not just current page
+    const filtered = applyFilters(allNotAnswered, appliedFilters);
     const csvContent = [
       headers.join(","),
-      ...notAnswered.map((item) => [
+      ...filtered.map((item) => [
         item.id,
         `"${item.enquiry_details?.candidate_name || ""}"`,
         item.enquiry_details?.phone || "",
@@ -191,7 +227,7 @@ const NotAnsweredPage = () => {
                   <Label htmlFor="candidate_name">Candidate Name</Label>
                   <Input
                     id="candidate_name"
-                    value={filters.candidate_name}
+                    value={filterInputs.candidate_name}
                     onChange={(e) => handleFilterChange("candidate_name", e.target.value)}
                     placeholder="Enter candidate name"
                   />
@@ -200,7 +236,7 @@ const NotAnsweredPage = () => {
                   <Label htmlFor="phone">Phone</Label>
                   <Input
                     id="phone"
-                    value={filters.phone}
+                    value={filterInputs.phone}
                     onChange={(e) => handleFilterChange("phone", e.target.value)}
                     placeholder="Enter phone number"
                   />
@@ -209,14 +245,14 @@ const NotAnsweredPage = () => {
                   <Label htmlFor="email">Email</Label>
                   <Input
                     id="email"
-                    value={filters.email}
+                    value={filterInputs.email}
                     onChange={(e) => handleFilterChange("email", e.target.value)}
                     placeholder="Enter email"
                   />
                 </div>
                 <div>
                   <Label htmlFor="call_status">Call Status</Label>
-                  <Select value={filters.call_status} onValueChange={(value) => handleFilterChange("call_status", value)}>
+                  <Select value={filterInputs.call_status} onValueChange={(value) => handleFilterChange("call_status", value)}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select status" />
                     </SelectTrigger>
@@ -231,7 +267,7 @@ const NotAnsweredPage = () => {
                   <Input
                     id="call_start_time"
                     type="date"
-                    value={filters.call_start_time}
+                    value={filterInputs.call_start_time}
                     onChange={(e) => handleFilterChange("call_start_time", e.target.value)}
                   />
                 </div>
@@ -239,7 +275,7 @@ const NotAnsweredPage = () => {
                   <Label htmlFor="telecaller_name">Telecaller Name</Label>
                   <Input
                     id="telecaller_name"
-                    value={filters.telecaller_name}
+                    value={filterInputs.telecaller_name}
                     onChange={(e) => handleFilterChange("telecaller_name", e.target.value)}
                     placeholder="Enter telecaller name"
                   />
@@ -254,7 +290,7 @@ const NotAnsweredPage = () => {
                   <RefreshCw className="w-4 h-4 mr-2" />
                   Reset
                 </Button>
-                <Button variant="outline" onClick={exportToExcel} disabled={loading || notAnswered.length === 0}>
+                <Button variant="outline" className="bg-green-600 hover:bg-green-700 text-white" onClick={exportToExcel} disabled={loading || notAnswered.length === 0}>
                   <FileDown className="w-4 h-4 mr-2" />
                   Export Excel
                 </Button>

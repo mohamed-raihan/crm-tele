@@ -1,8 +1,49 @@
-import { Search, Bell, Settings, User } from "lucide-react"
+import { Search, Bell, Settings, User, LogOut } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { SidebarTrigger } from "@/components/ui/sidebar"
+import { useNavigate } from "react-router-dom"
+import { useState, useEffect, useState as useStateReact } from "react"
 
 export function DashboardHeader() {
+  const navigate = useNavigate();
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [userName, setUserName] = useStateReact("");
+
+  useEffect(() => {
+    let name = "User";
+    if (typeof window !== "undefined") {
+      try {
+        const userData = localStorage.getItem("user_data");
+        if (userData) {
+          const parsed = JSON.parse(userData);
+          if (parsed.role === "Admin" && parsed.email) {
+            name = parsed.email;
+          } else if (parsed.role === "Telecaller" && parsed.telecaller && parsed.telecaller.name) {
+            name = parsed.telecaller.name;
+          }
+        }
+      } catch (e) {
+        // fallback to default
+      }
+    }
+    setUserName(name);
+  }, []);
+
+  const handleLogout = () => {
+    setShowConfirm(true);
+  };
+
+  const confirmLogout = () => {
+    // Remove items from localStorage
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("refresh_token");
+    // Set boolean values to false instead of removing
+    localStorage.setItem("isAuthenticated", "false");
+    localStorage.setItem("isLoggedIn", "false");
+    localStorage.removeItem("user_data");
+    navigate("/login");
+  };
+
   return (
     <header className="bg-white border-b border-gray-200 px-4 md:px-6 py-4">
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
@@ -11,39 +52,45 @@ export function DashboardHeader() {
             <SidebarTrigger className="h-8 w-8" />
             <h1 className="text-xl font-semibold text-gray-900">Dashboard</h1>
           </div>
-          <p className="text-sm text-gray-500 ml-0 sm:ml-2">Welcome back! Here's what's happening today.</p>
+          {/* <p className="text-sm text-gray-500 ml-0 sm:ml-2">Welcome back! Here's what's happening today.</p> */}
         </div>
-        
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-4 w-full md:w-auto">
-          {/* Search */}
-          <div className="relative w-full sm:w-64">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search customers, leads..."
-              className="pl-10 pr-4 py-2 w-full border border-gray-200 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
+
+        <div className="flex flex-row items-center justify-end gap-4 w-full">
+          <div className="flex items-center gap-2 px-3 py-2 rounded-md bg-gray-100">
+            <User className="h-5 w-5 text-gray-700" />
+            <span className="hidden sm:inline text-sm font-medium text-gray-700 truncate max-w-[120px]">{userName}</span>
           </div>
-          
-          {/* Notifications */}
-          <Button variant="ghost" size="icon" className="relative">
-            <Bell className="h-4 w-4" />
-            <span className="absolute -top-1 -right-1 h-3 w-3 bg-red-500 rounded-full text-xs flex items-center justify-center text-white">
-              3
-            </span>
-          </Button>
-          
-          {/* Settings */}
-          <Button variant="ghost" size="icon">
-            <Settings className="h-4 w-4" />
-          </Button>
-          
-          {/* Profile */}
-          <Button variant="ghost" size="icon">
-            <User className="h-4 w-4" />
-          </Button>
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-red-100 transition-colors border border-red-300 bg-red-50"
+          >
+            <LogOut className="h-4 w-4 text-red-600" />
+            <span className="hidden sm:inline text-sm font-medium text-red-600">Logout</span>
+          </button>
         </div>
       </div>
+      {/* Confirm Alert */}
+      {showConfirm && (
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50">
+          <div className="bg-white rounded-lg shadow-lg p-6 w-80 max-w-full">
+            <p className="text-gray-900 text-base mb-4">Are you sure you want to logout?</p>
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setShowConfirm(false)}
+                className="px-4 py-2 rounded bg-gray-200 text-gray-700 hover:bg-gray-300"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmLogout}
+                className="px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700"
+              >
+                Logout
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </header>
   )
 }
