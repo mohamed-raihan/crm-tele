@@ -121,8 +121,8 @@ export function DynamicTable({
             </div>
           )}
 
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
+          <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2 w-full">
+            <div className="flex flex-wrap items-center gap-2 min-w-0">
               {filters.map((filter, index) => (
                 <Badge key={index} variant="secondary" className="bg-blue-100 text-blue-800">
                   {filter.label}: {filter.value}
@@ -134,15 +134,14 @@ export function DynamicTable({
                 More filters
               </Button>
             </div>
-            
             {onSearch && (
-              <div className="relative">
+              <div className="relative w-full sm:w-64 min-w-0">
                 <Search className="h-4 w-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                 <Input
                   placeholder={searchPlaceholder}
                   value={searchTerm}
                   onChange={(e) => handleSearch(e.target.value)}
-                  className="pl-10 w-64"
+                  className="pl-10 w-full"
                 />
               </div>
             )}
