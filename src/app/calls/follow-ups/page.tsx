@@ -4,8 +4,21 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { FileDown, Search, RefreshCw } from "lucide-react";
 import axiosInstance from "@/components/apiconfig/axios";
 import { API_URLS } from "@/components/apiconfig/api_urls";
@@ -77,19 +90,39 @@ const FollowUpsPage = () => {
       const queryParams = new URLSearchParams();
       queryParams.append("page", page.toString());
       queryParams.append("limit", pagination.limit.toString());
-      Object.entries(filters).forEach(([key, value]) => {
-        if (value) queryParams.append(key, value);
-      });
 
-      const response = await axiosInstance.get(`${API_URLS.CALLS.GET_FOLLOW_UPS}?${queryParams}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
+      // Add individual filter parameters
+      if (filters.candidate_name.trim()) {
+        queryParams.append("candidate_name", filters.candidate_name.trim());
+      }
+      if (filters.phone.trim()) {
+        queryParams.append("phone", filters.phone.trim());
+      }
+      if (filters.email.trim()) {
+        queryParams.append("email", filters.email.trim());
+      }
+      if (filters.call_status) {
+        queryParams.append("call_status", filters.call_status);
+      }
+      if (filters.follow_up_date) {
+        queryParams.append("follow_up_date", filters.follow_up_date);
+      }
+      if (filters.telecaller_name.trim()) {
+        queryParams.append("telecaller_name", filters.telecaller_name.trim());
+      }
 
-      console.log(response);
-      
+      const response = await axiosInstance.get(
+        `${API_URLS.CALLS.GET_FOLLOW_UPS}?${queryParams}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      console.log("API Response:", response);
+      console.log("Query Params:", queryParams.toString());
 
       if (response.data?.code === 200) {
         setFollowUps(response.data.data || []);
@@ -100,6 +133,7 @@ const FollowUpsPage = () => {
         setFollowUps([]);
       }
     } catch (error) {
+      console.error("Error fetching follow-ups:", error);
       setFollowUps([]);
     } finally {
       setLoading(false);
@@ -115,6 +149,8 @@ const FollowUpsPage = () => {
   };
 
   const handleSearch = () => {
+    // Reset pagination to page 1 when searching
+    setPagination((prev) => ({ ...prev, currentPage: 1 }));
     fetchFollowUps(1);
   };
 
@@ -127,7 +163,12 @@ const FollowUpsPage = () => {
       follow_up_date: "",
       telecaller_name: "",
     });
-    fetchFollowUps(1);
+    // Reset pagination to page 1
+    setPagination((prev) => ({ ...prev, currentPage: 1 }));
+    // Wait for state update then fetch
+    setTimeout(() => {
+      fetchFollowUps(1);
+    }, 0);
   };
 
   const handlePageChange = (newPage: number) => {
@@ -149,18 +190,20 @@ const FollowUpsPage = () => {
     ];
     const csvContent = [
       headers.join(","),
-      ...followUps.map((item) => [
-        item.id,
-        `"${item.enquiry_details?.candidate_name || ""}"`,
-        item.enquiry_details?.phone || "",
-        `"${item.enquiry_details?.email || ""}"`,
-        item.call_status,
-        item.call_outcome,
-        item.follow_up_date,
-        item.telecaller_name,
-        item.branch_name,
-        item.created_at,
-      ].join(",")),
+      ...followUps.map((item) =>
+        [
+          item.id,
+          `"${item.enquiry_details?.candidate_name || ""}"`,
+          item.enquiry_details?.phone || "",
+          `"${item.enquiry_details?.email || ""}"`,
+          item.call_status,
+          item.call_outcome,
+          item.follow_up_date,
+          item.telecaller_name,
+          item.branch_name,
+          item.created_at,
+        ].join(",")
+      ),
     ].join("\n");
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const link = document.createElement("a");
@@ -179,7 +222,9 @@ const FollowUpsPage = () => {
       <main className="flex-1 p-6">
         <div className="max-w-7xl mx-auto">
           <div className="mb-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Follow-ups</h2>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">
+              Follow-ups
+            </h2>
             <p className="text-gray-600">Manage and track follow-up calls</p>
           </div>
 
@@ -195,7 +240,9 @@ const FollowUpsPage = () => {
                   <Input
                     id="candidate_name"
                     value={filters.candidate_name}
-                    onChange={(e) => handleFilterChange("candidate_name", e.target.value)}
+                    onChange={(e) =>
+                      handleFilterChange("candidate_name", e.target.value)
+                    }
                     placeholder="Enter candidate name"
                   />
                 </div>
@@ -204,7 +251,9 @@ const FollowUpsPage = () => {
                   <Input
                     id="phone"
                     value={filters.phone}
-                    onChange={(e) => handleFilterChange("phone", e.target.value)}
+                    onChange={(e) =>
+                      handleFilterChange("phone", e.target.value)
+                    }
                     placeholder="Enter phone number"
                   />
                 </div>
@@ -213,13 +262,20 @@ const FollowUpsPage = () => {
                   <Input
                     id="email"
                     value={filters.email}
-                    onChange={(e) => handleFilterChange("email", e.target.value)}
+                    onChange={(e) =>
+                      handleFilterChange("email", e.target.value)
+                    }
                     placeholder="Enter email"
                   />
                 </div>
                 <div>
                   <Label htmlFor="call_status">Call Status</Label>
-                  <Select value={filters.call_status} onValueChange={(value) => handleFilterChange("call_status", value)}>
+                  <Select
+                    value={filters.call_status}
+                    onValueChange={(value) =>
+                      handleFilterChange("call_status", value)
+                    }
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="Select status" />
                     </SelectTrigger>
@@ -235,7 +291,9 @@ const FollowUpsPage = () => {
                     id="follow_up_date"
                     type="date"
                     value={filters.follow_up_date}
-                    onChange={(e) => handleFilterChange("follow_up_date", e.target.value)}
+                    onChange={(e) =>
+                      handleFilterChange("follow_up_date", e.target.value)
+                    }
                   />
                 </div>
                 <div>
@@ -243,7 +301,9 @@ const FollowUpsPage = () => {
                   <Input
                     id="telecaller_name"
                     value={filters.telecaller_name}
-                    onChange={(e) => handleFilterChange("telecaller_name", e.target.value)}
+                    onChange={(e) =>
+                      handleFilterChange("telecaller_name", e.target.value)
+                    }
                     placeholder="Enter telecaller name"
                   />
                 </div>
@@ -253,11 +313,19 @@ const FollowUpsPage = () => {
                   <Search className="w-4 h-4 mr-2" />
                   Search
                 </Button>
-                <Button variant="outline" onClick={handleReset} disabled={loading}>
+                <Button
+                  variant="outline"
+                  onClick={handleReset}
+                  disabled={loading}
+                >
                   <RefreshCw className="w-4 h-4 mr-2" />
                   Reset
                 </Button>
-                <Button variant="outline" onClick={exportToExcel} disabled={loading || followUps.length === 0}>
+                <Button
+                  variant="outline"
+                  onClick={exportToExcel}
+                  disabled={loading || followUps.length === 0}
+                >
                   <FileDown className="w-4 h-4 mr-2" />
                   Export Excel
                 </Button>
@@ -296,7 +364,10 @@ const FollowUpsPage = () => {
                     <TableBody>
                       {followUps.length === 0 ? (
                         <TableRow>
-                          <TableCell colSpan={10} className="text-center py-8 text-gray-500">
+                          <TableCell
+                            colSpan={10}
+                            className="text-center py-8 text-gray-500"
+                          >
                             No follow-ups found
                           </TableCell>
                         </TableRow>
@@ -304,12 +375,16 @@ const FollowUpsPage = () => {
                         followUps.map((item) => (
                           <TableRow key={item.id}>
                             <TableCell>{item.id}</TableCell>
-                            <TableCell>{item.enquiry_details?.candidate_name}</TableCell>
+                            <TableCell>
+                              {item.enquiry_details?.candidate_name}
+                            </TableCell>
                             <TableCell>{item.enquiry_details?.phone}</TableCell>
                             <TableCell>{item.enquiry_details?.email}</TableCell>
                             <TableCell>{item.call_status}</TableCell>
                             <TableCell>{item.call_outcome}</TableCell>
-                            <TableCell>{formatDate(item.follow_up_date)}</TableCell>
+                            <TableCell>
+                              {formatDate(item.follow_up_date)}
+                            </TableCell>
                             <TableCell>{item.telecaller_name}</TableCell>
                             <TableCell>{item.branch_name}</TableCell>
                             <TableCell>{formatDate(item.created_at)}</TableCell>
@@ -324,21 +399,33 @@ const FollowUpsPage = () => {
               {pagination.totalPages > 1 && (
                 <div className="mt-6 flex justify-between items-center">
                   <div className="text-sm text-gray-600">
-                    Showing {(pagination.currentPage - 1) * pagination.limit + 1} to {Math.min(pagination.currentPage * pagination.limit, pagination.totalRecords)} of {pagination.totalRecords} entries
+                    Showing{" "}
+                    {(pagination.currentPage - 1) * pagination.limit + 1} to{" "}
+                    {Math.min(
+                      pagination.currentPage * pagination.limit,
+                      pagination.totalRecords
+                    )}{" "}
+                    of {pagination.totalRecords} entries
                   </div>
                   <div className="flex gap-2">
                     <Button
                       variant="outline"
                       size="sm"
                       disabled={pagination.currentPage === 1}
-                      onClick={() => handlePageChange(pagination.currentPage - 1)}
+                      onClick={() =>
+                        handlePageChange(pagination.currentPage - 1)
+                      }
                     >
                       Previous
                     </Button>
                     {[...Array(pagination.totalPages)].map((_, index) => (
                       <Button
                         key={index}
-                        variant={pagination.currentPage === index + 1 ? "default" : "outline"}
+                        variant={
+                          pagination.currentPage === index + 1
+                            ? "default"
+                            : "outline"
+                        }
                         size="sm"
                         onClick={() => handlePageChange(index + 1)}
                       >
@@ -348,8 +435,12 @@ const FollowUpsPage = () => {
                     <Button
                       variant="outline"
                       size="sm"
-                      disabled={pagination.currentPage === pagination.totalPages}
-                      onClick={() => handlePageChange(pagination.currentPage + 1)}
+                      disabled={
+                        pagination.currentPage === pagination.totalPages
+                      }
+                      onClick={() =>
+                        handlePageChange(pagination.currentPage + 1)
+                      }
                     >
                       Next
                     </Button>
@@ -364,4 +455,4 @@ const FollowUpsPage = () => {
   );
 };
 
-export default FollowUpsPage; 
+export default FollowUpsPage;
