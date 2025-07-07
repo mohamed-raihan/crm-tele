@@ -40,6 +40,11 @@ const navigationItems = [
     icon: Target,
   },
   {
+    title: "Calls",
+    url: "/calls",
+    icon: Phone,
+  },
+  {
     title: "Walk-in List",
     url: "/walk-in-list",
     icon: Calendar,
