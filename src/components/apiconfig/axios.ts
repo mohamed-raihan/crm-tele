@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_BASE_URL = "https://crm-tellecallers.onrender.com/";
+const API_BASE_URL = "https://backend.telecrm.pixelsoft.online/";
 
 const axiosInstance = axios.create({
   baseURL: API_BASE_URL,
