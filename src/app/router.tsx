@@ -100,6 +100,14 @@ export function AppRouter() {
         }
       />
       <Route
+        path="/telecaller-leads/profile/:id"
+        element={
+          <TelecallerRoute>
+            <EnquiryProfilePage />
+          </TelecallerRoute>
+        }
+      />
+      <Route
         path="/dashboard"
         element={
           <TelecallerRoute>

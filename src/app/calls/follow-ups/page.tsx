@@ -88,6 +88,9 @@ const FollowUpsPage = () => {
         },
       });
 
+      console.log(response);
+      
+
       if (response.data?.code === 200) {
         setFollowUps(response.data.data || []);
         if (response.data.pagination) {

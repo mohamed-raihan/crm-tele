@@ -66,6 +66,11 @@ export function EnquiryProfile(id:id) {
     next_action: ''
   })
 
+  // Check if user is a Telecaller
+  const userData = localStorage.getItem("user_data");
+  const user = userData ? JSON.parse(userData) : null;
+  const isTelecaller = user && user.role === "Telecaller";
+
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({
       ...prev,
@@ -184,144 +189,146 @@ export function EnquiryProfile(id:id) {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardContent className="p-6">
-          <div className="flex items-start justify-between mb-6">
-            <div className="flex items-center gap-4">
-              <span className="text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded">UPDATE CALL STATUS</span>
+      {isTelecaller && (
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-start justify-between mb-6">
+              <div className="flex items-center gap-4">
+                <span className="text-sm text-gray-500 bg-gray-100 px-3 py-1 rounded">UPDATE CALL STATUS</span>
+              </div>
             </div>
-          </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Call Type */}
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Call Type */}
+                <div className="space-y-2">
+                  <Label htmlFor="call_type">Call Type</Label>
+                  <Select value={formData.call_type} onValueChange={(value) => handleInputChange('call_type', value)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select call type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Incoming">Incoming</SelectItem>
+                      <SelectItem value="Outgoing">Outgoing</SelectItem>
+                      {/* <SelectItem value="missed">Missed</SelectItem> */}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Call Status */}
+                <div className="space-y-2">
+                  <Label htmlFor="call_status">Call Status</Label>
+                  <Select value={formData.call_status} onValueChange={(value) => handleInputChange('call_status', value)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select call status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="contacted">Contacted</SelectItem>
+                      <SelectItem value="Not Answered">Not Answered</SelectItem>
+                      <SelectItem value="Busy">Busy</SelectItem>
+                      <SelectItem value="Switched Off">VSwitched Off</SelectItem>
+                      <SelectItem value="Answered">Answered</SelectItem>
+                      <SelectItem value="No Response">No Response</SelectItem>
+                      <SelectItem value="Invalid Number">Invalid Number</SelectItem>
+                      <SelectItem value="not_contacted">Not Contacted</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Call Outcome */}
+                <div className="space-y-2">
+                  <Label htmlFor="call_outcome">Call Outcome</Label>
+                  <Select value={formData.call_outcome} onValueChange={(value) => handleInputChange('call_outcome', value)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select call outcome" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Interested">Interested</SelectItem>
+                      <SelectItem value="Not Interested">Not Interested</SelectItem>
+                      <SelectItem value="Callback Requested">Callback Requested</SelectItem>
+                      <SelectItem value="Information Provided">Information Provided</SelectItem>
+                      <SelectItem value="Follow Up">Follow Up</SelectItem>
+                      <SelectItem value="Converted">Converted</SelectItem>
+                      <SelectItem value="Do Not Call">Do Not Call</SelectItem>
+                      <SelectItem value="walk_in_list">walk_in_list</SelectItem>
+                      <SelectItem value="closed">closed</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Follow Up Date */}
+                <div className="space-y-2">
+                  <Label htmlFor="follow_up_date">Follow Up Date</Label>
+                  <Input
+                    type="date"
+                    id="follow_up_date"
+                    value={formData.follow_up_date}
+                    onChange={(e) => handleInputChange('follow_up_date', e.target.value)}
+                  />
+                </div>
+
+                {/* Call Start Time */}
+                <div className="space-y-2">
+                  <Label htmlFor="call_start_time">Call Start Time</Label>
+                  <Input
+                    type="datetime-local"
+                    id="call_start_time"
+                    value={formData.call_start_time}
+                    onChange={(e) => handleInputChange('call_start_time', e.target.value)}
+                  />
+                </div>
+
+                {/* Call End Time */}
+                <div className="space-y-2">
+                  <Label htmlFor="call_end_time">Call End Time</Label>
+                  <Input
+                    type="datetime-local"
+                    id="call_end_time"
+                    value={formData.call_end_time}
+                    onChange={(e) => handleInputChange('call_end_time', e.target.value)}
+                  />
+                </div>
+              </div>
+
+              {/* Next Action */}
               <div className="space-y-2">
-                <Label htmlFor="call_type">Call Type</Label>
-                <Select value={formData.call_type} onValueChange={(value) => handleInputChange('call_type', value)}>
+                <Label htmlFor="next_action">Next Action</Label>
+                <Select value={formData.next_action} onValueChange={(value) => handleInputChange('next_action', value)}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Select call type" />
+                    <SelectValue placeholder="Select next action" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="Incoming">Incoming</SelectItem>
-                    <SelectItem value="Outgoing">Outgoing</SelectItem>
-                    {/* <SelectItem value="missed">Missed</SelectItem> */}
+                    <SelectItem value="call_back">Call Back</SelectItem>
+                    <SelectItem value="send_email">Send Email</SelectItem>
+                    <SelectItem value="send_sms">Send SMS</SelectItem>
+                    <SelectItem value="meeting">Schedule Meeting</SelectItem>
+                    <SelectItem value="no_action">No Action Required</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
-              {/* Call Status */}
+              {/* Note */}
               <div className="space-y-2">
-                <Label htmlFor="call_status">Call Status</Label>
-                <Select value={formData.call_status} onValueChange={(value) => handleInputChange('call_status', value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select call status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="contacted">Contacted</SelectItem>
-                    <SelectItem value="Not Answered">Not Answered</SelectItem>
-                    <SelectItem value="Busy">Busy</SelectItem>
-                    <SelectItem value="Switched Off">VSwitched Off</SelectItem>
-                    <SelectItem value="Answered">Answered</SelectItem>
-                    <SelectItem value="No Response">No Response</SelectItem>
-                    <SelectItem value="Invalid Number">Invalid Number</SelectItem>
-                    <SelectItem value="not_contacted">Not Contacted</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Call Outcome */}
-              <div className="space-y-2">
-                <Label htmlFor="call_outcome">Call Outcome</Label>
-                <Select value={formData.call_outcome} onValueChange={(value) => handleInputChange('call_outcome', value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select call outcome" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Interested">Interested</SelectItem>
-                    <SelectItem value="Not Interested">Not Interested</SelectItem>
-                    <SelectItem value="Callback Requested">Callback Requested</SelectItem>
-                    <SelectItem value="Information Provided">Information Provided</SelectItem>
-                    <SelectItem value="Follow Up">Follow Up</SelectItem>
-                    <SelectItem value="Converted">Converted</SelectItem>
-                    <SelectItem value="Do Not Call">Do Not Call</SelectItem>
-                    <SelectItem value="walk_in_list">walk_in_list</SelectItem>
-                    <SelectItem value="closed">closed</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Follow Up Date */}
-              <div className="space-y-2">
-                <Label htmlFor="follow_up_date">Follow Up Date</Label>
-                <Input
-                  type="date"
-                  id="follow_up_date"
-                  value={formData.follow_up_date}
-                  onChange={(e) => handleInputChange('follow_up_date', e.target.value)}
+                <Label htmlFor="note">Note</Label>
+                <Textarea
+                  id="note"
+                  placeholder="Enter call notes..."
+                  value={formData.note}
+                  onChange={(e) => handleInputChange('note', e.target.value)}
+                  rows={4}
                 />
               </div>
 
-              {/* Call Start Time */}
-              <div className="space-y-2">
-                <Label htmlFor="call_start_time">Call Start Time</Label>
-                <Input
-                  type="datetime-local"
-                  id="call_start_time"
-                  value={formData.call_start_time}
-                  onChange={(e) => handleInputChange('call_start_time', e.target.value)}
-                />
+              {/* Submit Button */}
+              <div className="flex justify-end">
+                <Button type="submit" className="bg-blue-600 hover:bg-blue-700">
+                  Update Call Status
+                </Button>
               </div>
-
-              {/* Call End Time */}
-              <div className="space-y-2">
-                <Label htmlFor="call_end_time">Call End Time</Label>
-                <Input
-                  type="datetime-local"
-                  id="call_end_time"
-                  value={formData.call_end_time}
-                  onChange={(e) => handleInputChange('call_end_time', e.target.value)}
-                />
-              </div>
-            </div>
-
-            {/* Next Action */}
-            <div className="space-y-2">
-              <Label htmlFor="next_action">Next Action</Label>
-              <Select value={formData.next_action} onValueChange={(value) => handleInputChange('next_action', value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select next action" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="call_back">Call Back</SelectItem>
-                  <SelectItem value="send_email">Send Email</SelectItem>
-                  <SelectItem value="send_sms">Send SMS</SelectItem>
-                  <SelectItem value="meeting">Schedule Meeting</SelectItem>
-                  <SelectItem value="no_action">No Action Required</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Note */}
-            <div className="space-y-2">
-              <Label htmlFor="note">Note</Label>
-              <Textarea
-                id="note"
-                placeholder="Enter call notes..."
-                value={formData.note}
-                onChange={(e) => handleInputChange('note', e.target.value)}
-                rows={4}
-              />
-            </div>
-
-            {/* Submit Button */}
-            <div className="flex justify-end">
-              <Button type="submit" className="bg-blue-600 hover:bg-blue-700">
-                Update Call Status
-              </Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
+            </form>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Profile Tabs */}
       <Tabs defaultValue="profile-info" className="w-full">
