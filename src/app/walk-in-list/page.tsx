@@ -151,8 +151,8 @@ const WalkInListPage = () => {
                 <Download className="w-4 h-4" /> Export to Excel
               </Button>
             </div>
-            <div className="overflow-x-auto">
-              <Table>
+            <div className="overflow-x-auto w-full">
+              <Table className="min-w-full">
                 <TableHeader>
                   <TableRow>
                     <TableHead>ID</TableHead>
