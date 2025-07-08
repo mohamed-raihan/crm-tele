@@ -16,8 +16,8 @@ export function DashboardHeader() {
         const userData = localStorage.getItem("user_data");
         if (userData) {
           const parsed = JSON.parse(userData);
-          if (parsed.role === "Admin" && parsed.email) {
-            name = parsed.email;
+          if (parsed.role === "Admin") {
+            name = "Admin";
           } else if (parsed.role === "Telecaller" && parsed.telecaller && parsed.telecaller.name) {
             name = parsed.telecaller.name;
           }
@@ -56,6 +56,16 @@ export function DashboardHeader() {
         </div>
 
         <div className="flex flex-row items-center justify-end gap-4 w-full">
+          {/* Notification Icon */}
+          <button
+            onClick={() => navigate('/notifications')}
+            className="relative flex items-center justify-center h-10 w-10 rounded-full hover:bg-gray-100 transition-colors focus:outline-none"
+            aria-label="Notifications"
+          >
+            <Bell className="h-6 w-6 text-gray-700" />
+            {/* Optionally, add a red dot for unread notifications */}
+            {/* <span className="absolute top-2 right-2 h-2 w-2 bg-red-500 rounded-full"></span> */}
+          </button>
           <div className="flex items-center gap-2 px-3 py-2 rounded-md bg-gray-100">
             <User className="h-5 w-5 text-gray-700" />
             <span className="hidden sm:inline text-sm font-medium text-gray-700 truncate max-w-[120px]">{userName}</span>

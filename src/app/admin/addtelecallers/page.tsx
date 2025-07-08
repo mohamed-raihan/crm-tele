@@ -95,7 +95,7 @@ const telecallerCreateSchema = z.object({
     .min(1, "Email is required"),
   contact: z
     .string()
-    .regex(/^[0-9]{10,15}$/, "Contact must be 10-15 digits")
+    .regex(/^[0-9]{10}$/, "Contact must be exactly 10 digits")
     .min(1, "Contact is required"),
   address: z.string().min(5, "Address must be at least 5 characters"),
   role: z.string().min(1, "Role is required"),
@@ -113,30 +113,34 @@ const telecallerEditSchema = z.object({
   name: z
     .string()
     .min(2, "Name must be at least 2 characters")
-    .optional()
-    .or(z.literal("")),
+    .refine((val) => val === undefined || val.trim() !== "", {
+      message: "Name is required",
+    })
+    .optional(),
   email: z
     .string()
     .email("Please enter a valid email address")
-    .optional()
-    .or(z.literal("")),
+    .optional(),
   contact: z
     .string()
-    .regex(/^[0-9]{10,15}$/, "Contact must be 10-15 digits")
-    .optional()
-    .or(z.literal("")),
+    .regex(/^[0-9]{10}$/, "Contact must be exactly 10 digits")
+    .refine((val) => val === undefined || val.trim() !== "", {
+      message: "Contact is required",
+    })
+    .optional(),
   address: z
     .string()
     .min(5, "Address must be at least 5 characters")
-    .optional()
-    .or(z.literal("")),
-  role: z.string().optional().or(z.literal("")),
-  branch: z.string().optional().or(z.literal("")),
+    .refine((val) => val === undefined || val.trim() !== "", {
+      message: "Address is required",
+    })
+    .optional(),
+  role: z.string().optional(),
+  branch: z.string().optional(),
   password: z
     .string()
     .min(6, "Password must be at least 6 characters")
-    .optional()
-    .or(z.literal("")),
+    .optional(),
 });
 
 // const columns: TableColumn[] = [

@@ -61,5 +61,8 @@ export const API_URLS = {
     PATCH_CALLS: (id)=> `/api/calls/${id}/`,
     DELETE_CALLLS: (id)=> `/api/calls/${id}/`
 
-  }
+  },
+  NOTIFICATIONS: {
+    GET_NOTIFICATIONS: "/api/notifications/",
+  },
 };
