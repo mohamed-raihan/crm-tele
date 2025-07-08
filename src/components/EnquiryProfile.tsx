@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { toast } from '@/hooks/use-toast';
 
 // Mock data for the profile
 const profileData = {
@@ -59,8 +60,8 @@ export function EnquiryProfile(id:id) {
     call_type: '',
     call_status: '',
     call_outcome: '',
-    call_start_time: '',
-    call_end_time: '',
+    // call_start_time: '',
+    // call_end_time: '',
     note: '',
     follow_up_date: '',
     next_action: ''
@@ -85,9 +86,10 @@ export function EnquiryProfile(id:id) {
       console.log('Form data:', formData)
       const reponse = await axiosInstance.post(API_URLS.CALLS.POST_CALLS, formData)
       console.log(reponse);
-      
+      toast({ title: "Updated successfully", variant: "success" });
     } catch (error) {
       console.error('Error submitting form:', error)
+      toast({ title: "failed to update", variant: "destructive" });
     }
   }
 
@@ -272,7 +274,7 @@ export function EnquiryProfile(id:id) {
                 </div>
 
                 {/* Call Start Time */}
-                <div className="space-y-2">
+                {/* <div className="space-y-2">
                   <Label htmlFor="call_start_time">Call Start Time</Label>
                   <Input
                     type="datetime-local"
@@ -280,10 +282,10 @@ export function EnquiryProfile(id:id) {
                     value={formData.call_start_time}
                     onChange={(e) => handleInputChange('call_start_time', e.target.value)}
                   />
-                </div>
+                </div> */}
 
                 {/* Call End Time */}
-                <div className="space-y-2">
+                {/* <div className="space-y-2">
                   <Label htmlFor="call_end_time">Call End Time</Label>
                   <Input
                     type="datetime-local"
@@ -291,7 +293,7 @@ export function EnquiryProfile(id:id) {
                     value={formData.call_end_time}
                     onChange={(e) => handleInputChange('call_end_time', e.target.value)}
                   />
-                </div>
+                </div> */}
               </div>
 
               {/* Next Action */}
