@@ -17,6 +17,8 @@ import {
   PhoneMissed,
   ChevronDown,
   ChevronRight,
+  Briefcase,
+  CheckCircle,
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { useState } from "react"
@@ -110,6 +112,19 @@ const navigationItems = [
   // },
 ]
 
+const myJobSubItems = [
+  {
+    title: "Remaining",
+    url: "/my-job/remaining",
+    icon: Briefcase,
+  },
+  {
+    title: "Completed",
+    url: "/my-job/completed",
+    icon: CheckCircle,
+  },
+];
+
 const quickActions = [
   // {
   //   title: "System Health",
@@ -171,8 +186,8 @@ export function AdminSidebar() {
         <Link
           to={item.url}
           className={`flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors ${location.pathname === item.url
-              ? "bg-blue-100 text-blue-900"
-              : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+            ? "bg-blue-100 text-blue-900"
+            : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
             }`}
         >
           <item.icon className="h-4 w-4" />
@@ -193,8 +208,8 @@ export function AdminSidebar() {
           <CollapsibleTrigger asChild>
             <SidebarMenuButton>
               <div className={`flex items-center justify-between w-full px-3 py-2 text-sm font-medium rounded-md transition-colors ${isActive
-                  ? "bg-blue-100 text-blue-900"
-                  : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                ? "bg-blue-100 text-blue-900"
+                : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
                 }`}>
                 <div className="flex items-center gap-3">
                   <item.icon className="h-4 w-4" />
@@ -216,8 +231,8 @@ export function AdminSidebar() {
                 <Link
                   to={subItem.url}
                   className={`flex items-center gap-3 pl-8 pr-3 py-2 text-sm rounded-md transition-colors ${location.pathname === subItem.url
-                      ? "bg-blue-100 text-blue-900"
-                      : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+                    ? "bg-blue-100 text-blue-900"
+                    : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
                     }`}
                 >
                   <subItem.icon className="h-3 w-3" />
@@ -264,6 +279,34 @@ export function AdminSidebar() {
               })}
             </SidebarMenu>
           </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <Collapsible>
+            <CollapsibleTrigger asChild>
+              <SidebarMenuButton className="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors">
+                <Briefcase className="h-4 w-4" />
+                <span>My Job</span>
+                <ChevronDown className="ml-auto h-4 w-4 transition-transform data-[state=open]:rotate-180" />
+              </SidebarMenuButton>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              {myJobSubItems.map((sub) => (
+                <SidebarMenuButton asChild className="w-full pl-8" key={sub.title}>
+                  <Link
+                    to={sub.url}
+                    className={`flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors ${location.pathname === sub.url
+                      ? "bg-green-100 text-green-900"
+                      : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                      }`}
+                  >
+                    <sub.icon className="h-4 w-4" />
+                    <span>{sub.title}</span>
+                  </Link>
+                </SidebarMenuButton>
+              ))}
+            </CollapsibleContent>
+          </Collapsible>
         </SidebarGroup>
 
         <SidebarGroup>

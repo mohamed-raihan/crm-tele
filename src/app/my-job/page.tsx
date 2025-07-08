@@ -14,7 +14,7 @@ interface JobData {
   contact: string;
   email: string;
   status: string;
-  outcome: string;
+  outcome: string; 
   telecaller_name: string;
   assigned_date: string;
 }
@@ -43,12 +43,17 @@ const MyJobPage = () => {
         status,
       });
       if (name) params.append("name", name);
+      console.log(`/api/jobs-summary/?${params.toString()}`);
+      
       const response = await axiosInstance.get(`/api/jobs-summary/?${params.toString()}`, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
       });
+
+      console.log(response);
+      
       if (response.data?.code === 200) {
         setJobs(response.data.data || []);
         if (response.data.pagination) {

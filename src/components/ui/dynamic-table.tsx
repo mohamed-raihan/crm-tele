@@ -167,7 +167,7 @@ export function DynamicTable({
                   </TableHead>
                 )}
                 {columns.map((column) => (
-                  <TableHead key={column.key} className={column.width}>
+                  <TableHead key={column.key} className={column.width ? column.width + " font-bold" : "font-bold"}>
                     {column.label}
                     {column.sortable && " ↓"}
                   </TableHead>

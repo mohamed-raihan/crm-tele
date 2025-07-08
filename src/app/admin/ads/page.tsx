@@ -57,9 +57,10 @@ export default function AdsPage() {
     try {
       if(ad.id){
         await axiosInstance.patch(API_URLS.ADS.PATCH_ADS(ad.id), { name: ad.name });
+        toast({ title: "Source Updated successfully", variant: "success" });
       }else{
         await axiosInstance.post(API_URLS.ADS.POST_ADS, { name: ad.name });
-        toast({ title: "Ad added successfully" });
+        toast({ title: "Source added successfully", variant: "success" });
       }
       setAd({ id: "", name: "" });
       setOpen(false);
@@ -76,7 +77,6 @@ export default function AdsPage() {
     // You can implement edit modal logic here
     setOpen(true)
     setAd(ad)
-    toast({ title: `Edit not implemented`, description: `Ad: ${ad.name}` });
   };
 
   // Delete ad
@@ -84,10 +84,10 @@ export default function AdsPage() {
     if (!window.confirm(`Delete ad '${ad.name}'?`)) return;
     try {
       await axiosInstance.delete(API_URLS.ADS.DELETE_ADS(ad.id));
-      toast({ title: "Ad deleted successfully" });
+      toast({ title: "Source deleted successfully", variant:"success" });
       fetchAds();
     } catch (err) {
-      toast({ title: "Failed to delete ad", description: "Please try again.", variant: "destructive" });
+      toast({ title: "Failed to delete source", description: "Please try again.", variant: "destructive" });
     }
   };
 
@@ -117,11 +117,11 @@ export default function AdsPage() {
     <div className=" mx-8 py-8">
       <Card>
         <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-2xl font-bold">ADS</CardTitle>
+          <CardTitle className="text-2xl font-bold">SOURCE</CardTitle>
           <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
               <Button variant="default" className="gap-2 bg-violet-500" size="sm">
-                <Plus className="h-4 w-4" />Add Ads
+                <Plus className="h-4 w-4" />Add Source
               </Button>
             </DialogTrigger>
             <DialogContent>
@@ -136,13 +136,13 @@ export default function AdsPage() {
                     name="name"
                     value={ad.name}
                     onChange={e => setAd({...ad, name: e.target.value})}
-                    placeholder="Enter ad name"
+                    placeholder="Enter source name"
                     required
                   />
                 </div>
                 <DialogFooter>
-                  <Button type="submit" disabled={adding}>
-                    {adding ? "Adding..." : "Add"}
+                  <Button type="submit" className="bg-violet-500" disabled={adding}>
+                    {adding ? (ad.id ? "Updating..." : "Adding...") : (ad.id ? "Update" : "Add")}
                   </Button>
                   <DialogClose asChild>
                     <Button type="button" variant="outline">Cancel</Button>
