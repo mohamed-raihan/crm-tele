@@ -127,12 +127,24 @@ const WalkInListPage = () => {
     }
   };
 
+  function formatDate(dateStr: string | null | undefined) {
+    if (!dateStr) return "";
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return dateStr;
+    return d.toLocaleString();
+  }
+
   return (
-    <div className="flex-1 flex flex-col min-h-0 p-4 md:p-8 bg-gray-50">
-      <div className="max-w-7xl mx-auto w-full">
-        <Card className="mb-6">
+    <div className="flex-1 flex flex-col">
+      <main className="flex-1 p-6">
+        <div className="mb-6">
+          <h1 className="text-2xl font-semibold text-gray-900 mb-2">Walk-in List</h1>
+          <p className="text-gray-600">Track and manage walk-in enquiries</p>
+        </div>
+
+        <Card>
           <CardHeader>
-            <CardTitle className="text-2xl font-bold">Walk-in List</CardTitle>
+            <CardTitle className="text-lg">Walk-in List</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex flex-row items-center gap-2 mb-4">
@@ -151,8 +163,8 @@ const WalkInListPage = () => {
                 <Download className="w-4 h-4" /> Export to Excel
               </Button>
             </div>
-            <div className="overflow-x-auto">
-              <Table>
+            <div className="overflow-x-auto w-full">
+              <Table className="min-w-full">
                 <TableHeader>
                   <TableRow>
                     <TableHead>ID</TableHead>
@@ -182,9 +194,9 @@ const WalkInListPage = () => {
                       </TableCell>
                     </TableRow>
                   ) : (
-                    walkIns.map((item) => (
+                    walkIns.map((item, idx) => (
                       <TableRow key={item.id}>
-                        <TableCell>{item.id}</TableCell>
+                        <TableCell>{(pagination.page - 1) * pagination.limit + idx + 1}</TableCell>
                         <TableCell>{item.enquiry_details?.candidate_name}</TableCell>
                         <TableCell>{item.enquiry_details?.phone}</TableCell>
                         <TableCell>{item.enquiry_details?.email}</TableCell>
@@ -193,8 +205,8 @@ const WalkInListPage = () => {
                         <TableCell>{item.call_type}</TableCell>
                         <TableCell>{item.call_status}</TableCell>
                         <TableCell>{item.call_outcome}</TableCell>
-                        <TableCell>{item.call_start_time}</TableCell>
-                        <TableCell>{item.created_at}</TableCell>
+                        <TableCell>{formatDate(item.call_start_time)}</TableCell>
+                        <TableCell>{formatDate(item.created_at)}</TableCell>
                       </TableRow>
                     ))
                   )}
@@ -239,7 +251,7 @@ const WalkInListPage = () => {
             )}
           </CardContent>
         </Card>
-      </div>
+      </main>
     </div>
   );
 };
