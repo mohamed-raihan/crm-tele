@@ -134,10 +134,10 @@ export function DynamicTable({
                   <X className="h-3 w-3 ml-1 cursor-pointer" onClick={filter.onRemove} />
                 </Badge>
               ))}
-              <Button variant="outline" size="sm">
+              {/* <Button variant="outline" size="sm">
                 <Filter className="h-4 w-4 mr-2" />
                 More filters
-              </Button>
+              </Button> */}
             </div>
             {onSearch && (
               <div className="relative w-full sm:w-64 min-w-0">

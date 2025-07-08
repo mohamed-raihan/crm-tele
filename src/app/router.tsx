@@ -23,14 +23,17 @@ import FollowUpsPage from "./calls/follow-ups/page";
 import NotAnsweredPage from "./calls/not-answered/page";
 import MyJobPage from "./my-job/page";
 import CallsPage from "./calls/page";
+import NotificationPage from "./notifications/page";
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
+  if (loading) return null; // or a spinner
   return user ? <>{children}</> : <Navigate to="/login" replace />;
 }
 
 function AdminRoute({ children }: { children: React.ReactNode }) {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
+  if (loading) return null; // or a spinner
   if (!user) return <Navigate to="/login" replace />;
   // Fixed: Check for "Admin" (capitalized) instead of "admin"
   if (user.role !== "Admin") return <Navigate to="/dashboard" replace />;
@@ -38,7 +41,8 @@ function AdminRoute({ children }: { children: React.ReactNode }) {
 }
 
 function TelecallerRoute({ children }: { children: React.ReactNode }) {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
+  if (loading) return null; // or a spinner
   if (!user) return <Navigate to="/login" replace />;
   // Fixed: Check for "Telecaller" (capitalized) and redirect to admin if not telecaller
   if (user.role !== "Telecaller") return <Navigate to="/admin" replace />;
@@ -215,6 +219,14 @@ export function AppRouter() {
         element={
           <PrivateRoute>
             <CustomersPage />
+          </PrivateRoute>
+        }
+      />
+      <Route
+        path="/notifications"
+        element={
+          <PrivateRoute>
+            <NotificationPage />
           </PrivateRoute>
         }
       />
