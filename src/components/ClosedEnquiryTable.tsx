@@ -81,7 +81,7 @@ const activeEnquiries = [
   }
 ];
 
-export function ActiveEnquiryTable() {
+export function ClosedEnquiryTable() {
   const navigate = useNavigate();
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
   const [Enquiries, setEnquiry] = useState([]);
@@ -111,7 +111,7 @@ export function ActiveEnquiryTable() {
   const fetchEnquiry = async (pageNum = 1) => {
     setLoading(true);
     try {
-      const response = await axiosInstance.get(`${API_URLS.ENQUIRY.GET_ACTIVE_ENQUIRY}?page=${pageNum}`);
+      const response = await axiosInstance.get(`${API_URLS.ENQUIRY.GET_CLOSED_ENQUIRY}?page=${pageNum}`);
       console.log(response);
       const filtered = response.data.data 
       setEnquiry(response.data.data);
@@ -178,16 +178,16 @@ export function ActiveEnquiryTable() {
         }
       }
     },
-    // {
-    //   label: 'Edit',
-    //   icon: <Edit className="h-4 w-4 mr-2" />,
-    //   onClick: (row) => console.log('Edit:', row)
-    // },
-    // {
-    //   label: 'Refresh',
-    //   icon: <RotateCcw className="h-4 w-4 mr-2" />,
-    //   onClick: (row) => console.log('Refresh:', row)
-    // }
+    {
+      label: 'Edit',
+      icon: <Edit className="h-4 w-4 mr-2" />,
+      onClick: (row) => console.log('Edit:', row)
+    },
+    {
+      label: 'Refresh',
+      icon: <RotateCcw className="h-4 w-4 mr-2" />,
+      onClick: (row) => console.log('Refresh:', row)
+    }
   ];
 
   const handleExportExcel = () => {

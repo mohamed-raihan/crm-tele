@@ -46,6 +46,8 @@ export const API_URLS = {
   ENQUIRY: {
     POST_ENQUIRY: "/api/enquiries/",
     GET_ENQUIRY: "/api/enquiries/",
+    GET_ACTIVE_ENQUIRY: "/api/enquiries/active/",
+    GET_CLOSED_ENQUIRY: "/api/enquiries/closed/",
     GET_ENQUIRY_ID: (id: string) => `/api/enquiries/${id}/`,
     PATCH_ENQUIRY: (id) => `/api/enquiries/${id}/`,
     DELETE_ENQUIRY: (id) => `/api/enquiries/${id}/`,
