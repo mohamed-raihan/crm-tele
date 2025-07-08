@@ -16,17 +16,14 @@ const AdminDashboardPage = () => {
     <div className="flex-1 flex flex-col min-h-0">
       <DashboardHeader />
       <main className="flex-1 p-6">
-        <div className="max-w-7xl mx-auto">
+        <div>
           <div className="mb-8">
             <h2 className="text-2xl font-bold text-gray-900 mb-2">Admin Dashboard</h2>
             <p className="text-gray-600">System overview and management</p>
           </div>
-          
           <DashboardStats />
-          
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
             <SystemOverview />
-            
             <div className="bg-white rounded-lg shadow p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
               <div className="space-y-3">

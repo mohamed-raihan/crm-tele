@@ -194,9 +194,9 @@ const WalkInListPage = () => {
                       </TableCell>
                     </TableRow>
                   ) : (
-                    walkIns.map((item) => (
+                    walkIns.map((item, idx) => (
                       <TableRow key={item.id}>
-                        <TableCell>{item.id}</TableCell>
+                        <TableCell>{(pagination.page - 1) * pagination.limit + idx + 1}</TableCell>
                         <TableCell>{item.enquiry_details?.candidate_name}</TableCell>
                         <TableCell>{item.enquiry_details?.phone}</TableCell>
                         <TableCell>{item.enquiry_details?.email}</TableCell>
