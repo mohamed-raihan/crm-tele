@@ -24,6 +24,7 @@ import NotAnsweredPage from "./calls/not-answered/page";
 import MyJobPage from "./my-job/page";
 import CallsPage from "./calls/page";
 import NotificationPage from "./notifications/page";
+import { ClosedEnquiryTable } from "@/components/ClosedEnquiryTable";
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -94,6 +95,9 @@ export function AppRouter() {
       <Route path="/admin/not-answer" element={<AdminRoute><NotAnswerPage /></AdminRoute>} />
       <Route path="/admin/reports" element={<AdminRoute><ReportPage /></AdminRoute>} />
       <Route path="/admin/settings" element={<AdminRoute><div>Settings Page</div></AdminRoute>} />
+      <Route path="/admin/closed-enquiry" element={<AdminRoute><ClosedEnquiryTable /></AdminRoute>} />
+
+
 
       {/* Telecaller Routes */}
       <Route

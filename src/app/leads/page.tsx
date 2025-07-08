@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { NewEnquiryForm } from "@/components/NewEnquiryForm";
 import { ActiveEnquirySection } from "@/components/ActiveEnquirySection";
+import { ClosedEnquiryTable } from "@/components/ClosedEnquiryTable";
 
 export default function LeadsPage() {
   return (
@@ -32,15 +33,7 @@ export default function LeadsPage() {
           </TabsContent>
           
           <TabsContent value="closed-enquiry" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Closed Enquiry</CardTitle>
-                <CardDescription>View and manage closed enquiries</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <p className="text-gray-600">Closed enquiry management coming soon...</p>
-              </CardContent>
-            </Card>
+           <ClosedEnquiryTable/>
           </TabsContent>
         </Tabs>
       </main>
