@@ -111,7 +111,7 @@ const NotAnsweredPage = () => {
       const matchesCandidate = candidate_name ? item.enquiry_details?.candidate_name?.toLowerCase().includes(candidate_name.toLowerCase()) : true;
       const matchesPhone = phone ? item.enquiry_details?.phone?.includes(phone) : true;
       const matchesEmail = email ? item.enquiry_details?.email?.toLowerCase().includes(email.toLowerCase()) : true;
-      const matchesCallStatus = call_status ? item.call_status === call_status : true;
+      const matchesCallStatus = !call_status || call_status === 'all' || item.call_status === call_status;
       const matchesCallStartTime = call_start_time ? (item.call_start_time ? item.call_start_time.slice(0, 10) === call_start_time : false) : true;
       const matchesTelecaller = telecaller_name ? item.telecaller_name?.toLowerCase().includes(telecaller_name.toLowerCase()) : true;
       return matchesCandidate && matchesPhone && matchesEmail && matchesCallStatus && matchesCallStartTime && matchesTelecaller;
@@ -208,7 +208,7 @@ const NotAnsweredPage = () => {
 
   return (
     <div className="flex-1 flex flex-col">
-      <DashboardHeader />
+      {/* <DashboardHeader /> */}
       <main className="flex-1 p-6">
         <div className="mb-8">
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Not Answered Calls</h2>
@@ -256,6 +256,7 @@ const NotAnsweredPage = () => {
                     <SelectValue placeholder="Select status" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="all">All Statuses</SelectItem>
                     <SelectItem value="not_answered">Not Answered</SelectItem>
                     <SelectItem value="do_not_call">Do Not Call</SelectItem>
                   </SelectContent>
@@ -309,8 +310,8 @@ const NotAnsweredPage = () => {
                 Loading...
               </div>
             ) : (
-              <div className="overflow-x-auto w-full">
-                <Table className="min-w-full">
+              <div className="overflow-x-auto">
+                <Table>
                   <TableHeader>
                     <TableRow>
                       <TableHead>ID</TableHead>
@@ -333,9 +334,9 @@ const NotAnsweredPage = () => {
                         </TableCell>
                       </TableRow>
                     ) : (
-                      notAnswered.map((item) => (
+                      notAnswered.map((item, idx) => (
                         <TableRow key={item.id}>
-                          <TableCell>{item.id}</TableCell>
+                          <TableCell>{(pagination.currentPage - 1) * pagination.limit + idx + 1}</TableCell>
                           <TableCell>{item.enquiry_details?.candidate_name}</TableCell>
                           <TableCell>{item.enquiry_details?.phone}</TableCell>
                           <TableCell>{item.enquiry_details?.email}</TableCell>
@@ -388,6 +389,7 @@ const NotAnsweredPage = () => {
                 </div>
               </div>
             )}
+            
           </CardContent>
         </Card>
       </main>

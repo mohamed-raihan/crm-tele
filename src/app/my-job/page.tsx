@@ -85,109 +85,107 @@ const MyJobPage = () => {
   };
 
   return (
-    <div className="flex-1 flex flex-col min-h-0 p-4 md:p-8 bg-gray-50">
-      <div className="max-w-7xl mx-auto w-full">
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle className="text-2xl font-bold">My Job - {tab === "completed" ? "Completed" : "Remaining"}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-row items-center gap-2 mb-4">
-              <Input
-                type="text"
-                placeholder="Search by name..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="w-full md:w-64"
-                onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-              />
-              <Button onClick={handleSearch} variant="outline" className="w-auto">
-                Search
-              </Button>
-            </div>
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
+    <div className="flex-1 flex flex-col p-4 md:p-8 bg-gray-50">
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle className="text-2xl font-bold">My Job - {tab === "completed" ? "Completed" : "Remaining"}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-row items-center gap-2 mb-4">
+            <Input
+              type="text"
+              placeholder="Search by name..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full md:w-64"
+              onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+            />
+            <Button onClick={handleSearch} variant="outline" className="w-auto">
+              Search
+            </Button>
+          </div>
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>ID</TableHead>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Contact</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Outcome</TableHead>
+                  <TableHead>Telecaller</TableHead>
+                  <TableHead>Assigned Date</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {loading ? (
                   <TableRow>
-                    <TableHead>ID</TableHead>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Contact</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Outcome</TableHead>
-                    <TableHead>Telecaller</TableHead>
-                    <TableHead>Assigned Date</TableHead>
+                    <TableCell colSpan={8} className="text-center py-8">
+                      <RefreshCw className="w-6 h-6 animate-spin mx-auto" />
+                    </TableCell>
                   </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {loading ? (
-                    <TableRow>
-                      <TableCell colSpan={8} className="text-center py-8">
-                        <RefreshCw className="w-6 h-6 animate-spin mx-auto" />
-                      </TableCell>
+                ) : jobs.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={8} className="text-center py-8 text-gray-500">
+                      No jobs found
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  jobs.map((job, idx) => (
+                    <TableRow key={job.enquiry_id}>
+                      <TableCell>{(pagination.page - 1) * pagination.limit + idx + 1}</TableCell>
+                      <TableCell>{job.name}</TableCell>
+                      <TableCell>{job.contact}</TableCell>
+                      <TableCell>{job.email}</TableCell>
+                      <TableCell>{job.status}</TableCell>
+                      <TableCell>{job.outcome}</TableCell>
+                      <TableCell>{job.telecaller_name}</TableCell>
+                      <TableCell>{job.assigned_date}</TableCell>
                     </TableRow>
-                  ) : jobs.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={8} className="text-center py-8 text-gray-500">
-                        No jobs found
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    jobs.map((job) => (
-                      <TableRow key={job.enquiry_id}>
-                        <TableCell>{job.enquiry_id}</TableCell>
-                        <TableCell>{job.name}</TableCell>
-                        <TableCell>{job.contact}</TableCell>
-                        <TableCell>{job.email}</TableCell>
-                        <TableCell>{job.status}</TableCell>
-                        <TableCell>{job.outcome}</TableCell>
-                        <TableCell>{job.telecaller_name}</TableCell>
-                        <TableCell>{job.assigned_date}</TableCell>
-                      </TableRow>
-                    ))
-                  )}
-                </TableBody>
-              </Table>
-            </div>
-            {/* Pagination */}
-            {pagination.total > pagination.limit && (
-              <div className="mt-6 flex flex-col md:flex-row justify-between items-center gap-2">
-                <div className="text-sm text-gray-600">
-                  Showing {(pagination.page - 1) * pagination.limit + 1} to {Math.min(pagination.page * pagination.limit, pagination.total)} of {pagination.total} entries
-                </div>
-                <div className="flex gap-2 flex-wrap">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={pagination.page === 1}
-                    onClick={() => handlePageChange(pagination.page - 1)}
-                  >
-                    Previous
-                  </Button>
-                  {[...Array(Math.ceil(pagination.total / pagination.limit))].map((_, index) => (
-                    <Button
-                      key={index}
-                      variant={pagination.page === index + 1 ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => handlePageChange(index + 1)}
-                    >
-                      {index + 1}
-                    </Button>
-                  ))}
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={pagination.page === Math.ceil(pagination.total / pagination.limit)}
-                    onClick={() => handlePageChange(pagination.page + 1)}
-                  >
-                    Next
-                  </Button>
-                </div>
+                  ))
+                )}
+              </TableBody>
+            </Table>
+          </div>
+          {/* Pagination */}
+          {pagination.total > pagination.limit && (
+            <div className="mt-6 flex flex-col md:flex-row justify-between items-center gap-2">
+              <div className="text-sm text-gray-600">
+                Showing {(pagination.page - 1) * pagination.limit + 1} to {Math.min(pagination.page * pagination.limit, pagination.total)} of {pagination.total} entries
               </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+              <div className="flex gap-2 flex-wrap">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={pagination.page === 1}
+                  onClick={() => handlePageChange(pagination.page - 1)}
+                >
+                  Previous
+                </Button>
+                {[...Array(Math.ceil(pagination.total / pagination.limit))].map((_, index) => (
+                  <Button
+                    key={index}
+                    variant={pagination.page === index + 1 ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => handlePageChange(index + 1)}
+                  >
+                    {index + 1}
+                  </Button>
+                ))}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={pagination.page === Math.ceil(pagination.total / pagination.limit)}
+                  onClick={() => handlePageChange(pagination.page + 1)}
+                >
+                  Next
+                </Button>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 };
