@@ -115,12 +115,12 @@ const navigationItems = [
 const myJobSubItems = [
   {
     title: "Remaining",
-    url: "/my-job/remaining",
+    url: "/admin/remaining",
     icon: Briefcase,
   },
   {
     title: "Completed",
-    url: "/my-job/completed",
+    url: "/admin/completed",
     icon: CheckCircle,
   },
 ];

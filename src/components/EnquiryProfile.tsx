@@ -232,7 +232,7 @@ export function EnquiryProfile(id:id) {
                       <SelectItem value="contacted">Contacted</SelectItem>
                       <SelectItem value="Not Answered">Not Answered</SelectItem>
                       <SelectItem value="Busy">Busy</SelectItem>
-                      <SelectItem value="Switched Off">VSwitched Off</SelectItem>
+                      <SelectItem value="Switched Off">Switched Off</SelectItem>
                       <SelectItem value="Answered">Answered</SelectItem>
                       <SelectItem value="No Response">No Response</SelectItem>
                       <SelectItem value="Invalid Number">Invalid Number</SelectItem>

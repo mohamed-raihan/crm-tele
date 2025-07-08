@@ -27,6 +27,8 @@ interface Pagination {
 
 const MyJobPage = () => {
   const { tab } = useParams<{ tab: string }>();
+  console.log(tab);
+  
   const [jobs, setJobs] = useState<JobData[]>([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
