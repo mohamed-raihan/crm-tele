@@ -101,54 +101,52 @@ export default function DashboardPage() {
     <div className="flex-1 flex flex-col min-h-0">
       <DashboardHeader />
       <main className="flex-1 p-6">
-        <div className="max-w-7xl mx-auto">
-          <div className="mb-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Dashboard</h2>
-            <p className="text-gray-600">System overview and management</p>
-          </div>
-          <DashboardStats />
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
-            <SystemOverview />
-            <div className="bg-white rounded-lg shadow p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Menu</h3>
-              <div className="space-y-3">
-                <button 
-                  onClick={() => handleQuickAction("/leads")}
-                  className="w-full text-left p-3 rounded-md border border-gray-200 hover:bg-gray-50 transition-colors"
-                >
-                  <div className="flex flex-row items-center gap-3">
-                    <FileText className="w-5 h-5 text-gray-500" />
-                    <div className="flex flex-col justify-center">
-                      <div className="font-medium text-gray-900">My Enquiry</div>
-                      <div className="text-sm text-gray-500">View and manage your enquiries</div>
-                    </div>
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Dashboard</h2>
+          <p className="text-gray-600">System overview and management</p>
+        </div>
+        <DashboardStats />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
+          <SystemOverview />
+          <div className="bg-white rounded-lg shadow p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Menu</h3>
+            <div className="space-y-3">
+              <button 
+                onClick={() => handleQuickAction("/leads")}
+                className="w-full text-left p-3 rounded-md border border-gray-200 hover:bg-gray-50 transition-colors"
+              >
+                <div className="flex flex-row items-center gap-3">
+                  <FileText className="w-5 h-5 text-gray-500" />
+                  <div className="flex flex-col justify-center">
+                    <div className="font-medium text-gray-900">My Enquiry</div>
+                    <div className="text-sm text-gray-500">View and manage your enquiries</div>
                   </div>
-                </button>
-                <button 
-                  onClick={() => handleQuickAction("/calls")}
-                  className="w-full text-left p-3 rounded-md border border-gray-200 hover:bg-gray-50 transition-colors"
-                >
-                  <div className="flex flex-row items-center gap-3">
-                    <BarChart3 className="w-5 h-5 text-gray-500" />
-                    <div className="flex flex-col justify-center">
-                      <div className="font-medium text-gray-900">Calls</div>
-                      <div className="text-sm text-gray-500">View and manage calls</div>
-                    </div>
+                </div>
+              </button>
+              <button 
+                onClick={() => handleQuickAction("/calls")}
+                className="w-full text-left p-3 rounded-md border border-gray-200 hover:bg-gray-50 transition-colors"
+              >
+                <div className="flex flex-row items-center gap-3">
+                  <BarChart3 className="w-5 h-5 text-gray-500" />
+                  <div className="flex flex-col justify-center">
+                    <div className="font-medium text-gray-900">Calls</div>
+                    <div className="text-sm text-gray-500">View and manage calls</div>
                   </div>
-                </button>
-                <button 
-                  onClick={() => handleQuickAction("/walk-in-list")}
-                  className="w-full text-left p-3 rounded-md border border-gray-200 hover:bg-gray-50 transition-colors"
-                >
-                  <div className="flex flex-row items-center gap-3">
-                    <UserPlus className="w-5 h-5 text-gray-500" />
-                    <div className="flex flex-col justify-center">
-                      <div className="font-medium text-gray-900">Walk in List</div>
-                      <div className="text-sm text-gray-500">View walk-in candidates</div>
-                    </div>
+                </div>
+              </button>
+              <button 
+                onClick={() => handleQuickAction("/walk-in-list")}
+                className="w-full text-left p-3 rounded-md border border-gray-200 hover:bg-gray-50 transition-colors"
+              >
+                <div className="flex flex-row items-center gap-3">
+                  <UserPlus className="w-5 h-5 text-gray-500" />
+                  <div className="flex flex-col justify-center">
+                    <div className="font-medium text-gray-900">Walk in List</div>
+                    <div className="text-sm text-gray-500">View walk-in candidates</div>
                   </div>
-                </button>
-              </div>
+                </div>
+              </button>
             </div>
           </div>
         </div>

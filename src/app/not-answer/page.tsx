@@ -207,191 +207,189 @@ const NotAnsweredPage = () => {
   };
 
   return (
-    <div className="flex-1 flex flex-col min-h-0">
+    <div className="flex-1 flex flex-col">
       <DashboardHeader />
       <main className="flex-1 p-6">
-        <div className="max-w-7xl mx-auto">
-          <div className="mb-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">Not Answered Calls</h2>
-            <p className="text-gray-600">Track and manage calls that were not answered</p>
-          </div>
-
-          {/* Filters Card */}
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle className="text-lg">Filters</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                <div>
-                  <Label htmlFor="candidate_name">Candidate Name</Label>
-                  <Input
-                    id="candidate_name"
-                    value={filterInputs.candidate_name}
-                    onChange={(e) => handleFilterChange("candidate_name", e.target.value)}
-                    placeholder="Enter candidate name"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="phone">Phone</Label>
-                  <Input
-                    id="phone"
-                    value={filterInputs.phone}
-                    onChange={(e) => handleFilterChange("phone", e.target.value)}
-                    placeholder="Enter phone number"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    value={filterInputs.email}
-                    onChange={(e) => handleFilterChange("email", e.target.value)}
-                    placeholder="Enter email"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="call_status">Call Status</Label>
-                  <Select value={filterInputs.call_status} onValueChange={(value) => handleFilterChange("call_status", value)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="not_answered">Not Answered</SelectItem>
-                      <SelectItem value="do_not_call">Do Not Call</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="call_start_time">Call Start Time</Label>
-                  <Input
-                    id="call_start_time"
-                    type="date"
-                    value={filterInputs.call_start_time}
-                    onChange={(e) => handleFilterChange("call_start_time", e.target.value)}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="telecaller_name">Telecaller Name</Label>
-                  <Input
-                    id="telecaller_name"
-                    value={filterInputs.telecaller_name}
-                    onChange={(e) => handleFilterChange("telecaller_name", e.target.value)}
-                    placeholder="Enter telecaller name"
-                  />
-                </div>
-              </div>
-              <div className="flex gap-2 mt-4">
-                <Button onClick={handleSearch} disabled={loading}>
-                  <Search className="w-4 h-4 mr-2" />
-                  Search
-                </Button>
-                <Button variant="outline" onClick={handleReset} disabled={loading}>
-                  <RefreshCw className="w-4 h-4 mr-2" />
-                  Reset
-                </Button>
-                <Button variant="outline" className="bg-green-600 hover:bg-green-700 text-white" onClick={exportToExcel} disabled={loading || notAnswered.length === 0}>
-                  <FileDown className="w-4 h-4 mr-2" />
-                  Export Excel
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Results Table */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Not Answered Calls </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {loading ? (
-                <div className="flex items-center justify-center py-8">
-                  <RefreshCw className="w-6 h-6 animate-spin mr-2" />
-                  Loading...
-                </div>
-              ) : (
-                <div className="overflow-x-auto w-full">
-                  <Table className="min-w-full">
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>ID</TableHead>
-                        <TableHead>Candidate Name</TableHead>
-                        <TableHead>Phone</TableHead>
-                        <TableHead>Email</TableHead>
-                        <TableHead>Call Status</TableHead>
-                        <TableHead>Call Outcome</TableHead>
-                        <TableHead>Call Start Time</TableHead>
-                        <TableHead>Telecaller Name</TableHead>
-                        <TableHead>Branch Name</TableHead>
-                        <TableHead>Created At</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {notAnswered.length === 0 ? (
-                        <TableRow>
-                          <TableCell colSpan={10} className="text-center py-8 text-gray-500">
-                            No not answered calls found
-                          </TableCell>
-                        </TableRow>
-                      ) : (
-                        notAnswered.map((item) => (
-                          <TableRow key={item.id}>
-                            <TableCell>{item.id}</TableCell>
-                            <TableCell>{item.enquiry_details?.candidate_name}</TableCell>
-                            <TableCell>{item.enquiry_details?.phone}</TableCell>
-                            <TableCell>{item.enquiry_details?.email}</TableCell>
-                            <TableCell>{item.call_status}</TableCell>
-                            <TableCell>{item.call_outcome}</TableCell>
-                            <TableCell>{formatDate(item.call_start_time)}</TableCell>
-                            <TableCell>{item.telecaller_name}</TableCell>
-                            <TableCell>{item.branch_name}</TableCell>
-                            <TableCell>{formatDate(item.created_at)}</TableCell>
-                          </TableRow>
-                        ))
-                      )}
-                    </TableBody>
-                  </Table>
-                </div>
-              )}
-              {/* Pagination */}
-              {pagination.totalPages > 1 && (
-                <div className="mt-6 flex justify-between items-center">
-                  <div className="text-sm text-gray-600">
-                    Showing {(pagination.currentPage - 1) * pagination.limit + 1} to {Math.min(pagination.currentPage * pagination.limit, pagination.totalRecords)} of {pagination.totalRecords} entries
-                  </div>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      disabled={pagination.currentPage === 1}
-                      onClick={() => handlePageChange(pagination.currentPage - 1)}
-                    >
-                      Previous
-                    </Button>
-                    {[...Array(pagination.totalPages)].map((_, index) => (
-                      <Button
-                        key={index}
-                        variant={pagination.currentPage === index + 1 ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => handlePageChange(index + 1)}
-                      >
-                        {index + 1}
-                      </Button>
-                    ))}
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      disabled={pagination.currentPage === pagination.totalPages}
-                      onClick={() => handlePageChange(pagination.currentPage + 1)}
-                    >
-                      Next
-                    </Button>
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Not Answered Calls</h2>
+          <p className="text-gray-600">Track and manage calls that were not answered</p>
         </div>
+
+        {/* Filters Card */}
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle className="text-lg">Filters</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div>
+                <Label htmlFor="candidate_name">Candidate Name</Label>
+                <Input
+                  id="candidate_name"
+                  value={filterInputs.candidate_name}
+                  onChange={(e) => handleFilterChange("candidate_name", e.target.value)}
+                  placeholder="Enter candidate name"
+                />
+              </div>
+              <div>
+                <Label htmlFor="phone">Phone</Label>
+                <Input
+                  id="phone"
+                  value={filterInputs.phone}
+                  onChange={(e) => handleFilterChange("phone", e.target.value)}
+                  placeholder="Enter phone number"
+                />
+              </div>
+              <div>
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  value={filterInputs.email}
+                  onChange={(e) => handleFilterChange("email", e.target.value)}
+                  placeholder="Enter email"
+                />
+              </div>
+              <div>
+                <Label htmlFor="call_status">Call Status</Label>
+                <Select value={filterInputs.call_status} onValueChange={(value) => handleFilterChange("call_status", value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="not_answered">Not Answered</SelectItem>
+                    <SelectItem value="do_not_call">Do Not Call</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label htmlFor="call_start_time">Call Start Time</Label>
+                <Input
+                  id="call_start_time"
+                  type="date"
+                  value={filterInputs.call_start_time}
+                  onChange={(e) => handleFilterChange("call_start_time", e.target.value)}
+                />
+              </div>
+              <div>
+                <Label htmlFor="telecaller_name">Telecaller Name</Label>
+                <Input
+                  id="telecaller_name"
+                  value={filterInputs.telecaller_name}
+                  onChange={(e) => handleFilterChange("telecaller_name", e.target.value)}
+                  placeholder="Enter telecaller name"
+                />
+              </div>
+            </div>
+            <div className="flex gap-2 mt-4">
+              <Button onClick={handleSearch} disabled={loading}>
+                <Search className="w-4 h-4 mr-2" />
+                Search
+              </Button>
+              <Button variant="outline" onClick={handleReset} disabled={loading}>
+                <RefreshCw className="w-4 h-4 mr-2" />
+                Reset
+              </Button>
+              <Button variant="outline" className="bg-green-600 hover:bg-green-700 text-white" onClick={exportToExcel} disabled={loading || notAnswered.length === 0}>
+                <FileDown className="w-4 h-4 mr-2" />
+                Export Excel
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Results Table */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Not Answered Calls </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {loading ? (
+              <div className="flex items-center justify-center py-8">
+                <RefreshCw className="w-6 h-6 animate-spin mr-2" />
+                Loading...
+              </div>
+            ) : (
+              <div className="overflow-x-auto w-full">
+                <Table className="min-w-full">
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>ID</TableHead>
+                      <TableHead>Candidate Name</TableHead>
+                      <TableHead>Phone</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Call Status</TableHead>
+                      <TableHead>Call Outcome</TableHead>
+                      <TableHead>Call Start Time</TableHead>
+                      <TableHead>Telecaller Name</TableHead>
+                      <TableHead>Branch Name</TableHead>
+                      <TableHead>Created At</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {notAnswered.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={10} className="text-center py-8 text-gray-500">
+                          No not answered calls found
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      notAnswered.map((item) => (
+                        <TableRow key={item.id}>
+                          <TableCell>{item.id}</TableCell>
+                          <TableCell>{item.enquiry_details?.candidate_name}</TableCell>
+                          <TableCell>{item.enquiry_details?.phone}</TableCell>
+                          <TableCell>{item.enquiry_details?.email}</TableCell>
+                          <TableCell>{item.call_status}</TableCell>
+                          <TableCell>{item.call_outcome}</TableCell>
+                          <TableCell>{formatDate(item.call_start_time)}</TableCell>
+                          <TableCell>{item.telecaller_name}</TableCell>
+                          <TableCell>{item.branch_name}</TableCell>
+                          <TableCell>{formatDate(item.created_at)}</TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+            {/* Pagination */}
+            {pagination.totalPages > 1 && (
+              <div className="mt-6 flex justify-between items-center">
+                <div className="text-sm text-gray-600">
+                  Showing {(pagination.currentPage - 1) * pagination.limit + 1} to {Math.min(pagination.currentPage * pagination.limit, pagination.totalRecords)} of {pagination.totalRecords} entries
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={pagination.currentPage === 1}
+                    onClick={() => handlePageChange(pagination.currentPage - 1)}
+                  >
+                    Previous
+                  </Button>
+                  {[...Array(pagination.totalPages)].map((_, index) => (
+                    <Button
+                      key={index}
+                      variant={pagination.currentPage === index + 1 ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => handlePageChange(index + 1)}
+                    >
+                      {index + 1}
+                    </Button>
+                  ))}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={pagination.currentPage === pagination.totalPages}
+                    onClick={() => handlePageChange(pagination.currentPage + 1)}
+                  >
+                    Next
+                  </Button>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </main>
     </div>
   );
