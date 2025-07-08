@@ -310,8 +310,8 @@ const NotAnsweredPage = () => {
                   Loading...
                 </div>
               ) : (
-                <div className="overflow-x-auto">
-                  <Table>
+                <div className="overflow-x-auto w-full">
+                  <Table className="min-w-full">
                     <TableHeader>
                       <TableRow>
                         <TableHead>ID</TableHead>
