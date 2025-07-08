@@ -78,43 +78,56 @@ const branchCreateSchema = z.object({
     .nonempty("Email is required"),
   contact: z
     .string()
-    .regex(/^[0-9]{10,15}$/, "Contact must be 10-15 digits")
+    .regex(/^[0-9]{10}$/, "Contact must be exactly 10 digits")
     .nonempty("Contact is required"),
 });
 
 // Zod Schema for editing - only validate if field has content
 const branchEditSchema = z.object({
-  branch_name: z.string().min(1).optional().or(z.literal("")),
-  address: z.string().min(1).optional().or(z.literal("")),
-  city: z.string().min(1).optional().or(z.literal("")),
+  branch_name: z
+    .string()
+    .min(2, "Branch name must be at least 2 characters")
+    .refine((val) => val === undefined || val.trim() !== "", {
+      message: "Branch name is required",
+    })
+    .optional(),
+  address: z
+    .string()
+    .min(5, "Address must be at least 5 characters")
+    .refine((val) => val === undefined || val.trim() !== "", {
+      message: "Address is required",
+    })
+    .optional(),
+  city: z
+    .string()
+    .min(2, "City must be at least 2 characters")
+    .refine((val) => val === undefined || val.trim() !== "", {
+      message: "City is required",
+    })
+    .optional(),
   email: z
     .string()
     .email("Please enter a valid email address")
-    .optional()
-    .or(z.literal("")),
+    .optional(),
   contact: z
     .string()
-    .regex(/^[0-9]{10,15}$/, "Contact must be 10-15 digits")
-    .optional()
-    .or(z.literal("")),
+    .regex(/^[0-9]{10}$/, "Contact must be exactly 10 digits")
+    .optional(),
 });
 
 const columns: TableColumn[] = [
-  { key: "id", label: "ID", sortable: true, width: "w-16" },
+  {
+    key: "serial",
+    label: "ID",
+    sortable: false,
+    render: (_: any, __: Branch, index: number) => index + 1,
+    width: "w-16",
+  },
   { key: "branch_name", label: "Branch Name", sortable: true },
   { key: "address", label: "Address", sortable: true },
   { key: "city", label: "City", sortable: true },
   { key: "email", label: "Email", sortable: true },
   { key: "contact", label: "Contact", sortable: true },
-  {
-    key: "status",
-    label: "Status",
-    render: () => (
-      <Badge variant="secondary" className="bg-green-100 text-green-800">
-        Active
-      </Badge>
-    ),
-  },
 ];
 
 // Update formSections to make fields optional for editing
@@ -664,11 +677,7 @@ export default function BranchManagementPage() {
           <DynamicTable
             data={branches}
             columns={columns}
-            onSelectAll={handleSelectAll}
-            onSelectRow={handleSelectRow}
-            selectedRows={selectedRows}
             rowIdKey="id"
-            // loading={loading}
             actions={[
               {
                 label: "Edit",

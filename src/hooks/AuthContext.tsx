@@ -31,6 +31,7 @@ interface User {
 interface AuthContextType {
   user: User | null;
   isLoggedIn: boolean;
+  loading: boolean;
   login: (
     email: string,
     password: string
@@ -38,9 +39,8 @@ interface AuthContextType {
   logout: () => void;
   resetPassword: (email: string, newPassword: string) => Promise<boolean>;
   token: string | null;
-    showTokenExpiredAlert: boolean; // Add this
-  setShowTokenExpiredAlert: (show: boolean) => void; // Add this
-
+  showTokenExpiredAlert: boolean;
+  setShowTokenExpiredAlert: (show: boolean) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -50,6 +50,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
   const [token, setToken] = useState<string | null>(null);
   const [showTokenExpiredAlert, setShowTokenExpiredAlert] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const isTokenExpired = (token) => {
     if (!token) return true;
@@ -75,6 +76,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         // Token expired, show alert and logout
         setShowTokenExpiredAlert(true);
         logout();
+        setLoading(false);
       } else {
         setToken(savedToken);
         setUser(JSON.parse(savedUser));
@@ -82,7 +84,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
         // Set up token expiry check
         setupTokenExpiryCheck(savedToken);
+        setLoading(false);
       }
+    } else {
+      setLoading(false);
     }
   }, []);
 
@@ -250,6 +255,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       value={{
         user,
         isLoggedIn,
+        loading,
         login,
         logout,
         resetPassword,
@@ -262,8 +268,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     </AuthContext.Provider>
   );
 };
-
-
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
