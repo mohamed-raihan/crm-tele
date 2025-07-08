@@ -128,11 +128,16 @@ const WalkInListPage = () => {
   };
 
   return (
-    <div className="flex-1 flex flex-col min-h-0 p-4 md:p-8 bg-gray-50">
-      <div className="max-w-7xl mx-auto w-full">
-        <Card className="mb-6">
+    <div className="flex-1 flex flex-col">
+      <main className="flex-1 p-6">
+        <div className="mb-6">
+          <h1 className="text-2xl font-semibold text-gray-900 mb-2">Walk-in List</h1>
+          <p className="text-gray-600">Track and manage walk-in enquiries</p>
+        </div>
+  
+        <Card>
           <CardHeader>
-            <CardTitle className="text-2xl font-bold">Walk-in List</CardTitle>
+            <CardTitle className="text-lg">Walk-in List</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex flex-row items-center gap-2 mb-4">
@@ -239,7 +244,7 @@ const WalkInListPage = () => {
             )}
           </CardContent>
         </Card>
-      </div>
+      </main>
     </div>
   );
 };

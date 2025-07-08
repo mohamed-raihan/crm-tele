@@ -390,6 +390,7 @@ const NotAnsweredPage = () => {
                   </div>
                 </div>
               )}
+              
             </CardContent>
           </Card>
         </div>
