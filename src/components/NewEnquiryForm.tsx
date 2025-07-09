@@ -8,6 +8,7 @@ import { z } from 'zod';
 import axiosInstance from './apiconfig/axios';
 import { API_URLS } from './apiconfig/api_urls';
 import { toast } from '@/hooks/use-toast';
+import { BulkUploadSection } from './Bulkupload';
 
 export function NewEnquiryForm() {
   const userData = typeof window !== 'undefined' ? localStorage.getItem("user_data") : null;
@@ -18,6 +19,8 @@ export function NewEnquiryForm() {
   const [counselorOptions, setCounselorOptions] = useState<{ value: string, label: string }[]>([]);
   const [formKey, setFormKey] = useState(0);
   const [source, setSource] = useState<{ value: string, label: string }[]>([])
+  const [service, setService] = useState<{ value: string, label: string }[]>([])
+  const [course, setCourse] = useState<{ value: string, label: string }[]>([])
 
   const fetchTelecaller = async () => {
     try {
@@ -48,7 +51,47 @@ export function NewEnquiryForm() {
       if (Array.isArray(response.data.data)) {
         setSource(
           response.data.data.map((item: any) => ({
-            value: String(item.id),
+            value: Number(item.id),
+            label: item.name || item.username || item.email || `Counselor ${item.id}`
+          }))
+        );
+      }
+    } catch (err) {
+      console.log(err);
+    }
+
+  };
+
+  const fetchCourses = async () => {
+    try {
+      const response = await axiosInstance.get(API_URLS.COURSES.GET_COURSES);
+      console.log(response);
+      // setSource(response.data.data)
+      // Map response to options for select
+      if (Array.isArray(response.data.data)) {
+        setCourse(
+          response.data.data.map((item: any) => ({
+            value: Number(item.id),
+            label: item.name || item.username || item.email || `Counselor ${item.id}`
+          }))
+        );
+      }
+    } catch (err) {
+      console.log(err);
+    }
+
+  };
+
+  const fetchServices = async () => {
+    try {
+      const response = await axiosInstance.get(API_URLS.SERVICES.GET_SERVICES);
+      console.log(response);
+      // setSource(response.data.data)
+      // Map response to options for select
+      if (Array.isArray(response.data.data)) {
+        setService(
+          response.data.data.map((item: any) => ({
+            value: Number(item.id),
             label: item.name || item.username || item.email || `Counselor ${item.id}`
           }))
         );
@@ -64,6 +107,8 @@ export function NewEnquiryForm() {
   useEffect(() => {
     fetchTelecaller();
     fetchSource();
+    fetchCourses();
+    fetchServices();
   }, [])
 
   // Define form fields configuration
@@ -85,14 +130,21 @@ export function NewEnquiryForm() {
           type: 'phone',
           placeholder: 'Enter Phone Number',
           required: true,
-          validation: z.string().min(1, 'Phone number is required')
+          validation: z.string()
+            .min(10, 'Phone number must be 10 digits')
+            .max(10, 'Phone number must be 10 digits')
+            .regex(/^\d{10}$/, 'Phone number must be 10 digits and only numbers')
         },
         {
           name: 'phone2',
           label: 'Phone 2',
           type: 'phone',
           placeholder: 'Enter Phone Number',
-          validation: z.string().optional()
+          validation: z.string()
+            .optional()
+            .refine(val => !val || /^\d{10}$/.test(val), {
+              message: 'Phone number must be 10 digits and only numbers',
+            })
         },
         {
           name: 'email',
@@ -122,33 +174,22 @@ export function NewEnquiryForm() {
           // disabled: isTelecaller
         },
         {
-          name: 'preferred_course',
+          name: 'preferred_course_id',
           label: 'Preferred Course',
           type: 'select',
           placeholder: 'Search Here',
           required: true,
           // showAddButton: true,
-          onAddClick: () => console.log('Add preferred course'),
-          options: [
-            { value: 'engineering', label: 'Engineering' },
-            { value: 'medical', label: 'Medical' },
-            { value: 'commerce', label: 'Commerce' },
-            { value: 'arts', label: 'Arts' }
-          ],
+          options: course,
           validation: z.string().min(1, 'Preferred course is required')
         },
         {
-          name: 'required_service',
+          name: 'required_service_id',
           label: 'Required Service',
           type: 'select',
           placeholder: 'Search Here',
           required: true,
-          options: [
-            { value: 'consultation', label: 'Consultation' },
-            { value: 'admission', label: 'Admission Guidance' },
-            { value: 'counselling', label: 'Career Counselling' },
-            { value: 'test-prep', label: 'Test Preparation' }
-          ],
+          options: service,
           validation: z.string().min(1, 'Required service is required')
         }
       ]
@@ -177,7 +218,7 @@ export function NewEnquiryForm() {
           validation: z.string().min(1, 'Required service is required')
         },
         {
-          name: 'mettads',
+          name: 'mettad_id',
           label: 'Source',
           type: 'select',
           placeholder: 'Select Source',
@@ -242,93 +283,7 @@ export function NewEnquiryForm() {
       />
 
       {/* Bulk Upload Section */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-muted-foreground">BULK UPLOAD</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="bg-muted/50 p-4 rounded-lg">
-              <p className="text-sm text-muted-foreground mb-2">
-                * Save the file as MS-DOS CSV, Do not Use any Special Characters in File Name.
-              </p>
-              <p className="text-sm text-muted-foreground mb-4">
-                * Please Download Demo File and Upload the data in Same Format
-              </p>
-              <Button variant="default" className="bg-blue-600 hover:bg-blue-700">
-                Download Demo File
-              </Button>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div>
-                <label className="text-sm font-medium">Branch</label>
-                <Select>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Search Here" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="main">Main Branch</SelectItem>
-                    <SelectItem value="north">North Branch</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <label className="text-sm font-medium">Preferred Course</label>
-                <Select>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Search Here" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="engineering">Engineering</SelectItem>
-                    <SelectItem value="medical">Medical</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <label className="text-sm font-medium">Enquiry Source</label>
-                <Select>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Search Here" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="website">Website</SelectItem>
-                    <SelectItem value="phone">Phone Call</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <label className="text-sm font-medium">Required Service</label>
-                <Select>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Search Here" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="consultation">Consultation</SelectItem>
-                    <SelectItem value="admission">Admission Guidance</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Upload File</label>
-              <div className="flex gap-2">
-                <Input placeholder="Upload File" className="flex-1" readOnly />
-                <Button variant="default" className="bg-blue-600 hover:bg-blue-700">
-                  Select File
-                </Button>
-              </div>
-              <p className="text-sm text-muted-foreground">
-                Please Upload Enquiries as MS DOS CSV File
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <BulkUploadSection/>
     </div>
   );
 }

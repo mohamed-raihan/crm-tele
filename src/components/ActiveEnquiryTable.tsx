@@ -146,16 +146,16 @@ export function ActiveEnquiryTable() {
     { 
       key: 'required_service', 
       label: 'Service',
-      render: (value, row) => (
-        <Badge className={row.serviceColor}>{value}</Badge>
-      )
+      // render: (value, row) => (
+      //   <Badge className={row.serviceColor}>{value}</Badge>
+      // )
     },
     { 
       key: 'preferred_course', 
       label: 'Preferred Course',
-      render: (value, row) => (
-        <Badge className={row.examsColor}>{value}</Badge>
-      )
+      // render: (value, row) => (
+      //   <Badge className={row.examsColor}>{value}</Badge>
+      // )
     },
     { key: 'created_by_name', label: 'Created by' },
     { key: 'branch_name', label: 'Branch' },
