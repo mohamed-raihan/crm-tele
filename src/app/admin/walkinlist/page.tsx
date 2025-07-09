@@ -345,7 +345,7 @@ const WalkInListPage = () => {
         {/* Results Table */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Walk-in List ({pagination.totalRecords} total)</CardTitle>
+            <CardTitle className="text-lg">Walk-in List </CardTitle>
           </CardHeader>
           <CardContent>
             {loading ? (

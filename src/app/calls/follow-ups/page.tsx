@@ -346,7 +346,7 @@ const FollowUpsPage = () => {
         {/* Results Table */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Follow-ups ({pagination.totalRecords} total)</CardTitle>
+            <CardTitle className="text-lg">Follow-ups </CardTitle>
           </CardHeader>
           <CardContent>
             {loading ? (
