@@ -3,10 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { DynamicTable, TableColumn, TableAction, TableFilter } from "@/components/ui/dynamic-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Edit, RotateCcw, Eye } from "lucide-react";
+import { Edit, RotateCcw, Eye, Trash } from "lucide-react";
 import axiosInstance from './apiconfig/axios';
 import { API_URLS } from './apiconfig/api_urls';
 import { error } from 'console';
+import { toast } from '@/hooks/use-toast';
 import {
   Pagination,
   PaginationContent,
@@ -132,6 +133,19 @@ export function ActiveEnquiryTable() {
     fetchEnquiry(page);
   }, [page]);
 
+  // Delete handler
+  const handleDelete = async (row: any) => {
+    if (!window.confirm('Are you sure you want to delete this enquiry?')) return;
+    try {
+      await axiosInstance.delete(`${API_URLS.ENQUIRY.DELETE_ENQUIRY(row.id)}`);
+      toast({ title: 'Enquiry deleted successfully', variant: 'success' });
+      fetchEnquiry(page);
+    } catch (err) {
+      toast({ title: 'Failed to delete enquiry', variant: 'destructive' });
+      console.error(err);
+    }
+  };
+
   const columns: TableColumn[] = [
     { 
       key: 'id',
@@ -178,11 +192,11 @@ export function ActiveEnquiryTable() {
         }
       }
     },
-    // {
-    //   label: 'Edit',
-    //   icon: <Edit className="h-4 w-4 mr-2" />,
-    //   onClick: (row) => console.log('Edit:', row)
-    // },
+    {
+      label: 'Delete',
+      icon: <Trash className="h-4 w-4 mr-2" />,
+      onClick: handleDelete
+    },
     // {
     //   label: 'Refresh',
     //   icon: <RotateCcw className="h-4 w-4 mr-2" />,

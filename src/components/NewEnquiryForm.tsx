@@ -51,7 +51,7 @@ export function NewEnquiryForm() {
       if (Array.isArray(response.data.data)) {
         setSource(
           response.data.data.map((item: any) => ({
-            value: Number(item.id),
+            value: String(item.id),
             label: item.name || item.username || item.email || `Counselor ${item.id}`
           }))
         );
@@ -71,7 +71,7 @@ export function NewEnquiryForm() {
       if (Array.isArray(response.data.data)) {
         setCourse(
           response.data.data.map((item: any) => ({
-            value: Number(item.id),
+            value: String(item.id),
             label: item.name || item.username || item.email || `Counselor ${item.id}`
           }))
         );
@@ -91,7 +91,7 @@ export function NewEnquiryForm() {
       if (Array.isArray(response.data.data)) {
         setService(
           response.data.data.map((item: any) => ({
-            value: Number(item.id),
+            value: String(item.id),
             label: item.name || item.username || item.email || `Counselor ${item.id}`
           }))
         );
@@ -161,9 +161,9 @@ export function NewEnquiryForm() {
       fields: [
         {
           name: 'assigned_by_id',
-          label: 'Counselor',
+          label: 'Counsellor',
           type: 'select',
-          placeholder: 'Select Counsielor',
+          placeholder: 'Select counsellor',
           required: true,
           options: !isTelecaller
             ? counselorOptions
