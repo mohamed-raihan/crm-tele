@@ -51,9 +51,10 @@ function formatDate(dateStr: string | null | undefined) {
 }
 
 const FollowUpsPage = () => {
-  const [allFollowUps, setAllFollowUps] = useState<FollowUpData[]>([]);
   const [followUps, setFollowUps] = useState<FollowUpData[]>([]);
   const [loading, setLoading] = useState(false);
+  const [showNoDataMsg, setShowNoDataMsg] = useState(false);
+  const [delayedLoading, setDelayedLoading] = useState(false);
   type FiltersType = {
     candidate_name: string;
     phone: string;
@@ -61,6 +62,7 @@ const FollowUpsPage = () => {
     call_status: string;
     follow_up_date: string;
     telecaller_name: string;
+    search: string;
   };
   const defaultFilters: FiltersType = {
     candidate_name: "",
@@ -69,6 +71,7 @@ const FollowUpsPage = () => {
     call_status: "",
     follow_up_date: "",
     telecaller_name: "",
+    search: "",
   };
   const [filterInputs, setFilterInputs] = useState<FiltersType>(defaultFilters);
   const [appliedFilters, setAppliedFilters] = useState<FiltersType>(defaultFilters);
@@ -79,115 +82,83 @@ const FollowUpsPage = () => {
     limit: 10,
   });
 
-  // Fetch all follow-ups once
-  const fetchAllFollowUps = async () => {
+  // Helper to build query params from filters and pagination
+  const buildQueryParams = (filters: FiltersType, page: number, limit: number) => {
+    const params = new URLSearchParams();
+    if (filters.candidate_name) params.append("candidate_name", filters.candidate_name);
+    if (filters.phone) params.append("phone", filters.phone);
+    if (filters.email) params.append("email", filters.email);
+    if (filters.call_status && filters.call_status !== "all") params.append("call_status", filters.call_status);
+    if (filters.follow_up_date) params.append("follow_up_date", filters.follow_up_date);
+    if (filters.telecaller_name) params.append("telecaller_name", filters.telecaller_name);
+    if (filters.search) params.append("search", filters.search);
+    params.append("page", String(page));
+    params.append("limit", String(limit));
+    return params.toString();
+  };
+
+  // Fetch follow-ups from API with filters and pagination
+  const fetchFollowUps = async (filters: FiltersType, page: number, limit: number, isInitial = false) => {
     setLoading(true);
+    setShowNoDataMsg(false);
+    let loadingTimeout = setTimeout(() => setDelayedLoading(true), 1000);
     try {
       const token = localStorage.getItem("access_token");
       if (!token) return;
-      // Try to fetch a large number of records
-      const response = await axiosInstance.get(`${API_URLS.CALLS.GET_FOLLOW_UPS}?page=1&limit=10000`, {
+      const query = buildQueryParams(filters, page, limit);
+      const response = await axiosInstance.get(`${API_URLS.CALLS.GET_FOLLOW_UPS}?${query}`, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
       });
-      console.log(response);
-      
       if (response.data?.code === 200) {
-        setAllFollowUps(response.data.data || []);
+        setFollowUps(response.data.data || []);
+        setPagination((prev) => ({
+          ...prev,
+          totalPages: response.data.totalPages || 1,
+          totalRecords: response.data.totalRecords || 0,
+        }));
+        // Show no data message only if filters/search are applied and no data
+        if (!isInitial && response.data.data.length === 0) setShowNoDataMsg(true);
+        else setShowNoDataMsg(false);
       } else {
-        setAllFollowUps([]);
+        setFollowUps([]);
+        setPagination((prev) => ({ ...prev, totalPages: 1, totalRecords: 0 }));
+        if (!isInitial) setShowNoDataMsg(true);
+        else setShowNoDataMsg(false);
       }
     } catch (error) {
-      console.error('Error fetching follow-ups:', error);
-      setAllFollowUps([]);
+      setFollowUps([]);
+      setPagination((prev) => ({ ...prev, totalPages: 1, totalRecords: 0 }));
+      if (!isInitial) setShowNoDataMsg(true);
+      else setShowNoDataMsg(false);
     } finally {
+      clearTimeout(loadingTimeout);
       setLoading(false);
+      setDelayedLoading(false);
     }
   };
 
-  // Improved frontend filter logic
-  const applyFilters = (rawData: FollowUpData[], filters: FiltersType) => {
-    console.log('Applying filters:', filters);
-    console.log('Raw data count:', rawData.length);
-    
-    const filtered = rawData.filter((item) => {
-      const { candidate_name, phone, email, call_status, follow_up_date, telecaller_name } = filters;
-      
-      // Candidate name filter (case insensitive, partial match)
-      const matchesCandidate = !candidate_name || 
-        (item.enquiry_details?.candidate_name?.toLowerCase().includes(candidate_name.toLowerCase()) ?? false);
-      
-      // Phone filter (partial match)
-      const matchesPhone = !phone || 
-        (item.enquiry_details?.phone?.includes(phone) ?? false);
-      
-      // Email filter (case insensitive, partial match)
-      const matchesEmail = !email || 
-        (item.enquiry_details?.email?.toLowerCase().includes(email.toLowerCase()) ?? false);
-      
-      // Call status filter (exact match, case insensitive, or 'all')
-      const matchesCallStatus = !call_status || call_status === 'all' || 
-        (item.call_status?.toLowerCase() === call_status.toLowerCase());
-      
-      // Follow up date filter (exact date match)
-      const matchesFollowUpDate = !follow_up_date || 
-        (item.follow_up_date ? item.follow_up_date.slice(0, 10) === follow_up_date : false);
-      
-      // Telecaller name filter (case insensitive, partial match)
-      const matchesTelecaller = !telecaller_name || 
-        (item.telecaller_name?.toLowerCase().includes(telecaller_name.toLowerCase()) ?? false);
-      
-      const result = matchesCandidate && matchesPhone && matchesEmail && 
-                    matchesCallStatus && matchesFollowUpDate && matchesTelecaller;
-      
-      return result;
-    });
-    
-    console.log('Filtered data count:', filtered.length);
-    return filtered;
-  };
-
-  // Frontend pagination logic
-  const paginate = (data: FollowUpData[], page: number, limit: number) => {
-    const totalRecords = data.length;
-    const totalPages = Math.max(1, Math.ceil(totalRecords / limit));
-    const start = (page - 1) * limit;
-    const end = start + limit;
-    return {
-      paginated: data.slice(start, end),
-      totalPages,
-      totalRecords,
-    };
-  };
-
-  // On mount, fetch all data
+  // On mount, fetch initial data
   useEffect(() => {
-    fetchAllFollowUps();
+    fetchFollowUps(appliedFilters, pagination.currentPage, pagination.limit, true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  console.log(allFollowUps);
-  
-
-  // When allFollowUps, appliedFilters, or pagination changes, update displayed data
+  // When filters or pagination changes, fetch data
   useEffect(() => {
-    if (allFollowUps.length === 0) return;
-    
-    setLoading(true);
-    const filtered = applyFilters(allFollowUps, appliedFilters);
-    const { paginated, totalPages, totalRecords } = paginate(filtered, pagination.currentPage, pagination.limit);
-    setFollowUps(paginated);
-    setPagination((prev) => ({ ...prev, totalPages, totalRecords }));
-    setLoading(false);
-  }, [allFollowUps, appliedFilters, pagination.currentPage, pagination.limit]);
+    const isInitial =
+      JSON.stringify(appliedFilters) === JSON.stringify(defaultFilters) && pagination.currentPage === 1;
+    fetchFollowUps(appliedFilters, pagination.currentPage, pagination.limit, isInitial);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [appliedFilters, pagination.currentPage, pagination.limit]);
 
   const handleFilterChange = (field: string, value: string) => {
     setFilterInputs((prev) => ({ ...prev, [field]: value }));
   };
 
   const handleSearch = () => {
-    console.log('Search clicked with filters:', filterInputs);
     setAppliedFilters({ ...filterInputs });
     setPagination((prev) => ({ ...prev, currentPage: 1 }));
   };
@@ -202,45 +173,62 @@ const FollowUpsPage = () => {
     setPagination((prev) => ({ ...prev, currentPage: newPage }));
   };
 
-  const exportToExcel = () => {
-    const headers = [
-      "ID",
-      "Candidate Name",
-      "Phone",
-      "Email",
-      "Call Status",
-      "Call Outcome",
-      "Follow Up Date",
-      "Telecaller Name",
-      "Branch Name",
-      "Created At",
-    ];
-    // Export filtered data, not just current page
-    const filtered = applyFilters(allFollowUps, appliedFilters);
-    const csvContent = [
-      headers.join(","),
-      ...filtered.map((item) => [
-        item.id,
-        `"${item.enquiry_details?.candidate_name || ""}"`,
-        item.enquiry_details?.phone || "",
-        `"${item.enquiry_details?.email || ""}"`,
-        item.call_status,
-        item.call_outcome,
-        item.follow_up_date,
-        item.telecaller_name,
-        item.branch_name,
-        item.created_at,
-      ].join(",")),
-    ].join("\n");
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const link = document.createElement("a");
-    const url = URL.createObjectURL(blob);
-    link.setAttribute("href", url);
-    link.setAttribute("download", "follow-ups.csv");
-    link.style.visibility = "hidden";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  // Export filtered data from API (all records)
+  const exportToExcel = async () => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem("access_token");
+      if (!token) return;
+      // Use a large limit to get all filtered records
+      const query = buildQueryParams(appliedFilters, 1, 10000);
+      const response = await axiosInstance.get(`${API_URLS.CALLS.GET_FOLLOW_UPS}?${query}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+      const data = response.data?.data || [];
+      const headers = [
+        "ID",
+        "Candidate Name",
+        "Phone",
+        "Email",
+        "Call Status",
+        "Call Outcome",
+        "Follow Up Date",
+        "Telecaller Name",
+        "Branch Name",
+        "Created At",
+      ];
+      const csvContent = [
+        headers.join(","),
+        ...data.map((item: FollowUpData) => [
+          item.id,
+          `"${item.enquiry_details?.candidate_name || ""}"`,
+          item.enquiry_details?.phone || "",
+          `"${item.enquiry_details?.email || ""}"`,
+          item.call_status,
+          item.call_outcome,
+          item.follow_up_date,
+          item.telecaller_name,
+          item.branch_name,
+          item.created_at,
+        ].join(",")),
+      ].join("\n");
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const link = document.createElement("a");
+      const url = URL.createObjectURL(blob);
+      link.setAttribute("href", url);
+      link.setAttribute("download", "follow-ups.csv");
+      link.style.visibility = "hidden";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error('Error exporting follow-ups:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -319,13 +307,31 @@ const FollowUpsPage = () => {
                   placeholder="Enter telecaller name"
                 />
               </div>
+              <div>
+                <Label htmlFor="search">Search All Fields</Label>
+                <Input
+                  id="search"
+                  value={filterInputs.search}
+                  onChange={(e) => handleFilterChange("search", e.target.value)}
+                  placeholder="Search candidate, phone, email..."
+                />
+              </div>
             </div>
             <div className="flex gap-2 mt-4">
-              <Button onClick={handleSearch} disabled={loading}>
-                <Search className="w-4 h-4 mr-2" />
-                Search
+              <Button onClick={handleSearch} disabled={loading} className="bg-green-500 hover:bg-green-600 text-white">
+                {delayedLoading ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                    Searching...
+                  </>
+                ) : (
+                  <>
+                    <Search className="w-4 h-4 mr-2" />
+                    Search
+                  </>
+                )}
               </Button>
-              <Button variant="outline" onClick={handleReset} disabled={loading}>
+              <Button variant="outline" onClick={handleReset} disabled={loading} className="bg-gray-100 hover:bg-gray-200 text-gray-700">
                 <RefreshCw className="w-4 h-4 mr-2" />
                 Reset
               </Button>
@@ -369,7 +375,7 @@ const FollowUpsPage = () => {
                     {followUps.length === 0 ? (
                       <TableRow>
                         <TableCell colSpan={10} className="text-center py-8 text-gray-500">
-                          No follow-ups found matching your criteria
+                          {showNoDataMsg ? "No follow-ups found matching your criteria" : null}
                         </TableCell>
                       </TableRow>
                     ) : (

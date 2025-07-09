@@ -175,6 +175,7 @@ export default function TelecallersManagementPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [roles, setroles] = useState<Roles[]>([]);
   const [formSections, setFormSections] = useState<FormSection[]>([]);
+  const [isFormSectionsReady, setIsFormSectionsReady] = useState(false);
 
   const [editingTelecaller, setEditingTelecaller] = useState<Telecaller | null>(
     null
@@ -368,86 +369,47 @@ export default function TelecallersManagementPage() {
         return; // Exit early if branches aren't loaded yet
       }
 
-      // Create form sections with role options (Admin disabled)
-      const sections: FormSection[] = [
-        {
-          fields: [
-            {
-              name: "name",
-              label: "Name",
-              type: "text",
-              placeholder: "Enter telecaller name",
-              defaultValue: "",
-              required: true,
-            },
-            {
-              name: "email",
-              label: "Email",
-              type: "email",
-              placeholder: "Enter email address",
-              defaultValue: "",
-              required: true,
-            },
-            {
-              name: "contact",
-              label: "Contact",
-              type: "text",
-              placeholder: "Enter contact number",
-              defaultValue: "",
-              required: true,
-            },
-            {
-              name: "address",
-              label: "Address",
-              type: "textarea",
-              placeholder: "Enter address",
-              defaultValue: "",
-              required: true,
-            },
-            {
-              name: "branch",
-              label: "Branch",
-              type: "select",
-              options: branches.map((branch: Branch) => ({
-                value: branch.id.toString(),
-                label: branch.branch_name,
-              })),
-              placeholder: "Select branch",
-              defaultValue: editingTelecaller
-                ? editingTelecaller.branch.toString()
-                : "",
-              required: true,
-            },
-            {
-              name: "role",
-              label: "Role",
-              type: "select",
-              options: rolesData.map((role: Roles) => ({
-                value: role.id.toString(),
-                label: role.name,
-                disabled: role.name === "Admin",
-              })),
-              placeholder: "Select role",
-              defaultValue: editingTelecaller
-                ? editingTelecaller.role.toString()
-                : "",
-              required: true,
-            },
-            {
-              name: "password",
-              label: "Password",
-              type: "text",
-              placeholder: "Enter password",
-              defaultValue: "",
-              required: editingTelecaller ? false : true,
-            },
-          ],
-          columns: 1,
-          className: "grid grid-cols-1 gap-4",
-        },
-      ];
-
-      setFormSections(sections);
+      // Update existing form sections with role and branch options
+      setFormSections(prevSections => {
+        if (prevSections.length === 0) return prevSections;
+        
+        const updatedSections = prevSections.map(section => ({
+          ...section,
+          fields: section.fields.map(field => {
+            if (field.name === "branch") {
+              return {
+                ...field,
+                options: branches.map((branch: Branch) => ({
+                  value: branch.id.toString(),
+                  label: branch.branch_name,
+                })),
+                placeholder: "Select branch",
+                defaultValue: editingTelecaller
+                  ? editingTelecaller.branch.toString()
+                  : "",
+              };
+            }
+            if (field.name === "role") {
+              return {
+                ...field,
+                options: rolesData.map((role: Roles) => ({
+                  value: role.id.toString(),
+                  label: role.name,
+                  disabled: role.name === "Admin",
+                })),
+                placeholder: "Select role",
+                defaultValue: editingTelecaller
+                  ? editingTelecaller.role.toString()
+                  : "2",
+              };
+            }
+            return field;
+          }),
+        }));
+        
+        return updatedSections;
+      });
+      setIsFormSectionsReady(true);
     } catch (error) {
       console.error("Error fetching roles:", error);
 
@@ -459,87 +421,48 @@ export default function TelecallersManagementPage() {
 
       setroles(fallbackRoles);
 
-      // Continue with form sections creation using fallback roles
+      // Update existing form sections with fallback roles
       if (branches.length > 0) {
-        const sections: FormSection[] = [
-          {
-            fields: [
-              {
-                name: "name",
-                label: "Name",
-                type: "text",
-                placeholder: "Enter telecaller name",
-                defaultValue: "",
-                required: true,
-              },
-              {
-                name: "email",
-                label: "Email",
-                type: "email",
-                placeholder: "Enter email address",
-                defaultValue: "",
-                required: true,
-              },
-              {
-                name: "contact",
-                label: "Contact",
-                type: "text",
-                placeholder: "Enter contact number",
-                defaultValue: "",
-                required: true,
-              },
-              {
-                name: "address",
-                label: "Address",
-                type: "textarea",
-                placeholder: "Enter address",
-                defaultValue: "",
-                required: true,
-              },
-              {
-                name: "branch",
-                label: "Branch",
-                type: "select",
-                options: branches.map((branch: Branch) => ({
-                  value: branch.id.toString(),
-                  label: branch.branch_name,
-                })),
-                placeholder: "Select branch",
-                defaultValue: editingTelecaller
-                  ? editingTelecaller.branch.toString()
-                  : "",
-                required: true,
-              },
-              {
-                name: "role",
-                label: "Role",
-                type: "select",
-                options: fallbackRoles.map((role: Roles) => ({
-                  value: role.id.toString(),
-                  label: role.name,
-                  disabled: role.name === "Admin",
-                })),
-                placeholder: "Select role",
-                defaultValue: editingTelecaller
-                  ? editingTelecaller.role.toString()
-                  : "",
-                required: true,
-              },
-              {
-                name: "password",
-                label: "Password",
-                type: "text",
-                placeholder: "Enter password",
-                defaultValue: "",
-                required: editingTelecaller ? false : true,
-              },
-            ],
-            columns: 1,
-            className: "grid grid-cols-1 gap-4",
-          },
-        ];
-
-        setFormSections(sections);
+        setFormSections(prevSections => {
+          if (prevSections.length === 0) return prevSections;
+          
+          const updatedSections = prevSections.map(section => ({
+            ...section,
+            fields: section.fields.map(field => {
+              if (field.name === "branch") {
+                return {
+                  ...field,
+                  options: branches.map((branch: Branch) => ({
+                    value: branch.id.toString(),
+                    label: branch.branch_name,
+                  })),
+                  placeholder: "Select branch",
+                  defaultValue: editingTelecaller
+                    ? editingTelecaller.branch.toString()
+                    : "",
+                };
+              }
+              if (field.name === "role") {
+                return {
+                  ...field,
+                  options: fallbackRoles.map((role: Roles) => ({
+                    value: role.id.toString(),
+                    label: role.name,
+                    disabled: role.name === "Admin",
+                  })),
+                  placeholder: "Select role",
+                  defaultValue: editingTelecaller
+                    ? editingTelecaller.role.toString()
+                    : "2",
+                };
+              }
+              return field;
+            }),
+          }));
+          
+          return updatedSections;
+        });
+        setIsFormSectionsReady(true);
       }
 
       toast({
@@ -568,6 +491,79 @@ export default function TelecallersManagementPage() {
 
   useEffect(() => {
     fetchBranches();
+    
+    // Create basic form sections as fallback
+    const basicFormSections: FormSection[] = [
+      {
+        fields: [
+          {
+            name: "name",
+            label: "Name",
+            type: "text",
+            placeholder: "Enter telecaller name",
+            defaultValue: "",
+            required: true,
+          },
+          {
+            name: "email",
+            label: "Email",
+            type: "email",
+            placeholder: "Enter email address",
+            defaultValue: "",
+            required: true,
+          },
+          {
+            name: "contact",
+            label: "Contact",
+            type: "text",
+            placeholder: "Enter contact number",
+            defaultValue: "",
+            required: true,
+          },
+          {
+            name: "address",
+            label: "Address",
+            type: "textarea",
+            placeholder: "Enter address",
+            defaultValue: "",
+            required: true,
+          },
+          {
+            name: "branch",
+            label: "Branch",
+            type: "select",
+            options: [],
+            placeholder: "Loading branches...",
+            defaultValue: "",
+            required: true,
+          },
+          {
+            name: "role",
+            label: "Role",
+            type: "select",
+            options: [
+              { value: "2", label: "Telecaller" }
+            ],
+            placeholder: "Select role",
+            defaultValue: "2",
+            required: true,
+          },
+          {
+            name: "password",
+            label: "Password",
+            type: "text",
+            placeholder: "Enter password",
+            defaultValue: "",
+            required: true,
+          },
+        ],
+        columns: 1,
+        className: "grid grid-cols-1 gap-4",
+      },
+    ];
+    
+    setFormSections(basicFormSections);
+    setIsFormSectionsReady(true);
   }, []);
 
   useEffect(() => {
@@ -1062,6 +1058,13 @@ export default function TelecallersManagementPage() {
   // Modal handlers
   const openAddModal = () => {
     console.log("Opening add modal");
+    if (!isFormSectionsReady) {
+      toast({
+        title: "Form is still loading. Please wait a moment.",
+        variant: "destructive",
+      });
+      return;
+    }
     setEditingTelecaller(null);
     resetForm();
     setIsModalOpen(true);
@@ -1141,14 +1144,21 @@ export default function TelecallersManagementPage() {
           <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4 sm:mb-0">
             Telecallers Management
           </h1>
-          <Button
-            onClick={openAddModal}
-            className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto"
-            disabled={loading}
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Add New Telecaller
-          </Button>
+          <div className="flex flex-col sm:flex-row gap-2 items-center">
+            <Button
+              onClick={openAddModal}
+              className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto"
+              disabled={loading || !isFormSectionsReady}
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              {!isFormSectionsReady ? "Loading..." : "Add New Telecaller"}
+            </Button>
+            {!isFormSectionsReady && (
+              <div className="text-sm text-gray-500">
+                Loading form data...
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Search Bar */}
@@ -1202,7 +1212,7 @@ export default function TelecallersManagementPage() {
         </div>
 
         {/* Add/Edit Modal */}
-        {isModalOpen && formSections.length > 0 && (
+        {isModalOpen && isFormSectionsReady && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
             <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto scrollbar-hide">
               <div className="flex items-center justify-between p-6 border-b border-gray-200">
