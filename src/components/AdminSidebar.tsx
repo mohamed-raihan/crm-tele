@@ -19,6 +19,7 @@ import {
   ChevronRight,
   Briefcase,
   CheckCircle,
+  Book,
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { useState } from "react"
@@ -154,12 +155,12 @@ const dataManagement = [
       {
         title: "Courses",
         url: "/admin/course",
-        icon: PieChart
+        icon: Book
       },
       {
         title: "Services",
         url: "/admin/service",
-        icon: PieChart
+        icon: Settings
       },
       {
         title: "Ads",
@@ -296,7 +297,7 @@ export function AdminSidebar() {
             <CollapsibleTrigger asChild>
               <SidebarMenuButton className="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors">
                 <Briefcase className="h-4 w-4" />
-                <span>My Job</span>
+                <span>Jobs</span>
                 <ChevronDown className="ml-auto h-4 w-4 transition-transform data-[state=open]:rotate-180" />
               </SidebarMenuButton>
             </CollapsibleTrigger>

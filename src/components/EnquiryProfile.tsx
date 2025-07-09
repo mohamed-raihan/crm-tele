@@ -338,10 +338,10 @@ export function EnquiryProfile(id:id) {
 
       {/* Profile Tabs */}
       <Tabs defaultValue="profile-info" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="profile-info">Profile Info</TabsTrigger>
-          <TabsTrigger value="activities">Activities</TabsTrigger>
-          <TabsTrigger value="responds">Responds</TabsTrigger>
+          {/* <TabsTrigger value="activities">Activities</TabsTrigger>
+          <TabsTrigger value="responds">Responds</TabsTrigger> */}
           <TabsTrigger value="contact-history">Contact History</TabsTrigger>
         </TabsList>
         
@@ -349,16 +349,16 @@ export function EnquiryProfile(id:id) {
           <ProfileInfoTab id={id.id}/>
         </TabsContent>
         
-        <TabsContent value="activities" className="mt-6">
+        {/* <TabsContent value="activities" className="mt-6">
           <ActivitiesTab />
         </TabsContent>
         
         <TabsContent value="responds" className="mt-6">
           <RespondsTab />
-        </TabsContent>
+        </TabsContent> */}
         
         <TabsContent value="contact-history" className="mt-6">
-          <ContactHistoryTab />
+          <ContactHistoryTab id={id.id}/>
         </TabsContent>
       </Tabs>
     </div>

@@ -140,14 +140,22 @@ export function DynamicTable({
               </Button> */}
             </div>
             {onSearch && (
-              <div className="relative w-full sm:w-64 min-w-0">
+              <div className="relative w-full sm:w-64 min-w-0 flex">
                 <Search className="h-4 w-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                 <Input
                   placeholder={searchPlaceholder}
                   value={searchTerm}
-                  onChange={(e) => handleSearch(e.target.value)}
+                  onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10 w-full"
+                  onKeyDown={(e) => { if (e.key === 'Enter') onSearch?.(searchTerm); }}
                 />
+                <Button
+                  className="ml-2"
+                  variant="outline"
+                  onClick={() => onSearch?.(searchTerm)}
+                >
+                  Search
+                </Button>
               </div>
             )}
           </div>
