@@ -65,6 +65,6 @@ export const API_URLS = {
 
   },
   NOTIFICATIONS: {
-    GET_NOTIFICATIONS: "/api/notifications/",
+    GET_NOTIFICATIONS: "/api/reminders/",
   },
 };

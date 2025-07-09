@@ -3,264 +3,240 @@ import { DashboardHeader } from "@/components/DashboardHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { RefreshCw, Search } from "lucide-react";
+import { Bell, Search } from "lucide-react";
 import axiosInstance from "@/components/apiconfig/axios";
 import { API_URLS } from "@/components/apiconfig/api_urls";
 
-interface Notification {
+interface Reminder {
   id: number;
   title: string;
-  message: string;
+  description: string;
+  reminder_date: string;
   created_at: string;
-  read: boolean;
+  updated_at: string;
+  user_id: number;
 }
 
-interface Pagination {
-  currentPage: number;
-  totalPages: number;
-  totalRecords: number;
-  limit: number;
+interface ApiResponse {
+  code: number;
+  message: string;
+  reminders: Reminder[];
 }
 
 function formatDate(dateStr: string | null | undefined) {
   if (!dateStr) return "";
   const d = new Date(dateStr);
   if (isNaN(d.getTime())) return dateStr;
-  return d.toLocaleString();
+  return d.toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
 }
 
-const NotificationPage = () => {
-  const [allNotifications, setAllNotifications] = useState<Notification[]>([]);
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [filterInputs, setFilterInputs] = useState({ title: "", date: "" });
-  const [appliedFilters, setAppliedFilters] = useState({ title: "", date: "" });
-  const [pagination, setPagination] = useState<Pagination>({
-    currentPage: 1,
-    totalPages: 1,
-    totalRecords: 0,
-    limit: 10,
-  });
+function getRelativeTime(dateStr: string) {
+  const now = new Date();
+  const date = new Date(dateStr);
+  const diffMs = date.getTime() - now.getTime();
+  const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+  
+  if (diffDays === 0) return "Today";
+  if (diffDays === 1) return "Tomorrow";
+  if (diffDays > 1) return `In ${diffDays} days`;
+  if (diffDays === -1) return "Yesterday";
+  if (diffDays < -1) return `${Math.abs(diffDays)} days ago`;
+  return formatDate(dateStr);
+}
 
-  // Fetch all notifications once
-  const fetchAllNotifications = async () => {
+const NotificationCard = ({ reminder }: { reminder: Reminder }) => {
+  const isOverdue = new Date(reminder.reminder_date) < new Date();
+  
+  return (
+    <div className={`bg-white rounded-lg shadow-md hover:shadow-lg transition-all duration-300 border-l-4 ${
+      isOverdue ? 'border-red-400' : 'border-green-500'
+    } p-6 mb-4 transform hover:scale-105`}>
+      <div className="flex items-start justify-between">
+        <div className="flex-1">
+          <div className="flex items-center mb-2">
+            <Bell className="w-5 h-5 text-green-600 mr-2" />
+            <h3 className="text-lg font-semibold text-gray-900">{reminder.title}</h3>
+          </div>
+          
+          <p className="text-gray-600 mb-4 leading-relaxed">{reminder.description}</p>
+          
+          <div className="flex flex-wrap gap-4 text-sm">
+            <div className="text-green-600">
+              <span>{getRelativeTime(reminder.reminder_date)}</span>
+            </div>
+            
+            <div className="text-gray-500">
+              <span>{formatDate(reminder.reminder_date)}</span>
+            </div>
+          </div>
+        </div>
+        
+        <div className={`w-3 h-3 rounded-full ${
+          isOverdue ? 'bg-red-400' : 'bg-green-500'
+        } animate-pulse`}></div>
+      </div>
+    </div>
+  );
+};
+
+const NotificationPage = () => {
+  const [allReminders, setAllReminders] = useState<Reminder[]>([]);
+  const [filteredReminders, setFilteredReminders] = useState<Reminder[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const remindersPerPage = 10;
+
+  // Fetch reminders from API
+  const fetchReminders = async () => {
     setLoading(true);
     try {
       const token = localStorage.getItem("access_token");
       if (!token) return;
-      const response = await axiosInstance.get(`${API_URLS.NOTIFICATIONS.GET_NOTIFICATIONS}?page=1&limit=10000`, {
+      
+      const response = await axiosInstance.get(API_URLS.NOTIFICATIONS.GET_NOTIFICATIONS, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
       });
+      
       if (response.data?.code === 200) {
-        setAllNotifications(response.data.data || []);
+        // Map string reminders to objects if needed
+        const reminders = (response.data.reminders || []).map((item: any, idx: number) =>
+          typeof item === "string"
+            ? { id: idx, title: item, description: "", reminder_date: new Date().toISOString() }
+            : item
+        );
+        setAllReminders(reminders);
+        setFilteredReminders(reminders);
       } else {
-        setAllNotifications([]);
+        setAllReminders([]);
+        setFilteredReminders([]);
       }
     } catch (error) {
-      setAllNotifications([]);
+      setAllReminders([]);
+      setFilteredReminders([]);
     } finally {
       setLoading(false);
     }
   };
 
-  // Filter logic
-  const applyFilters = (rawData: Notification[], filters: { title: string; date: string }) => {
-    return rawData.filter((item) => {
-      const matchesTitle = !filters.title || item.title.toLowerCase().includes(filters.title.toLowerCase());
-      const matchesDate = !filters.date || (item.created_at ? item.created_at.slice(0, 10) === filters.date : false);
-      return matchesTitle && matchesDate;
-    });
-  };
-
-  // Pagination logic
-  const paginate = (data: Notification[], page: number, limit: number) => {
-    const totalRecords = data.length;
-    const totalPages = Math.max(1, Math.ceil(totalRecords / limit));
-    const start = (page - 1) * limit;
-    const end = start + limit;
-    return {
-      paginated: data.slice(start, end),
-      totalPages,
-      totalRecords,
-    };
+  // Filter reminders based on search term
+  const handleSearch = (value: string) => {
+    setSearchTerm(value);
+    setCurrentPage(1); // Reset to first page on search
+    if (!value.trim()) {
+      setFilteredReminders(allReminders);
+    } else {
+      const filtered = allReminders.filter(reminder =>
+        reminder.title.toLowerCase().includes(value.toLowerCase()) ||
+        reminder.description.toLowerCase().includes(value.toLowerCase())
+      );
+      setFilteredReminders(filtered);
+    }
   };
 
   useEffect(() => {
-    fetchAllNotifications();
+    fetchReminders();
   }, []);
 
-  useEffect(() => {
-    setLoading(true);
-    const filtered = applyFilters(allNotifications, appliedFilters);
-    const { paginated, totalPages, totalRecords } = paginate(filtered, pagination.currentPage, pagination.limit);
-    setNotifications(paginated);
-    setPagination((prev) => ({ ...prev, totalPages, totalRecords }));
-    setLoading(false);
-  }, [allNotifications, appliedFilters, pagination.currentPage, pagination.limit]);
+  // Pagination logic
+  const totalPages = Math.ceil(filteredReminders.length / remindersPerPage);
+  const paginatedReminders = filteredReminders.slice(
+    (currentPage - 1) * remindersPerPage,
+    currentPage * remindersPerPage
+  );
+  const handlePageChange = (page: number) => setCurrentPage(page);
 
-  const handleFilterChange = (field: string, value: string) => {
-    setFilterInputs((prev) => ({ ...prev, [field]: value }));
-  };
-
-  const handleSearch = () => {
-    setAppliedFilters({ ...filterInputs });
-    setPagination((prev) => ({ ...prev, currentPage: 1 }));
-  };
-
-  const handleReset = () => {
-    setFilterInputs({ title: "", date: "" });
-    setAppliedFilters({ title: "", date: "" });
-    setPagination((prev) => ({ ...prev, currentPage: 1 }));
-  };
-
-  const handlePageChange = (newPage: number) => {
-    setPagination((prev) => ({ ...prev, currentPage: newPage }));
-  };
+  console.log(allReminders);
+  
 
   return (
-    <div className="flex-1 flex flex-col min-h-0">
+    <div className="flex-1 flex flex-col min-h-0" style={{ backgroundColor: 'white' }}>
       <DashboardHeader />
       <main className="flex-1 p-6">
         <div className="max-w-7xl mx-auto">
           <div className="mb-8">
             <h2 className="text-2xl font-bold text-gray-900 mb-2">Notifications</h2>
-            <p className="text-gray-600">View your recent notifications</p>
+            <p className="text-gray-600">View your reminders</p>
           </div>
 
-          {/* Filters Card */}
-          <Card className="mb-6">
-            <CardHeader>
-              <CardTitle className="text-lg">Filters</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-1">Title</label>
-                  <Input
-                    id="title"
-                    value={filterInputs.title}
-                    onChange={(e) => handleFilterChange("title", e.target.value)}
-                    placeholder="Enter title"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="date" className="block text-sm font-medium text-gray-700 mb-1">Date</label>
-                  <Input
-                    id="date"
-                    type="date"
-                    value={filterInputs.date}
-                    onChange={(e) => handleFilterChange("date", e.target.value)}
-                  />
-                </div>
-              </div>
-              <div className="flex gap-2 mt-4">
-                <Button onClick={handleSearch} disabled={loading}>
-                  <Search className="w-4 h-4 mr-2" />
-                  Search
-                </Button>
-                <Button variant="outline" onClick={handleReset} disabled={loading}>
-                  <RefreshCw className="w-4 h-4 mr-2" />
-                  Reset
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+          {/* Search */}
+          <div className="mb-6">
+            <div className="relative max-w-md">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-green-500 w-5 h-5" />
+              <Input
+                type="text"
+                placeholder="Search reminders..."
+                value={searchTerm}
+                onChange={(e) => handleSearch(e.target.value)}
+                className="pl-10 pr-4 py-2 border-2 border-green-200 focus:border-green-500 focus:ring-green-500 rounded-lg"
+                style={{ borderColor: '#10B981', outline: 'none' }}
+                onFocus={(e) => e.target.style.borderColor = '#10B981'}
+              />
+            </div>
+          </div>
 
-          {/* Results Table */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Notifications ({pagination.totalRecords} total)</CardTitle>
+          {/* Notifications List */}
+          <Card style={{ backgroundColor: 'white', border: '1px solid #e5e7eb' }}>
+            <CardHeader style={{ backgroundColor: 'white', borderBottom: '1px solid #e5e7eb' }}>
+              <CardTitle className="text-lg flex items-center" style={{ color: '#10B981' }}>
+                <Bell className="w-5 h-5 mr-2" />
+                Your Reminders
+                {searchTerm && (
+                  <span className="ml-2 text-sm text-gray-500">
+                    ({filteredReminders.length} found)
+                  </span>
+                )}
+              </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent style={{ backgroundColor: 'white', padding: '1.5rem' }}>
               {loading ? (
-                <div className="flex items-center justify-center py-8">
-                  <RefreshCw className="w-6 h-6 animate-spin mr-2" />
-                  Loading...
+                <div className="flex flex-col items-center justify-center py-12">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500 mb-4"></div>
+                  <span className="text-gray-600">Loading your reminders...</span>
                 </div>
               ) : (
-                <div className="overflow-x-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>ID</TableHead>
-                        <TableHead>Title</TableHead>
-                        <TableHead>Message</TableHead>
-                        <TableHead>Date</TableHead>
-                        <TableHead>Status</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {notifications.length === 0 ? (
-                        <TableRow>
-                          <TableCell colSpan={5} className="text-center py-8 text-gray-500">
-                            No notifications found
-                          </TableCell>
-                        </TableRow>
-                      ) : (
-                        notifications.map((item) => (
-                          <TableRow key={item.id} className={item.read ? "" : "bg-blue-50"}>
-                            <TableCell>{item.id}</TableCell>
-                            <TableCell className="max-w-xs truncate" title={item.title}>{item.title}</TableCell>
-                            <TableCell className="max-w-md truncate" title={item.message}>{item.message}</TableCell>
-                            <TableCell>{formatDate(item.created_at)}</TableCell>
-                            <TableCell>
-                              {item.read ? (
-                                <span className="px-2 py-1 rounded text-xs font-medium bg-gray-100 text-gray-800">Read</span>
-                              ) : (
-                                <span className="px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-800">Unread</span>
-                              )}
-                            </TableCell>
-                          </TableRow>
-                        ))
+                <div className="space-y-4">
+                  {paginatedReminders.length === 0 ? (
+                    <div className="text-center py-12">
+                      <Bell className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                      <p className="text-gray-500 text-lg mb-2">
+                        {searchTerm ? "No reminders found" : "No reminders available"}
+                      </p>
+                      <p className="text-gray-400">
+                        {searchTerm ? "Try adjusting your search terms" : "You're all caught up!"}
+                      </p>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="grid gap-4">
+                        {paginatedReminders.map((reminder) => (
+                          <NotificationCard key={reminder.id} reminder={reminder} />
+                        ))}
+                      </div>
+                      {totalPages > 1 && (
+                        <div className="flex justify-center mt-4 space-x-2">
+                          {[...Array(totalPages)].map((_, idx) => (
+                            <button
+                              key={idx}
+                              onClick={() => handlePageChange(idx + 1)}
+                              className={`px-3 py-1 rounded ${currentPage === idx + 1 ? 'bg-green-500 text-white' : 'bg-gray-200'}`}
+                            >
+                              {idx + 1}
+                            </button>
+                          ))}
+                        </div>
                       )}
-                    </TableBody>
-                  </Table>
-                </div>
-              )}
-              {/* Pagination */}
-              {pagination.totalPages > 1 && (
-                <div className="mt-6 flex justify-between items-center">
-                  <div className="text-sm text-gray-600">
-                    Showing {(pagination.currentPage - 1) * pagination.limit + 1} to {Math.min(pagination.currentPage * pagination.limit, pagination.totalRecords)} of {pagination.totalRecords} entries
-                  </div>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      disabled={pagination.currentPage === 1}
-                      onClick={() => handlePageChange(pagination.currentPage - 1)}
-                    >
-                      Previous
-                    </Button>
-                    {[...Array(Math.min(pagination.totalPages, 5))].map((_, index) => {
-                      const pageNum = pagination.currentPage <= 3 ? index + 1 : 
-                        pagination.currentPage >= pagination.totalPages - 2 ? pagination.totalPages - 4 + index :
-                        pagination.currentPage - 2 + index;
-                      if (pageNum < 1 || pageNum > pagination.totalPages) return null;
-                      return (
-                        <Button
-                          key={pageNum}
-                          variant={pagination.currentPage === pageNum ? "default" : "outline"}
-                          size="sm"
-                          onClick={() => handlePageChange(pageNum)}
-                        >
-                          {pageNum}
-                        </Button>
-                      );
-                    })}
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      disabled={pagination.currentPage === pagination.totalPages}
-                      onClick={() => handlePageChange(pagination.currentPage + 1)}
-                    >
-                      Next
-                    </Button>
-                  </div>
+                    </>
+                  )}
                 </div>
               )}
             </CardContent>
@@ -271,4 +247,4 @@ const NotificationPage = () => {
   );
 };
 
-export default NotificationPage; 
+export default NotificationPage;

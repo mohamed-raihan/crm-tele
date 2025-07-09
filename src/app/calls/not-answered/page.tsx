@@ -282,8 +282,8 @@ const NotAnsweredPage = () => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Statuses</SelectItem>
-                    <SelectItem value="not_answered">Not Answered</SelectItem>
-                    <SelectItem value="do_not_call">Do Not Call</SelectItem>
+                    <SelectItem value="Not Answered">Not Answered</SelectItem>
+                    <SelectItem value="Do Not Call">Do Not Call</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -344,7 +344,7 @@ const NotAnsweredPage = () => {
         {/* Results Table */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Not Answered Calls ({pagination.totalRecords} total)</CardTitle>
+            <CardTitle className="text-lg">Not Answered Calls </CardTitle>
           </CardHeader>
           <CardContent>
             {loading ? (
@@ -385,8 +385,8 @@ const NotAnsweredPage = () => {
                           <TableCell>{item.enquiry_details?.email}</TableCell>
                           <TableCell>
                             <span className={`px-2 py-1 rounded text-xs font-medium ${
-                              item.call_status === 'not_answered' ? 'bg-red-100 text-red-800' :
-                              item.call_status === 'do_not_call' ? 'bg-orange-100 text-orange-800' :
+                              item.call_status === 'Not Answered' ? 'bg-red-100 text-red-800' :
+                              item.call_status === 'Do Not Call' ? 'bg-orange-100 text-orange-800' :
                               'bg-gray-100 text-gray-800'
                             }`}>
                               {item.call_status}

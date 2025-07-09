@@ -107,7 +107,7 @@ const MyJobPage = () => {
         {/* Table Card */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Jobs ({pagination.total} total)</CardTitle>
+            <CardTitle className="text-lg">Jobs </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto w-full">
