@@ -256,7 +256,7 @@ export function EnquiryProfile(id:id) {
                       <SelectItem value="Follow Up">Follow Up</SelectItem>
                       <SelectItem value="Converted">Converted</SelectItem>
                       <SelectItem value="Do Not Call">Do Not Call</SelectItem>
-                      <SelectItem value="walk_in_list">walk_in_list</SelectItem>
+                      <SelectItem value="walk_in_list">Walk In</SelectItem>
                       <SelectItem value="closed">closed</SelectItem>
                     </SelectContent>
                   </Select>

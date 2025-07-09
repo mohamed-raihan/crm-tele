@@ -40,6 +40,20 @@ export const API_URLS = {
     DELETE_ADS: (id) => `/api/mettads/${id}/`,
   },
 
+  SERVICES: {
+    POST_SERVICES: "/api/services/",
+    GET_SERVICES: "/api/services/",
+    PATCH_SERVICES: id=> `/api/services/${id}/`,
+    DELETE_SERVICES: id=> `/api/services/${id}/`
+  },
+
+  COURSES: {
+    POST_COURSES: "/api/courses/",
+    GET_COURSES: "/api/courses/",
+    PATCH_COURSES: (id) => `/api/courses/${id}/`,
+    DELETE_COURSES: (id) => `/api/courses/${id}/`
+  },
+
   DASHBOARD: {
     GET_STATS: "/api/dashboard/",
   },
@@ -52,6 +66,11 @@ export const API_URLS = {
     PATCH_ENQUIRY: (id) => `/api/enquiries/${id}/`,
     DELETE_ENQUIRY: (id) => `/api/enquiries/${id}/`,
   },
+
+  BULK_UPLOAD: {
+    POST_CSV: "/api/enquiries/import/"
+  },
+
   CALLS: {
 
     GET_FOLLOW_UPS: "/api/calls/follow-ups/",

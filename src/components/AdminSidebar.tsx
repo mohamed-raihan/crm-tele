@@ -152,6 +152,16 @@ const dataManagement = [
         icon: Users
       },
       {
+        title: "Courses",
+        url: "/admin/course",
+        icon: PieChart
+      },
+      {
+        title: "Services",
+        url: "/admin/service",
+        icon: PieChart
+      },
+      {
         title: "Ads",
         url: "/admin/ads",
         icon: PieChart
