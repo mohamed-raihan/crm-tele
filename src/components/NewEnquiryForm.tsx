@@ -202,7 +202,7 @@ export function NewEnquiryForm() {
           label: 'Follow Up On',
           type: 'date',
           placeholder: 'Sep 30, 2025',
-          description: 'Set Follow up Date for Already Contacted Enquiries',
+          // description: 'Set Follow up Date for Already Contacted Enquiries',
           validation: z.date().optional()
         },
         {
@@ -236,7 +236,7 @@ export function NewEnquiryForm() {
           label: 'FeedBack',
           type: 'textarea',
           placeholder: 'Type Feedback',
-          description: 'Provide Feed Back for Already Contacted Enquiries',
+          // description: 'Provide Feed Back for Already Contacted Enquiries',
           validation: z.string().optional()
         },
       ]

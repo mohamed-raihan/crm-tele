@@ -10,6 +10,7 @@ import { Plus, Edit, Trash2 } from "lucide-react";
 import axiosInstance from "@/components/apiconfig/axios.ts";
 import { useToast } from "@/components/ui/use-toast";
 import { API_URLS } from "@/components/apiconfig/api_urls.ts";
+import { DashboardHeader } from "@/components/DashboardHeader";
 
 interface Ad {
     id: string;
@@ -115,7 +116,9 @@ export default function ServicePage() {
     ];
 
     return (
-        <div className=" mx-8 py-8">
+        <div>
+            <DashboardHeader/>
+            <div className=" mx-8 py-8">
             <Card>
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
                     <CardTitle className="text-2xl font-bold">SOURCE</CardTitle>
@@ -164,6 +167,7 @@ export default function ServicePage() {
                     />
                 </CardContent>
             </Card>
+        </div>
         </div>
     );
 }
