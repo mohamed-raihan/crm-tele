@@ -10,8 +10,9 @@ import { FileDown, Search, RefreshCw } from "lucide-react";
 import axiosInstance from "@/components/apiconfig/axios";
 import { API_URLS } from "@/components/apiconfig/api_urls";
 
-interface FollowUpData {
+interface WalkInData {
   id: number;
+  enquiry_id: number;
   enquiry_details: {
     id: number;
     candidate_name: string;
@@ -50,29 +51,30 @@ function formatDate(dateStr: string | null | undefined) {
   return d.toLocaleString();
 }
 
-const FollowUpsPage = () => {
-  const [followUps, setFollowUps] = useState<FollowUpData[]>([]);
+const WalkInListPage = () => {
+  const [walkIns, setWalkIns] = useState<WalkInData[]>([]);
   const [loading, setLoading] = useState(false);
   const [showNoDataMsg, setShowNoDataMsg] = useState(false);
   const [delayedLoading, setDelayedLoading] = useState(false);
+
   type FiltersType = {
-    candidate_name: string;
-    phone: string;
-    email: string;
+    search: string;
+    branch_name: string;
+    telecaller_name: string;
     call_status: string;
     follow_up_date: string;
-    telecaller_name: string;
-    search: string;
+    ordering: string;
   };
+
   const defaultFilters: FiltersType = {
-    candidate_name: "",
-    phone: "",
-    email: "",
+    search: "",
+    branch_name: "",
+    telecaller_name: "",
     call_status: "",
     follow_up_date: "",
-    telecaller_name: "",
-    search: "",
+    ordering: "-call_start_time",
   };
+
   const [filterInputs, setFilterInputs] = useState<FiltersType>(defaultFilters);
   const [appliedFilters, setAppliedFilters] = useState<FiltersType>(defaultFilters);
   const [pagination, setPagination] = useState<Pagination>({
@@ -85,20 +87,19 @@ const FollowUpsPage = () => {
   // Helper to build query params from filters and pagination
   const buildQueryParams = (filters: FiltersType, page: number, limit: number) => {
     const params = new URLSearchParams();
-    if (filters.candidate_name) params.append("candidate_name", filters.candidate_name);
-    if (filters.phone) params.append("phone", filters.phone);
-    if (filters.email) params.append("email", filters.email);
-    if (filters.call_status && filters.call_status !== "all") params.append("call_status", filters.call_status);
-    if (filters.follow_up_date) params.append("follow_up_date", filters.follow_up_date);
-    if (filters.telecaller_name) params.append("telecaller_name", filters.telecaller_name);
     if (filters.search) params.append("search", filters.search);
+    if (filters.branch_name) params.append("branch_name", filters.branch_name);
+    if (filters.telecaller_name) params.append("telecaller_name", filters.telecaller_name);
+    if (filters.call_status) params.append("call_status", filters.call_status);
+    if (filters.follow_up_date) params.append("follow_up_date", filters.follow_up_date);
+    if (filters.ordering) params.append("ordering", filters.ordering);
     params.append("page", String(page));
     params.append("limit", String(limit));
     return params.toString();
   };
 
-  // Fetch follow-ups from API with filters and pagination
-  const fetchFollowUps = async (filters: FiltersType, page: number, limit: number, isInitial = false) => {
+  // Fetch walk-ins from API with filters and pagination
+  const fetchWalkIns = async (filters: FiltersType, page: number, limit: number, isInitial = false) => {
     setLoading(true);
     setShowNoDataMsg(false);
     let loadingTimeout = setTimeout(() => setDelayedLoading(true), 1000);
@@ -106,30 +107,38 @@ const FollowUpsPage = () => {
       const token = localStorage.getItem("access_token");
       if (!token) return;
       const query = buildQueryParams(filters, page, limit);
-      const response = await axiosInstance.get(`${API_URLS.CALLS.GET_FOLLOW_UPS}?${query}`, {
+      const response = await axiosInstance.get(`${API_URLS.CALLS.GET_WALKIN_LIST}?${query}`, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
       });
       if (response.data?.code === 200) {
-        setFollowUps(response.data.data || []);
-        setPagination((prev) => ({
-          ...prev,
-          totalPages: response.data.totalPages || 1,
-          totalRecords: response.data.totalRecords || 0,
-        }));
+        setWalkIns(response.data.data || []);
+        if (response.data.pagination) {
+          setPagination((prev) => ({
+            ...prev,
+            totalPages: Math.ceil(response.data.pagination.total / response.data.pagination.limit) || 1,
+            totalRecords: response.data.pagination.total || 0,
+          }));
+        } else {
+          setPagination((prev) => ({
+            ...prev,
+            totalPages: response.data.totalPages || 1,
+            totalRecords: response.data.totalRecords || 0,
+          }));
+        }
         // Show no data message only if filters/search are applied and no data
         if (!isInitial && response.data.data.length === 0) setShowNoDataMsg(true);
         else setShowNoDataMsg(false);
       } else {
-        setFollowUps([]);
+        setWalkIns([]);
         setPagination((prev) => ({ ...prev, totalPages: 1, totalRecords: 0 }));
         if (!isInitial) setShowNoDataMsg(true);
         else setShowNoDataMsg(false);
       }
     } catch (error) {
-      setFollowUps([]);
+      setWalkIns([]);
       setPagination((prev) => ({ ...prev, totalPages: 1, totalRecords: 0 }));
       if (!isInitial) setShowNoDataMsg(true);
       else setShowNoDataMsg(false);
@@ -142,7 +151,7 @@ const FollowUpsPage = () => {
 
   // On mount, fetch initial data
   useEffect(() => {
-    fetchFollowUps(appliedFilters, pagination.currentPage, pagination.limit, true);
+    fetchWalkIns(appliedFilters, pagination.currentPage, pagination.limit, true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -150,7 +159,7 @@ const FollowUpsPage = () => {
   useEffect(() => {
     const isInitial =
       JSON.stringify(appliedFilters) === JSON.stringify(defaultFilters) && pagination.currentPage === 1;
-    fetchFollowUps(appliedFilters, pagination.currentPage, pagination.limit, isInitial);
+    fetchWalkIns(appliedFilters, pagination.currentPage, pagination.limit, isInitial);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [appliedFilters, pagination.currentPage, pagination.limit]);
 
@@ -181,7 +190,7 @@ const FollowUpsPage = () => {
       if (!token) return;
       // Use a large limit to get all filtered records
       const query = buildQueryParams(appliedFilters, 1, 10000);
-      const response = await axiosInstance.get(`${API_URLS.CALLS.GET_FOLLOW_UPS}?${query}`, {
+      const response = await axiosInstance.get(`${API_URLS.CALLS.GET_WALKIN_LIST}?${query}`, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
@@ -193,25 +202,27 @@ const FollowUpsPage = () => {
         "Candidate Name",
         "Phone",
         "Email",
+        "Telecaller",
+        "Branch",
+        "Call Type",
         "Call Status",
         "Call Outcome",
-        "Follow Up Date",
-        "Telecaller Name",
-        "Branch Name",
+        "Start Time",
         "Created At",
       ];
       const csvContent = [
         headers.join(","),
-        ...data.map((item: FollowUpData) => [
+        ...data.map((item: WalkInData) => [
           item.id,
           `"${item.enquiry_details?.candidate_name || ""}"`,
           item.enquiry_details?.phone || "",
           `"${item.enquiry_details?.email || ""}"`,
-          item.call_status,
-          item.call_outcome,
-          item.follow_up_date,
           item.telecaller_name,
           item.branch_name,
+          item.call_type,
+          item.call_status,
+          item.call_outcome,
+          item.call_start_time,
           item.created_at,
         ].join(",")),
       ].join("\n");
@@ -219,13 +230,13 @@ const FollowUpsPage = () => {
       const link = document.createElement("a");
       const url = URL.createObjectURL(blob);
       link.setAttribute("href", url);
-      link.setAttribute("download", "follow-ups.csv");
+      link.setAttribute("download", "walkin-list.csv");
       link.style.visibility = "hidden";
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
     } catch (error) {
-      console.error('Error exporting follow-ups:', error);
+      console.error('Error exporting walk-in list:', error);
     } finally {
       setLoading(false);
     }
@@ -236,8 +247,8 @@ const FollowUpsPage = () => {
       <DashboardHeader />
       <main className="flex-1 p-6">
         <div className="mb-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Follow-ups</h2>
-          <p className="text-gray-600">Manage and track follow-up calls</p>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Walk-in List</h2>
+          <p className="text-gray-600">Track and manage walk-in enquiries</p>
         </div>
 
         {/* Filters Card */}
@@ -248,46 +259,40 @@ const FollowUpsPage = () => {
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               <div>
-                <Label htmlFor="candidate_name">Candidate Name</Label>
+                <Label htmlFor="search">Search</Label>
                 <Input
-                  id="candidate_name"
-                  value={filterInputs.candidate_name}
-                  onChange={(e) => handleFilterChange("candidate_name", e.target.value)}
-                  placeholder="Enter candidate name"
+                  id="search"
+                  value={filterInputs.search}
+                  onChange={(e) => handleFilterChange("search", e.target.value)}
+                  placeholder="Search by candidate name or phone..."
                 />
               </div>
               <div>
-                <Label htmlFor="phone">Phone</Label>
+                <Label htmlFor="branch_name">Branch Name</Label>
                 <Input
-                  id="phone"
-                  value={filterInputs.phone}
-                  onChange={(e) => handleFilterChange("phone", e.target.value)}
-                  placeholder="Enter phone number"
+                  id="branch_name"
+                  value={filterInputs.branch_name}
+                  onChange={(e) => handleFilterChange("branch_name", e.target.value)}
+                  placeholder="Enter branch name..."
                 />
               </div>
               <div>
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="telecaller_name">Telecaller Name</Label>
                 <Input
-                  id="email"
-                  value={filterInputs.email}
-                  onChange={(e) => handleFilterChange("email", e.target.value)}
-                  placeholder="Enter email"
+                  id="telecaller_name"
+                  value={filterInputs.telecaller_name}
+                  onChange={(e) => handleFilterChange("telecaller_name", e.target.value)}
+                  placeholder="Enter telecaller name..."
                 />
               </div>
               <div>
                 <Label htmlFor="call_status">Call Status</Label>
-                <Select value={filterInputs.call_status} onValueChange={(value) => handleFilterChange("call_status", value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Statuses</SelectItem>
-                    <SelectItem value="contacted">Contacted</SelectItem>
-                    <SelectItem value="not_answered">Not Answered</SelectItem>
-                    <SelectItem value="busy">Busy</SelectItem>
-                    <SelectItem value="no_response">No Response</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Input
+                  id="call_status"
+                  value={filterInputs.call_status}
+                  onChange={(e) => handleFilterChange("call_status", e.target.value)}
+                  placeholder="Enter call status..."
+                />
               </div>
               <div>
                 <Label htmlFor="follow_up_date">Follow Up Date</Label>
@@ -299,26 +304,20 @@ const FollowUpsPage = () => {
                 />
               </div>
               <div>
-                <Label htmlFor="telecaller_name">Telecaller Name</Label>
-                <Input
-                  id="telecaller_name"
-                  value={filterInputs.telecaller_name}
-                  onChange={(e) => handleFilterChange("telecaller_name", e.target.value)}
-                  placeholder="Enter telecaller name"
-                />
-              </div>
-              <div>
-                <Label htmlFor="search">Search All Fields</Label>
-                <Input
-                  id="search"
-                  value={filterInputs.search}
-                  onChange={(e) => handleFilterChange("search", e.target.value)}
-                  placeholder="Search candidate, phone, email..."
-                />
+                <Label htmlFor="ordering">Order By</Label>
+                <Select value={filterInputs.ordering} onValueChange={(value) => handleFilterChange("ordering", value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Order by" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="-call_start_time">Newest First</SelectItem>
+                    <SelectItem value="call_start_time">Oldest First</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
             <div className="flex gap-2 mt-4">
-              <Button onClick={handleSearch} disabled={loading} className="bg-green-500 hover:bg-green-600 text-white">
+              <Button onClick={handleSearch} disabled={loading} className="bg-blue-500 hover:bg-blue-600 text-white">
                 {delayedLoading ? (
                   <>
                     <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
@@ -335,7 +334,7 @@ const FollowUpsPage = () => {
                 <RefreshCw className="w-4 h-4 mr-2" />
                 Reset
               </Button>
-              <Button variant="outline" className="bg-green-600 hover:bg-green-700 text-white" onClick={exportToExcel} disabled={loading || followUps.length === 0}>
+              <Button variant="outline" className="bg-green-600 hover:bg-green-700 text-white" onClick={exportToExcel} disabled={loading || walkIns.length === 0}>
                 <FileDown className="w-4 h-4 mr-2" />
                 Export Excel
               </Button>
@@ -346,7 +345,7 @@ const FollowUpsPage = () => {
         {/* Results Table */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Follow-ups </CardTitle>
+            <CardTitle className="text-lg">Walk-in List </CardTitle>
           </CardHeader>
           <CardContent>
             {loading ? (
@@ -363,41 +362,44 @@ const FollowUpsPage = () => {
                       <TableHead>Candidate Name</TableHead>
                       <TableHead>Phone</TableHead>
                       <TableHead>Email</TableHead>
+                      <TableHead>Telecaller</TableHead>
+                      <TableHead>Branch</TableHead>
+                      <TableHead>Call Type</TableHead>
                       <TableHead>Call Status</TableHead>
                       <TableHead>Call Outcome</TableHead>
-                      <TableHead>Follow Up Date</TableHead>
-                      <TableHead>Telecaller Name</TableHead>
-                      <TableHead>Branch Name</TableHead>
+                      <TableHead>Start Time</TableHead>
                       <TableHead>Created At</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {followUps.length === 0 ? (
+                    {walkIns.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={10} className="text-center py-8 text-gray-500">
-                          {showNoDataMsg ? "No follow-ups found matching your criteria" : null}
+                        <TableCell colSpan={11} className="text-center py-8 text-gray-500">
+                          {showNoDataMsg ? "No walk-in data found matching your criteria" : null}
                         </TableCell>
                       </TableRow>
                     ) : (
-                      followUps.map((item, idx) => (
+                      walkIns.map((item, idx) => (
                         <TableRow key={item.id}>
                           <TableCell>{(pagination.currentPage - 1) * pagination.limit + idx + 1}</TableCell>
                           <TableCell>{item.enquiry_details?.candidate_name}</TableCell>
                           <TableCell>{item.enquiry_details?.phone}</TableCell>
                           <TableCell>{item.enquiry_details?.email}</TableCell>
+                          <TableCell>{item.telecaller_name}</TableCell>
+                          <TableCell>{item.branch_name}</TableCell>
+                          <TableCell>{item.call_type}</TableCell>
                           <TableCell>
-                            <span className={`px-2 py-1 rounded text-xs font-medium ${
-                              item.call_status === 'contacted' ? 'bg-green-100 text-green-800' :
-                              item.call_status === 'not_answered' ? 'bg-red-100 text-red-800' :
-                              'bg-gray-100 text-gray-800'
-                            }`}>
+                            <span className={`px-2 py-1 rounded text-xs font-medium ${item.call_status === 'contacted' ? 'bg-green-100 text-green-800' :
+                                item.call_status === 'not_contacted' ? 'bg-yellow-100 text-yellow-800' :
+                                  item.call_status === 'not_answered' ? 'bg-red-100 text-red-800' :
+                                    item.call_status === 'do_not_call' ? 'bg-orange-100 text-orange-800' :
+                                      'bg-gray-100 text-gray-800'
+                              }`}>
                               {item.call_status}
                             </span>
                           </TableCell>
                           <TableCell>{item.call_outcome}</TableCell>
-                          <TableCell>{formatDate(item.follow_up_date)}</TableCell>
-                          <TableCell>{item.telecaller_name}</TableCell>
-                          <TableCell>{item.branch_name}</TableCell>
+                          <TableCell>{formatDate(item.call_start_time)}</TableCell>
                           <TableCell>{formatDate(item.created_at)}</TableCell>
                         </TableRow>
                       ))
@@ -422,9 +424,9 @@ const FollowUpsPage = () => {
                     Previous
                   </Button>
                   {[...Array(Math.min(pagination.totalPages, 5))].map((_, index) => {
-                    const pageNum = pagination.currentPage <= 3 ? index + 1 : 
-                                   pagination.currentPage >= pagination.totalPages - 2 ? pagination.totalPages - 4 + index :
-                                   pagination.currentPage - 2 + index;
+                    const pageNum = pagination.currentPage <= 3 ? index + 1 :
+                      pagination.currentPage >= pagination.totalPages - 2 ? pagination.totalPages - 4 + index :
+                        pagination.currentPage - 2 + index;
                     return (
                       <Button
                         key={pageNum}
@@ -454,4 +456,4 @@ const FollowUpsPage = () => {
   );
 };
 
-export default FollowUpsPage;
+export default WalkInListPage;

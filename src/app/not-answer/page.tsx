@@ -51,9 +51,10 @@ function formatDate(dateStr: string | null | undefined) {
 }
 
 const NotAnsweredPage = () => {
-  const [allNotAnswered, setAllNotAnswered] = useState<NotAnsweredData[]>([]);
   const [notAnswered, setNotAnswered] = useState<NotAnsweredData[]>([]);
   const [loading, setLoading] = useState(false);
+  const [showNoDataMsg, setShowNoDataMsg] = useState(false);
+  const [delayedLoading, setDelayedLoading] = useState(false);
   type FiltersType = {
     candidate_name: string;
     phone: string;
@@ -61,6 +62,7 @@ const NotAnsweredPage = () => {
     call_status: string;
     call_start_time: string;
     telecaller_name: string;
+    search: string;
   };
   const defaultFilters: FiltersType = {
     candidate_name: "",
@@ -69,6 +71,7 @@ const NotAnsweredPage = () => {
     call_status: "",
     call_start_time: "",
     telecaller_name: "",
+    search: "",
   };
   const [filterInputs, setFilterInputs] = useState<FiltersType>(defaultFilters);
   const [appliedFilters, setAppliedFilters] = useState<FiltersType>(defaultFilters);
@@ -79,72 +82,77 @@ const NotAnsweredPage = () => {
     limit: 10,
   });
 
-  // Fetch all not-answered calls once
-  const fetchAllNotAnswered = async () => {
+  // Helper to build query params from filters and pagination
+  const buildQueryParams = (filters: FiltersType, page: number, limit: number) => {
+    const params = new URLSearchParams();
+    if (filters.candidate_name) params.append("candidate_name", filters.candidate_name);
+    if (filters.phone) params.append("phone", filters.phone);
+    if (filters.email) params.append("email", filters.email);
+    if (filters.call_status && filters.call_status !== "all") params.append("call_status", filters.call_status);
+    if (filters.call_start_time) params.append("call_start_time", filters.call_start_time);
+    if (filters.telecaller_name) params.append("telecaller_name", filters.telecaller_name);
+    if (filters.search) params.append("search", filters.search);
+    params.append("page", String(page));
+    params.append("limit", String(limit));
+    return params.toString();
+  };
+
+  // Fetch not-answered calls from API with filters and pagination
+  const fetchNotAnswered = async (filters: FiltersType, page: number, limit: number, isInitial = false) => {
     setLoading(true);
+    setShowNoDataMsg(false);
+    let loadingTimeout = setTimeout(() => setDelayedLoading(true), 1000);
     try {
       const token = localStorage.getItem("access_token");
       if (!token) return;
-      // Try to fetch a large number of records
-      const response = await axiosInstance.get(`${API_URLS.CALLS.GET_NOT_ANSWERED}?page=1&limit=10000`, {
+      const query = buildQueryParams(filters, page, limit);
+      const response = await axiosInstance.get(`${API_URLS.CALLS.GET_NOT_ANSWERED}?${query}`, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
       });
       if (response.data?.code === 200) {
-        setAllNotAnswered(response.data.data || []);
+        setNotAnswered(response.data.data || []);
+        setPagination((prev) => ({
+          ...prev,
+          totalPages: response.data.totalPages || 1,
+          totalRecords: response.data.totalRecords || 0,
+        }));
+        // Show no data message only if filters/search are applied and no data
+        if (!isInitial && response.data.data.length === 0) setShowNoDataMsg(true);
+        else setShowNoDataMsg(false);
       } else {
-        setAllNotAnswered([]);
+        setNotAnswered([]);
+        setPagination((prev) => ({ ...prev, totalPages: 1, totalRecords: 0 }));
+        if (!isInitial) setShowNoDataMsg(true);
+        else setShowNoDataMsg(false);
       }
     } catch (error) {
-      setAllNotAnswered([]);
+      setNotAnswered([]);
+      setPagination((prev) => ({ ...prev, totalPages: 1, totalRecords: 0 }));
+      if (!isInitial) setShowNoDataMsg(true);
+      else setShowNoDataMsg(false);
     } finally {
+      clearTimeout(loadingTimeout);
       setLoading(false);
+      setDelayedLoading(false);
     }
   };
 
-  // Frontend filter logic
-  const applyFilters = (rawData: NotAnsweredData[], filters: FiltersType) => {
-    return rawData.filter((item) => {
-      const { candidate_name, phone, email, call_status, call_start_time, telecaller_name } = filters;
-      const matchesCandidate = candidate_name ? item.enquiry_details?.candidate_name?.toLowerCase().includes(candidate_name.toLowerCase()) : true;
-      const matchesPhone = phone ? item.enquiry_details?.phone?.includes(phone) : true;
-      const matchesEmail = email ? item.enquiry_details?.email?.toLowerCase().includes(email.toLowerCase()) : true;
-      const matchesCallStatus = !call_status || call_status === 'all' || item.call_status === call_status;
-      const matchesCallStartTime = call_start_time ? (item.call_start_time ? item.call_start_time.slice(0, 10) === call_start_time : false) : true;
-      const matchesTelecaller = telecaller_name ? item.telecaller_name?.toLowerCase().includes(telecaller_name.toLowerCase()) : true;
-      return matchesCandidate && matchesPhone && matchesEmail && matchesCallStatus && matchesCallStartTime && matchesTelecaller;
-    });
-  };
-
-  // Frontend pagination logic
-  const paginate = (data: NotAnsweredData[], page: number, limit: number) => {
-    const totalRecords = data.length;
-    const totalPages = Math.max(1, Math.ceil(totalRecords / limit));
-    const start = (page - 1) * limit;
-    const end = start + limit;
-    return {
-      paginated: data.slice(start, end),
-      totalPages,
-      totalRecords,
-    };
-  };
-
-  // On mount, fetch all data
+  // On mount, fetch initial data
   useEffect(() => {
-    fetchAllNotAnswered();
+    fetchNotAnswered(appliedFilters, pagination.currentPage, pagination.limit, true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // When allNotAnswered, appliedFilters, or pagination changes, update displayed data
+  // When filters or pagination changes, fetch data
   useEffect(() => {
-    setLoading(true);
-    const filtered = applyFilters(allNotAnswered, appliedFilters);
-    const { paginated, totalPages, totalRecords } = paginate(filtered, pagination.currentPage, pagination.limit);
-    setNotAnswered(paginated);
-    setPagination((prev) => ({ ...prev, totalPages, totalRecords }));
-    setLoading(false);
-  }, [allNotAnswered, appliedFilters, pagination.currentPage, pagination.limit]);
+    const isInitial =
+      JSON.stringify(appliedFilters) === JSON.stringify(defaultFilters) && pagination.currentPage === 1;
+    fetchNotAnswered(appliedFilters, pagination.currentPage, pagination.limit, isInitial);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [appliedFilters, pagination.currentPage, pagination.limit]);
 
   const handleFilterChange = (field: string, value: string) => {
     setFilterInputs((prev) => ({ ...prev, [field]: value }));
@@ -165,50 +173,67 @@ const NotAnsweredPage = () => {
     setPagination((prev) => ({ ...prev, currentPage: newPage }));
   };
 
-  const exportToExcel = () => {
-    const headers = [
-      "ID",
-      "Candidate Name",
-      "Phone",
-      "Email",
-      "Call Status",
-      "Call Outcome",
-      "Call Start Time",
-      "Telecaller Name",
-      "Branch Name",
-      "Created At",
-    ];
-    // Export filtered data, not just current page
-    const filtered = applyFilters(allNotAnswered, appliedFilters);
-    const csvContent = [
-      headers.join(","),
-      ...filtered.map((item) => [
-        item.id,
-        `"${item.enquiry_details?.candidate_name || ""}"`,
-        item.enquiry_details?.phone || "",
-        `"${item.enquiry_details?.email || ""}"`,
-        item.call_status,
-        item.call_outcome,
-        item.call_start_time,
-        item.telecaller_name,
-        item.branch_name,
-        item.created_at,
-      ].join(",")),
-    ].join("\n");
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const link = document.createElement("a");
-    const url = URL.createObjectURL(blob);
-    link.setAttribute("href", url);
-    link.setAttribute("download", "not-answered-calls.csv");
-    link.style.visibility = "hidden";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  // Export filtered data from API (all records)
+  const exportToExcel = async () => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem("access_token");
+      if (!token) return;
+      // Use a large limit to get all filtered records
+      const query = buildQueryParams(appliedFilters, 1, 10000);
+      const response = await axiosInstance.get(`${API_URLS.CALLS.GET_NOT_ANSWERED}?${query}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+      const data = response.data?.data || [];
+      const headers = [
+        "ID",
+        "Candidate Name",
+        "Phone",
+        "Email",
+        "Call Status",
+        "Call Outcome",
+        "Call Start Time",
+        "Telecaller Name",
+        "Branch Name",
+        "Created At",
+      ];
+      const csvContent = [
+        headers.join(","),
+        ...data.map((item: NotAnsweredData) => [
+          item.id,
+          `"${item.enquiry_details?.candidate_name || ""}"`,
+          item.enquiry_details?.phone || "",
+          `"${item.enquiry_details?.email || ""}"`,
+          item.call_status,
+          item.call_outcome,
+          item.call_start_time,
+          item.telecaller_name,
+          item.branch_name,
+          item.created_at,
+        ].join(",")),
+      ].join("\n");
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const link = document.createElement("a");
+      const url = URL.createObjectURL(blob);
+      link.setAttribute("href", url);
+      link.setAttribute("download", "not-answered-calls.csv");
+      link.style.visibility = "hidden";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error('Error exporting not-answered calls:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div className="flex-1 flex flex-col">
-      {/* <DashboardHeader /> */}
+      <DashboardHeader />
       <main className="flex-1 p-6">
         <div className="mb-8">
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Not Answered Calls</h2>
@@ -257,8 +282,8 @@ const NotAnsweredPage = () => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Statuses</SelectItem>
-                    <SelectItem value="not_answered">Not Answered</SelectItem>
-                    <SelectItem value="do_not_call">Do Not Call</SelectItem>
+                    <SelectItem value="Not Answered">Not Answered</SelectItem>
+                    <SelectItem value="Do Not Call">Do Not Call</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -280,13 +305,31 @@ const NotAnsweredPage = () => {
                   placeholder="Enter telecaller name"
                 />
               </div>
+              <div>
+                <Label htmlFor="search">Search All Fields</Label>
+                <Input
+                  id="search"
+                  value={filterInputs.search}
+                  onChange={(e) => handleFilterChange("search", e.target.value)}
+                  placeholder="Search candidate, phone, email..."
+                />
+              </div>
             </div>
             <div className="flex gap-2 mt-4">
-              <Button onClick={handleSearch} disabled={loading}>
-                <Search className="w-4 h-4 mr-2" />
-                Search
+              <Button onClick={handleSearch} disabled={loading} className="bg-blue-500 hover:bg-blue-600 text-white">
+                {delayedLoading ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                    Searching...
+                  </>
+                ) : (
+                  <>
+                    <Search className="w-4 h-4 mr-2" />
+                    Search
+                  </>
+                )}
               </Button>
-              <Button variant="outline" onClick={handleReset} disabled={loading}>
+              <Button variant="outline" onClick={handleReset} disabled={loading} className="bg-gray-100 hover:bg-gray-200 text-gray-700">
                 <RefreshCw className="w-4 h-4 mr-2" />
                 Reset
               </Button>
@@ -310,8 +353,8 @@ const NotAnsweredPage = () => {
                 Loading...
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <Table>
+              <div className="overflow-x-auto w-full">
+                <Table className="min-w-full">
                   <TableHeader>
                     <TableRow>
                       <TableHead>ID</TableHead>
@@ -330,7 +373,7 @@ const NotAnsweredPage = () => {
                     {notAnswered.length === 0 ? (
                       <TableRow>
                         <TableCell colSpan={10} className="text-center py-8 text-gray-500">
-                          No not answered calls found
+                          {showNoDataMsg ? "No not answered calls found matching your criteria" : null}
                         </TableCell>
                       </TableRow>
                     ) : (
@@ -340,7 +383,15 @@ const NotAnsweredPage = () => {
                           <TableCell>{item.enquiry_details?.candidate_name}</TableCell>
                           <TableCell>{item.enquiry_details?.phone}</TableCell>
                           <TableCell>{item.enquiry_details?.email}</TableCell>
-                          <TableCell>{item.call_status}</TableCell>
+                          <TableCell>
+                            <span className={`px-2 py-1 rounded text-xs font-medium ${
+                              item.call_status === 'Not Answered' ? 'bg-red-100 text-red-800' :
+                              item.call_status === 'Do Not Call' ? 'bg-orange-100 text-orange-800' :
+                              'bg-gray-100 text-gray-800'
+                            }`}>
+                              {item.call_status}
+                            </span>
+                          </TableCell>
                           <TableCell>{item.call_outcome}</TableCell>
                           <TableCell>{formatDate(item.call_start_time)}</TableCell>
                           <TableCell>{item.telecaller_name}</TableCell>
@@ -368,16 +419,21 @@ const NotAnsweredPage = () => {
                   >
                     Previous
                   </Button>
-                  {[...Array(pagination.totalPages)].map((_, index) => (
-                    <Button
-                      key={index}
-                      variant={pagination.currentPage === index + 1 ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => handlePageChange(index + 1)}
-                    >
-                      {index + 1}
-                    </Button>
-                  ))}
+                  {[...Array(Math.min(pagination.totalPages, 5))].map((_, index) => {
+                    const pageNum = pagination.currentPage <= 3 ? index + 1 : 
+                                   pagination.currentPage >= pagination.totalPages - 2 ? pagination.totalPages - 4 + index :
+                                   pagination.currentPage - 2 + index;
+                    return (
+                      <Button
+                        key={pageNum}
+                        variant={pagination.currentPage === pageNum ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => handlePageChange(pageNum)}
+                      >
+                        {pageNum}
+                      </Button>
+                    );
+                  })}
                   <Button
                     variant="outline"
                     size="sm"
@@ -389,7 +445,6 @@ const NotAnsweredPage = () => {
                 </div>
               </div>
             )}
-            
           </CardContent>
         </Card>
       </main>

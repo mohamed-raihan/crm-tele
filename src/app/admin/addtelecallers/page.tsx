@@ -91,12 +91,12 @@ const telecallerCreateSchema = z.object({
     .max(50, "Name must not exceed 50 characters"),
   email: z
     .string()
-    .email("Please enter a valid email address")
-    .min(1, "Email is required"),
+    .min(1, "Email is required")
+    .email("Please enter a valid email address"),
   contact: z
     .string()
-    .regex(/^[0-9]{10}$/, "Contact must be exactly 10 digits")
-    .min(1, "Contact is required"),
+    .min(1, "Contact is required")
+    .regex(/^[0-9]{10}$/, "Contact must be exactly 10 digits"),
   address: z.string().min(5, "Address must be at least 5 characters"),
   role: z.string().min(1, "Role is required"),
   branch: z
@@ -119,10 +119,12 @@ const telecallerEditSchema = z.object({
     .optional(),
   email: z
     .string()
+    .min(1, "Email is required")
     .email("Please enter a valid email address")
     .optional(),
   contact: z
     .string()
+    .min(1, "Contact is required")
     .regex(/^[0-9]{10}$/, "Contact must be exactly 10 digits")
     .refine((val) => val === undefined || val.trim() !== "", {
       message: "Contact is required",
@@ -650,8 +652,6 @@ export default function TelecallersManagementPage() {
     setFormErrors({});
 
     try {
-      console.log("Creating telecaller with data:", data);
-
       // 1. Validate with Zod schema for creation (keeping role as string for validation)
       const validationData = {
         ...data,
@@ -660,19 +660,17 @@ export default function TelecallersManagementPage() {
       };
 
       const result = telecallerCreateSchema.safeParse(validationData);
+      let errors: Record<string, string> = {};
       if (!result.success) {
-        const errors = result.error.issues.reduce(
+        errors = result.error.issues.reduce(
           (acc: Record<string, string>, issue) => {
             const field = issue.path[0] as string;
-            acc[field] = issue.message;
+            // Only set the first error for each field
+            if (!acc[field]) acc[field] = issue.message;
             return acc;
           },
           {}
         );
-        setFormErrors(errors);
-        setLoading(false);
-        setIsSubmitting(false);
-        return;
       }
 
       // 2. Convert role and branch back to numbers for API call
@@ -682,10 +680,12 @@ export default function TelecallersManagementPage() {
         branch: parseInt(data.branch.toString()),
       };
 
-      // 3. Check for duplicates
+      // 3. Check for duplicates (run even if other errors exist)
       const duplicateErrors = checkDuplicatesForCreate(apiData);
-      if (Object.keys(duplicateErrors).length > 0) {
-        setFormErrors(duplicateErrors);
+      errors = { ...errors, ...duplicateErrors };
+
+      if (Object.keys(errors).length > 0) {
+        setFormErrors(errors);
         setLoading(false);
         setIsSubmitting(false);
         return;
@@ -715,14 +715,10 @@ export default function TelecallersManagementPage() {
       }
     } catch (error: any) {
       console.error("Error creating telecaller:", error);
-
       // Handle API errors with enhanced error parsing
       const apiErrors = handleApiErrors(error);
-
       if (Object.keys(apiErrors).length > 0) {
         setFormErrors(apiErrors);
-
-        // Show specific toast for general errors
         if (apiErrors.general) {
           toast({ title: apiErrors.general, variant: "destructive" });
         }
@@ -745,8 +741,6 @@ export default function TelecallersManagementPage() {
     setFormErrors({});
 
     try {
-      console.log("Updating telecaller with data:", data);
-
       // Filter out empty strings and undefined values
       const filteredData = Object.fromEntries(
         Object.entries(data).filter(
@@ -765,22 +759,19 @@ export default function TelecallersManagementPage() {
 
       // 1. Validate with Zod schema for editing
       const result = telecallerEditSchema.safeParse(validationData);
+      let errors: Record<string, string> = {};
       if (!result.success) {
-        const errors = result.error.issues.reduce(
+        errors = result.error.issues.reduce(
           (acc: Record<string, string>, issue) => {
             const field = issue.path[0] as string;
-            acc[field] = issue.message;
+            if (!acc[field]) acc[field] = issue.message;
             return acc;
           },
           {}
         );
-        setFormErrors(errors);
-        setLoading(false);
-        setIsSubmitting(false);
-        return;
       }
 
-      // 2. Check for duplicates on fields that have values
+      // 2. Check for duplicates on fields that have values (run even if other errors exist)
       const fieldsToCheck: Partial<Telecaller> = {};
       if (data.name && data.name.trim()) fieldsToCheck.name = data.name;
       if (data.email && data.email.trim()) fieldsToCheck.email = data.email;
@@ -788,8 +779,10 @@ export default function TelecallersManagementPage() {
         fieldsToCheck.contact = data.contact;
 
       const duplicateErrors = checkDuplicatesForEdit(fieldsToCheck, id);
-      if (Object.keys(duplicateErrors).length > 0) {
-        setFormErrors(duplicateErrors);
+      errors = { ...errors, ...duplicateErrors };
+
+      if (Object.keys(errors).length > 0) {
+        setFormErrors(errors);
         setLoading(false);
         setIsSubmitting(false);
         return;
@@ -1157,7 +1150,7 @@ export default function TelecallersManagementPage() {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
             <input
               type="text"
-              placeholder="Search telecallers by name, email, contact, address, role, branch, or ID..."
+              placeholder="Search telecallers by name, email, contact, address, role, branch..."
               value={searchTerm}
               onChange={(e) => handleSearch(e.target.value)}
               className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"

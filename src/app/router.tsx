@@ -15,6 +15,7 @@ import FollowUps from "./follow-ups/page";
 import CallRegisterPage from "./call-register/page";
 import AdminBranches from "../app/admin/branch/page";
 import Adminaddtelecallers from "../app/admin/addtelecallers/page";
+import AdminaWalkinlist from "../app/admin/walkinlist/page";
 
 import NotAnswerPage from "./not-answer/page";
 import ReportPage from "./report/page";
@@ -66,7 +67,7 @@ export function AppRouter() {
       <Route path="/admin/enquiries" element={<AdminRoute><LeadsPage /></AdminRoute>} />
       <Route path="/admin/telecallers" element={<AdminRoute><ExecutivePage /></AdminRoute>} />
       <Route path="/admin/jobs" element={<AdminRoute><JobListPage /></AdminRoute>} />
-      <Route path="/admin/walk-ins" element={<AdminRoute><WalkInListPage /></AdminRoute>} />
+      <Route path="/admin/walk-ins" element={<AdminRoute><AdminaWalkinlist /></AdminRoute>} />
       <Route path="/admin/follow-ups" element={<AdminRoute><FollowUps /></AdminRoute>} />
       <Route path="/admin/call-analytics" element={<AdminRoute><CallRegisterPage /></AdminRoute>} />
       <Route path="/admin/ads" element={<AdminRoute><AdsPage /></AdminRoute>} />

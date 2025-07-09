@@ -1,13 +1,23 @@
-import { Search, Bell, Settings, User, LogOut } from "lucide-react"
+import { Search, Bell, Settings, User, LogOut, ChevronDown } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 import { useNavigate } from "react-router-dom"
 import { useState, useEffect, useState as useStateReact } from "react"
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuLabel,
+} from "@/components/ui/dropdown-menu"
+import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu"
 
 export function DashboardHeader() {
   const navigate = useNavigate();
   const [showConfirm, setShowConfirm] = useState(false);
   const [userName, setUserName] = useStateReact("");
+  const [dropdownOpen, setDropdownOpen] = useState(false);
 
   useEffect(() => {
     let name = "User";
@@ -63,23 +73,27 @@ export function DashboardHeader() {
             aria-label="Notifications"
           >
             <Bell className="h-6 w-6 text-gray-700" />
-            {/* Optionally, add a red dot for unread notifications */}
-            {/* <span className="absolute top-2 right-2 h-2 w-2 bg-red-500 rounded-full"></span> */}
           </button>
-          <div className="flex items-center gap-2 px-3 py-2 rounded-md bg-gray-100">
-            <User className="h-5 w-5 text-gray-700" />
-            <span className="hidden sm:inline text-sm font-medium text-gray-700 truncate max-w-[120px]">{userName}</span>
-          </div>
-          <button
-            onClick={handleLogout}
-            className="flex items-center gap-2 px-3 py-2 rounded-md hover:bg-red-100 transition-colors border border-red-300 bg-red-50"
-          >
-            <LogOut className="h-4 w-4 text-red-600" />
-            <span className="hidden sm:inline text-sm font-medium text-red-600">Logout</span>
-          </button>
+          {/* User Dropdown */}
+          <DropdownMenu onOpenChange={setDropdownOpen}>
+            <DropdownMenuTrigger asChild>
+              <button className="flex items-center gap-2 px-3 py-2 rounded-md bg-gray-100 hover:bg-gray-200 transition-colors focus:outline-none">
+                <User className="h-5 w-5 text-gray-700" />
+                <span className="hidden sm:inline text-sm font-medium text-gray-700 truncate max-w-[120px]">{userName}</span>
+                <ChevronDown className={`h-4 w-4 text-gray-700 transition-transform duration-200 ${dropdownOpen ? 'rotate-180' : ''}`} />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>Account</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => setShowConfirm(true)} className="text-red-600 focus:bg-red-100">
+                <LogOut className="h-4 w-4 mr-2" /> Logout
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
-      {/* Confirm Alert */}
+      {/* Confirm Alert inside Dropdown */}
       {showConfirm && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50">
           <div className="bg-white rounded-lg shadow-lg p-6 w-80 max-w-full">
