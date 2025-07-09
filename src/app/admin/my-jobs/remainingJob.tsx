@@ -113,7 +113,7 @@ const formSections: FormSection[] = [
   },
 ];
 
-export default function remainingJobList() {
+export default function RemainingJobList() {
   const [filters, setFilters] = useState<TableFilter[]>([
     { key: 'allTime', label: 'All time', value: '', onRemove: () => removeFilter('allTime') },
     { key: 'recent', label: 'Recent', value: '', onRemove: () => removeFilter('recent') },

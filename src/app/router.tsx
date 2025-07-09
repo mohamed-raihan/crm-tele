@@ -25,6 +25,7 @@ import MyJobPage from "./my-job/page";
 import CallsPage from "./calls/page";
 import NotificationPage from "./notifications/page";
 import { ClosedEnquiryTable } from "@/components/ClosedEnquiryTable";
+import AdminJobPage from "./admin/my-jobs/completedjob";
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -67,6 +68,8 @@ export function AppRouter() {
       <Route path="/admin/follow-ups" element={<AdminRoute><FollowUps /></AdminRoute>} />
       <Route path="/admin/call-analytics" element={<AdminRoute><CallRegisterPage /></AdminRoute>} />
       <Route path="/admin/ads" element={<AdminRoute><AdsPage /></AdminRoute>} />
+      <Route path="/admin/:job" element={<AdminRoute><AdminJobPage /></AdminRoute>} />
+      {/* <Route path="/admin/:job" element={<AdminRoute><RemainingJobList /></AdminRoute>} /> */}
       <Route
         path="/admin/branches"
         element={
