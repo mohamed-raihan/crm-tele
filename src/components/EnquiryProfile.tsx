@@ -52,9 +52,9 @@ interface id {
   id: string;
 }
 
-export function EnquiryProfile(id:id) { 
+export function EnquiryProfile(id: id) {
 
-  const [enquiry,setEnquiry] = useState<Enquiry>() 
+  const [enquiry, setEnquiry] = useState<Enquiry>()
   const [formData, setFormData] = useState({
     enquiry_id: id.id,
     call_type: '',
@@ -66,6 +66,14 @@ export function EnquiryProfile(id:id) {
     follow_up_date: '',
     next_action: ''
   })
+  const [formErrors, setFormErrors] = useState({
+    call_type: '',
+    call_status: '',
+    call_outcome: '',
+    follow_up_date: '',
+    next_action: '',
+    note: ''
+  });
 
   // Check if user is a Telecaller
   const userData = localStorage.getItem("user_data");
@@ -81,34 +89,55 @@ export function EnquiryProfile(id:id) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    // Validation
+    const errors: any = {};
+    if (!formData.call_type) errors.call_type = 'Call type is required';
+    if (!formData.call_status) errors.call_status = 'Call status is required';
+    if (!formData.call_outcome) errors.call_outcome = 'Call outcome is required';
+    if (!formData.follow_up_date) errors.follow_up_date = 'Follow up date is required';
+    if (!formData.next_action) errors.next_action = 'Next action is required';
+    if (!formData.note) errors.note = 'Note is required';
+    setFormErrors(errors);
+    if (Object.keys(errors).length > 0) return;
     try {
       // Add your API call here to submit the form data
       console.log('Form data:', formData)
       const reponse = await axiosInstance.post(API_URLS.CALLS.POST_CALLS, formData)
       console.log(reponse);
       toast({ title: "Updated successfully", variant: "success" });
+      setFormData({
+        enquiry_id: "",
+        call_type: '',
+        call_status: '',
+        call_outcome: '',
+        // call_start_time: '',
+        // call_end_time: '',
+        note: '',
+        follow_up_date: '',
+        next_action: ''
+      })
     } catch (error) {
       console.error('Error submitting form:', error)
       toast({ title: "failed to update", variant: "destructive" });
     }
   }
 
-  const fetchEnquiry = async()=>{
-    try{
+  const fetchEnquiry = async () => {
+    try {
       const response = await axiosInstance.get(API_URLS.ENQUIRY.GET_ENQUIRY_ID(id.id))
       console.log(response);
       setEnquiry(response.data.data)
-    }catch(err){
+    } catch (err) {
       console.error(err);
     }
   }
 
   console.log(enquiry);
-  
- 
-  useEffect(()=>{
+
+
+  useEffect(() => {
     fetchEnquiry();
-  },[])
+  }, [])
 
   if (!enquiry) {
     return <div>Loading...</div>;
@@ -168,7 +197,7 @@ export function EnquiryProfile(id:id) {
             </div>
           </div>
 
-          
+
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6 pt-6 border-t">
             {/* Enquiry Status */}
@@ -219,6 +248,7 @@ export function EnquiryProfile(id:id) {
                       {/* <SelectItem value="missed">Missed</SelectItem> */}
                     </SelectContent>
                   </Select>
+                  {formErrors.call_type && <span className="text-red-500 text-xs">{formErrors.call_type}</span>}
                 </div>
 
                 {/* Call Status */}
@@ -239,6 +269,7 @@ export function EnquiryProfile(id:id) {
                       <SelectItem value="not_contacted">Not Contacted</SelectItem>
                     </SelectContent>
                   </Select>
+                  {formErrors.call_status && <span className="text-red-500 text-xs">{formErrors.call_status}</span>}
                 </div>
 
                 {/* Call Outcome */}
@@ -260,6 +291,7 @@ export function EnquiryProfile(id:id) {
                       <SelectItem value="closed">closed</SelectItem>
                     </SelectContent>
                   </Select>
+                  {formErrors.call_outcome && <span className="text-red-500 text-xs">{formErrors.call_outcome}</span>}
                 </div>
 
                 {/* Follow Up Date */}
@@ -271,6 +303,7 @@ export function EnquiryProfile(id:id) {
                     value={formData.follow_up_date}
                     onChange={(e) => handleInputChange('follow_up_date', e.target.value)}
                   />
+                  {formErrors.follow_up_date && <span className="text-red-500 text-xs">{formErrors.follow_up_date}</span>}
                 </div>
 
                 {/* Call Start Time */}
@@ -311,6 +344,7 @@ export function EnquiryProfile(id:id) {
                     <SelectItem value="no_action">No Action Required</SelectItem>
                   </SelectContent>
                 </Select>
+                {formErrors.next_action && <span className="text-red-500 text-xs">{formErrors.next_action}</span>}
               </div>
 
               {/* Note */}
@@ -323,6 +357,7 @@ export function EnquiryProfile(id:id) {
                   onChange={(e) => handleInputChange('note', e.target.value)}
                   rows={4}
                 />
+                {formErrors.note && <span className="text-red-500 text-xs">{formErrors.note}</span>}
               </div>
 
               {/* Submit Button */}
@@ -344,11 +379,11 @@ export function EnquiryProfile(id:id) {
           <TabsTrigger value="responds">Responds</TabsTrigger> */}
           <TabsTrigger value="contact-history">Contact History</TabsTrigger>
         </TabsList>
-        
+
         <TabsContent value="profile-info" className="mt-6">
-          <ProfileInfoTab id={id.id}/>
+          <ProfileInfoTab id={id.id} />
         </TabsContent>
-        
+
         {/* <TabsContent value="activities" className="mt-6">
           <ActivitiesTab />
         </TabsContent>
@@ -356,9 +391,9 @@ export function EnquiryProfile(id:id) {
         <TabsContent value="responds" className="mt-6">
           <RespondsTab />
         </TabsContent> */}
-        
+
         <TabsContent value="contact-history" className="mt-6">
-          <ContactHistoryTab id={id.id}/>
+          <ContactHistoryTab id={id.id} />
         </TabsContent>
       </Tabs>
     </div>

@@ -163,7 +163,7 @@ const dataManagement = [
         icon: Settings
       },
       {
-        title: "Ads",
+        title: "Source",
         url: "/admin/ads",
         icon: PieChart
       },

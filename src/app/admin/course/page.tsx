@@ -89,13 +89,21 @@ export default function CoursePage() {
       toast({ title: "Course deleted successfully", variant:"success" });
       fetchAds();
     } catch (err) {
-      toast({ title: "Failed to delete source", description: "Please try again.", variant: "destructive" });
+      console.log(err);
+      
+      toast({ title: err.response.data.message, description: "Please try again.", variant: "destructive" });
     }
   };
 
   // Table columns
   const columns: TableColumn[] = [
-    { key: "id", label: "ID", sortable: true, width: "w-24" },
+    {
+      key: "id",
+      label: "ID",
+      sortable: false,
+      width: "w-24",
+      render: (_value, _row, index) => index + 1
+    },
     { key: "name", label: "Name" },
   ];
 

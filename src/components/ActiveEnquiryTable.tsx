@@ -15,11 +15,22 @@ import {
   PaginationLink,
   PaginationPrevious,
   PaginationNext,
+  PaginationEllipsis,
 } from "@/components/ui/pagination";
 import * as XLSX from 'xlsx';
 
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {CalendarIcon} from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
+
 export function ActiveEnquiryTable() {
   const navigate = useNavigate();
+  const token = localStorage.getItem("access_token")
+
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
   const [Enquiries, setEnquiry] = useState([]);
   const [filters, setFilters] = useState<TableFilter[]>([
@@ -37,27 +48,43 @@ export function ActiveEnquiryTable() {
     }
   ]);
   const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(5); // Default to 5, update if API returns total
+  const [totalPages, setTotalPages] = useState(1); // Will be set from API response
   const pageSize = 10;
   const [loading, setLoading] = useState(false);
+  const [searchFields, setSearchFields] = useState({
+    candidate_name: '',
+    email: '',
+    phone: '',
+    branch: '',
+    assigned_by_name: '',
+    mettad_name: ''
+  });
 
   const removeFilter = (key: string) => {
     setFilters(filters.filter(f => f.key !== key));
   };
 
-  const fetchEnquiry = async (pageNum = 1, searchTerm = "") => {
+  const fetchEnquiry = async (pageNum = 1, searchParams = {}) => {
     setLoading(true);
     try {
       let url = `${API_URLS.ENQUIRY.GET_ACTIVE_ENQUIRY}?page=${pageNum}`;
-      if (searchTerm) {
-        url += `&candidate_name=${encodeURIComponent(searchTerm)}`;
+      const params = [];
+      Object.entries(searchParams).forEach(([key, value]) => {
+        if (value) params.push(`${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`);
+      });
+      if (params.length > 0) {
+        url += `&${params.join('&')}`;
       }
-      const response = await axiosInstance.get(url);
-      console.log(response);
-      const filtered = response.data.data 
+      console.log(url);
+      const response = await axiosInstance.get(url, {
+        headers: {
+          "Authorization": `Bearer ${token}`
+        }
+      });
       setEnquiry(response.data.data);
-      // If API returns total count or total pages, update totalPages here
-      if (response.data.total_pages) {
+      if (response.data.pagination && response.data.pagination.totalPages) {
+        setTotalPages(response.data.pagination.totalPages);
+      } else if (response.data.total_pages) {
         setTotalPages(response.data.total_pages);
       } else if (response.data.total) {
         setTotalPages(Math.ceil(response.data.total / pageSize));
@@ -87,7 +114,7 @@ export function ActiveEnquiryTable() {
   };
 
   const columns: TableColumn[] = [
-    { 
+    {
       key: 'id',
       label: 'ID',
       sortable: false,
@@ -97,15 +124,15 @@ export function ActiveEnquiryTable() {
     },
     { key: 'candidate_name', label: 'Name' },
     { key: 'phone', label: 'Phone' },
-    { 
-      key: 'required_service_name', 
+    {
+      key: 'required_service_name',
       label: 'Service',
       // render: (value, row) => (
       //   <Badge className={row.serviceColor}>{value}</Badge>
       // )
     },
-    { 
-      key: 'preferred_course_name', 
+    {
+      key: 'preferred_course_name',
       label: 'Preferred Course',
       // render: (value, row) => (
       //   <Badge className={row.examsColor}>{value}</Badge>
@@ -113,8 +140,8 @@ export function ActiveEnquiryTable() {
     },
     { key: 'created_by_name', label: 'Created by' },
     { key: 'branch_name', label: 'Branch' },
-    { key: 'mettad_name', label: 'Source'},
-    { key: 'assigned_by_name', label: 'Assigned to'}
+    { key: 'mettad_name', label: 'Source' },
+    { key: 'assigned_by_name', label: 'Assigned to' }
   ];
 
   const actions: TableAction[] = [
@@ -124,7 +151,7 @@ export function ActiveEnquiryTable() {
       onClick: (row) => {
         const userData = localStorage.getItem("user_data");
         const user = userData ? JSON.parse(userData) : null;
-        
+
         if (user && user.role === "Telecaller") {
           navigate(`/telecaller-leads/profile/${row.id}`);
         } else {
@@ -202,10 +229,27 @@ export function ActiveEnquiryTable() {
   };
 
 
-  const handleSearch = (term: string) => {
-    fetchEnquiry(1, term);
+  const handleSearch = () => {
+    fetchEnquiry(1, searchFields);
     setPage(1);
   };
+
+  // Helper to generate page numbers with ellipsis
+  function getPageNumbers(current: number, total: number) {
+    const pages = [];
+    if (total <= 7) {
+      for (let i = 1; i <= total; i++) pages.push(i);
+    } else {
+      if (current <= 3) {
+        pages.push(1, 2, 3, 4, '...', total);
+      } else if (current >= total - 2) {
+        pages.push(1, '...', total - 3, total - 2, total - 1, total);
+      } else {
+        pages.push(1, '...', current - 1, current, current + 1, '...', total);
+      }
+    }
+    return pages;
+  }
 
   return (
     <>
@@ -218,21 +262,197 @@ export function ActiveEnquiryTable() {
             </svg>
           </div>
         ) : (
-          <div className="overflow-x-auto w-full">
-            <DynamicTable
-              data={Enquiries}
-              columns={columns}
-              actions={actions}
-              // filters={filters}
-              searchPlaceholder="Search"
-              onSearch={handleSearch}
-              onSelectAll={handleSelectAll}
-              onSelectRow={handleSelectRow}
-              selectedRows={selectedRows}
-              rowIdKey="id"
-              showBulkActions={true}
-              exportActions={exportActions}
-            />
+          <div>
+            {/* Search Form */}
+            <Card className="my-3">
+              <CardHeader>
+                <CardTitle className="text-sm font-medium text-gray-500 uppercase">Search Enquiries</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                  <input
+                    className="border rounded px-3 py-2"
+                    placeholder="Candidate Name"
+                    value={searchFields.candidate_name}
+                    onChange={e => setSearchFields(f => ({ ...f, candidate_name: e.target.value }))}
+                  />
+                  <input
+                    className="border rounded px-3 py-2"
+                    placeholder="Email"
+                    value={searchFields.email}
+                    onChange={e => setSearchFields(f => ({ ...f, email: e.target.value }))}
+                  />
+                  <input
+                    className="border rounded px-3 py-2"
+                    placeholder="Phone"
+                    value={searchFields.phone}
+                    onChange={e => setSearchFields(f => ({ ...f, phone: e.target.value }))}
+                  />
+                  <input
+                    className="border rounded px-3 py-2"
+                    placeholder="Branch"
+                    value={searchFields.branch}
+                    onChange={e => setSearchFields(f => ({ ...f, branch: e.target.value }))}
+                  />
+                  <input
+                    className="border rounded px-3 py-2"
+                    placeholder="Assigned By Name"
+                    value={searchFields.assigned_by_name}
+                    onChange={e => setSearchFields(f => ({ ...f, assigned_by_name: e.target.value }))}
+                  />
+                  <input
+                    className="border rounded px-3 py-2"
+                    placeholder="Source"
+                    value={searchFields.mettad_name}
+                    onChange={e => setSearchFields(f => ({ ...f, mettad_name: e.target.value }))}
+                  />
+                </div>
+                <div className="flex justify-end gap-3">
+                  <Button className="bg-blue-600 hover:bg-blue-700" onClick={()=>fetchEnquiry()}>
+                    Refreash
+                  </Button>
+                  <Button className="bg-blue-600 hover:bg-blue-700" onClick={handleSearch}>
+                    Search
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+            {/* <Card className='my-3'>
+              <CardHeader>
+                <CardTitle className="text-sm font-medium text-gray-500 uppercase">New Enquiry</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-700">Exam</label>
+                    <Select>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Search Here" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="jee">JEE</SelectItem>
+                        <SelectItem value="neet">NEET</SelectItem>
+                        <SelectItem value="gate">GATE</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-700">Service</label>
+                    <Select>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Search Here" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="coaching">Coaching</SelectItem>
+                        <SelectItem value="online">Online Classes</SelectItem>
+                        <SelectItem value="test-series">Test Series</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-700">Branch</label>
+                    <Select>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Search Here" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="kozhikode">Kozhikode</SelectItem>
+                        <SelectItem value="kochi">Kochi</SelectItem>
+                        <SelectItem value="trivandrum">Trivandrum</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-700">Source</label>
+                    <Select>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Search Here" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="direct">Direct</SelectItem>
+                        <SelectItem value="online">Online</SelectItem>
+                        <SelectItem value="referral">Referral</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div> */}
+
+                {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-700">Starting Date</label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant={"outline"}
+                          className={cn(
+                            "w-full justify-start text-left font-normal",
+                            !startDate && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {startDate ? format(startDate, "MMM dd, yyyy") : "Sep 30, 2025"}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <CalendarComponent
+                          mode="single"
+                          selected={startDate}
+                          onSelect={setStartDate}
+                          initialFocus
+                          className="pointer-events-auto"
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-700">Ending Date</label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant={"outline"}
+                          className={cn(
+                            "w-full justify-start text-left font-normal",
+                            !endDate && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {endDate ? format(endDate, "MMM dd, yyyy") : "Sep 30, 2025"}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <CalendarComponent
+                          mode="single"
+                          selected={endDate}
+                          onSelect={setEndDate}
+                          initialFocus
+                          className="pointer-events-auto"
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                </div> */}
+              {/* </CardContent>
+            </Card> */}
+            <div className="overflow-x-auto w-full">
+              <DynamicTable
+                data={Enquiries}
+                columns={columns}
+                actions={actions}
+                // filters={filters}
+                // Remove search from DynamicTable, handled above
+                onSelectAll={handleSelectAll}
+                onSelectRow={handleSelectRow}
+                selectedRows={selectedRows}
+                rowIdKey="id"
+                showBulkActions={true}
+                exportActions={exportActions}
+              />
+            </div>
           </div>
         )}
         <div className="mt-4 flex justify-center">
@@ -248,20 +468,22 @@ export function ActiveEnquiryTable() {
                   className={page === 1 ? 'pointer-events-none opacity-50' : ''}
                 />
               </PaginationItem>
-              {Array.from({ length: totalPages }, (_, i) => (
-                <PaginationItem key={i + 1}>
-                  <PaginationLink
-                    href="#"
-                    isActive={page === i + 1}
-                    onClick={e => {
-                      e.preventDefault();
-                      setPage(i + 1);
-                    }}
-                  >
-                    {i + 1}
-                  </PaginationLink>
-                </PaginationItem>
-              ))}
+              {getPageNumbers(page, totalPages).map((p, idx) =>
+                p === '...'
+                  ? <PaginationEllipsis key={"ellipsis-" + idx} />
+                  : <PaginationItem key={p}>
+                    <PaginationLink
+                      href="#"
+                      isActive={page === p}
+                      onClick={e => {
+                        e.preventDefault();
+                        setPage(Number(p));
+                      }}
+                    >
+                      {p}
+                    </PaginationLink>
+                  </PaginationItem>
+              )}
               <PaginationItem>
                 <PaginationNext
                   href="#"

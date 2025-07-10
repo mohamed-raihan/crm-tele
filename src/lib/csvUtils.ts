@@ -8,7 +8,7 @@ export interface LeadTemplateData {
     'Preferred Course': string;
     'Created by': string;
     Branch: string;
-    Source: string;
+    'Meta Ad': string;
     'Assigned to': string;
   }
   
@@ -20,7 +20,7 @@ export interface LeadTemplateData {
     'Preferred Course',
     'Created by',
     'Branch',
-    'Source',
+    'Meta Ad',
     'Assigned to'
   ];
   
@@ -33,7 +33,7 @@ export interface LeadTemplateData {
       'Preferred Course': '',
       'Created by': 'Admin',
       Branch: 'vazhakala',
-      Source: '',
+      'Meta Ad': '',
       'Assigned to': 'Raihan'
     }
   ];
