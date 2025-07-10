@@ -41,7 +41,7 @@ function getRelativeTime(dateStr: string) {
   const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
   const diffDays = Math.floor(diffHours / 24);
 
-  if (diffHours < 1) return "Just now";
+  if (diffHours < 1) return "";
   if (diffHours < 24) return `${diffHours} hours ago`;
   if (diffDays === 1) return "Yesterday";
   if (diffDays < 7) return `${diffDays} days ago`;
@@ -158,7 +158,9 @@ const NotificationPage = () => {
       );
 
       if (response.data?.code === 200) {
-        const reminders = response.data.reminders || [];
+        let reminders = response.data.reminders || [];
+        // Sort reminders by created_at in descending order (latest first)
+        reminders = reminders.sort((a: Reminder, b: Reminder) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
         setAllReminders(reminders);
         setFilteredReminders(reminders);
 
@@ -180,6 +182,7 @@ const NotificationPage = () => {
     }
   };
 
+  
   // Filter reminders based on search term
   const handleSearch = (value: string) => {
     setSearchTerm(value);
