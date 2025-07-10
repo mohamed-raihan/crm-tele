@@ -5,27 +5,72 @@ import * as XLSX from "xlsx";
 import { RefreshCw, Search, ChevronDown, X, Loader2 } from "lucide-react";
 import { DashboardHeader } from "@/components/DashboardHeader";
 
+// TypeScript interfaces
+interface Report {
+  telecaller_id: number;
+  telecaller_name: string;
+  branch_name: string;
+  total_calls: number;
+  contacted: number;
+  not_contacted: number;
+  answered: number;
+  not_answered: number;
+  qualified: number; // changed from positive
+  not_interested: number; // changed from negative
+  walk_in_list: number;
+  total_follow_ups: number;
+}
+
+interface Branch {
+  id: number;
+  branch_name: string;
+}
+
+interface Telecaller {
+  id: number;
+  name: string;
+  branch_name?: string;
+}
+
+interface Pagination {
+  currentPage: number;
+  totalPages: number;
+  totalRecords: number;
+  limit: number;
+  hasNext: boolean;
+  hasPrevious: boolean;
+}
+
+interface DropdownPagination {
+  currentPage: number;
+  hasMore: boolean;
+  limit: number;
+}
+
 const columns = [
   "Counselor",
-  "Branch", // Added Branch column
+  "Branch",
   "Total Calls",
   "Contacted",
   "Not Contacted",
   "Answered",
   "Not Answered",
-  "Positive",
-  "Negative",
+  "Qualified",
+  "Not Interested",
   "Walk-in List",
   "Follow-ups",
 ];
 
 // Loading Spinner Component
-const LoadingSpinner = ({ size = "w-4 h-4", className = "" }) => (
-  <Loader2 className={`animate-spin ${size} ${className}`} />
-);
+const LoadingSpinner: React.FC<{ size?: string; className?: string }> = ({
+  size = "w-4 h-4",
+  className = "",
+}) => <Loader2 className={`animate-spin ${size} ${className}`} />;
 
 // Full Screen Loader Component
-const FullScreenLoader = ({ message = "Loading..." }) => (
+const FullScreenLoader: React.FC<{ message?: string }> = ({
+  message = "Loading...",
+}) => (
   <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
     <div className="bg-white rounded-lg p-6 flex flex-col items-center gap-4 min-w-[200px]">
       <LoadingSpinner size="w-8 h-8" className="text-blue-600" />
@@ -34,8 +79,20 @@ const FullScreenLoader = ({ message = "Loading..." }) => (
   </div>
 );
 
-// Custom SearchableDropdown Component
-const SearchableDropdown = ({
+// Optimized SearchableDropdown Component
+const SearchableDropdown: React.FC<{
+  options: any[];
+  value: string;
+  onChange: (value: string) => void;
+  placeholder: string;
+  displayKey?: string;
+  valueKey?: string;
+  onSearch?: (term: string) => void;
+  loading?: boolean;
+  hasMore?: boolean;
+  onLoadMore?: () => void;
+  disabled?: boolean;
+}> = ({
   options,
   value,
   onChange,
@@ -46,23 +103,20 @@ const SearchableDropdown = ({
   loading = false,
   hasMore = false,
   onLoadMore,
-  useLocalSearch = false, // New prop to control search behavior
+  disabled = false,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [displayedOptions, setDisplayedOptions] = useState([]);
-  const dropdownRef = useRef(null);
-  const listRef = useRef(null);
-  const searchTimeoutRef = useRef(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    // Initialize with first 10 options
-    setDisplayedOptions(options.slice(0, 10));
-  }, [options]);
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
         setIsOpen(false);
         setSearchTerm("");
       }
@@ -73,69 +127,46 @@ const SearchableDropdown = ({
   }, []);
 
   const handleSearch = useCallback(
-    (term) => {
+    (term: string) => {
       if (searchTimeoutRef.current) {
         clearTimeout(searchTimeoutRef.current);
       }
 
       searchTimeoutRef.current = setTimeout(() => {
-        if (useLocalSearch) {
-          // Local search - filter existing options
-          if (term.trim()) {
-            const filtered = options.filter((option) =>
-              option[displayKey].toLowerCase().includes(term.toLowerCase())
-            );
-            setDisplayedOptions(filtered);
-          } else {
-            setDisplayedOptions(options.slice(0, 10));
-          }
-        } else {
-          // API search - let parent handle it
-          if (term.trim()) {
-            const filtered = options.filter((option) =>
-              option[displayKey].toLowerCase().includes(term.toLowerCase())
-            );
-            setDisplayedOptions(filtered.slice(0, 10));
-          } else {
-            setDisplayedOptions(options.slice(0, 10));
-          }
-          if (onSearch) onSearch(term);
+        if (onSearch) {
+          onSearch(term);
         }
       }, 300);
     },
-    [options, displayKey, onSearch, useLocalSearch]
+    [onSearch]
   );
 
-  const handleSearchChange = (e) => {
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const term = e.target.value;
     setSearchTerm(term);
     handleSearch(term);
   };
 
   const handleScroll = useCallback(() => {
-    if (listRef.current && !useLocalSearch) {
+    if (listRef.current && hasMore && !loading) {
       const { scrollTop, scrollHeight, clientHeight } = listRef.current;
       if (scrollTop + clientHeight >= scrollHeight - 5) {
-        // Load more items when near bottom
-        const currentLength = displayedOptions.length;
-        const nextItems = options.slice(currentLength, currentLength + 10);
-        if (nextItems.length > 0) {
-          setDisplayedOptions((prev) => [...prev, ...nextItems]);
-        }
-        if (onLoadMore && hasMore) {
+        if (onLoadMore) {
           onLoadMore();
         }
       }
     }
-  }, [displayedOptions.length, options, hasMore, onLoadMore, useLocalSearch]);
+  }, [hasMore, loading, onLoadMore]);
 
   const selectedOption = options.find((opt) => opt[valueKey] === value);
 
   return (
     <div className="relative" ref={dropdownRef}>
       <div
-        className="w-full border rounded px-3 py-2 bg-gray-100 text-gray-700 cursor-pointer flex items-center justify-between"
-        onClick={() => setIsOpen(!isOpen)}
+        className={`w-full border rounded px-3 py-2 bg-gray-100 text-gray-700 cursor-pointer flex items-center justify-between ${
+          disabled ? "opacity-50 cursor-not-allowed" : ""
+        }`}
+        onClick={() => !disabled && setIsOpen(!isOpen)}
       >
         <span className={!value ? "text-gray-500" : ""}>
           {selectedOption ? selectedOption[displayKey] : placeholder}
@@ -147,7 +178,7 @@ const SearchableDropdown = ({
         />
       </div>
 
-      {isOpen && (
+      {isOpen && !disabled && (
         <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-64 overflow-hidden">
           <div className="p-2 border-b">
             <div className="relative">
@@ -159,17 +190,14 @@ const SearchableDropdown = ({
                 value={searchTerm}
                 onChange={handleSearchChange}
                 onClick={(e) => e.stopPropagation()}
+                autoFocus
               />
               {searchTerm && (
                 <button
                   className="absolute right-2 top-2.5 h-4 w-4 text-gray-400 hover:text-gray-600"
                   onClick={() => {
                     setSearchTerm("");
-                    if (useLocalSearch) {
-                      setDisplayedOptions(options.slice(0, 10));
-                    } else {
-                      setDisplayedOptions(options.slice(0, 10));
-                    }
+                    handleSearch("");
                   }}
                 >
                   <X className="h-4 w-4" />
@@ -194,7 +222,7 @@ const SearchableDropdown = ({
               {placeholder}
             </div>
 
-            {displayedOptions.map((option, index) => (
+            {options.map((option, index) => (
               <div
                 key={option.id || option[valueKey] || index}
                 className={`px-3 py-2 hover:bg-gray-100 cursor-pointer ${
@@ -217,9 +245,15 @@ const SearchableDropdown = ({
               </div>
             )}
 
-            {!loading && displayedOptions.length === 0 && searchTerm && (
+            {!loading && options.length === 0 && searchTerm && (
               <div className="px-3 py-2 text-center text-gray-500">
                 No results found
+              </div>
+            )}
+
+            {!loading && options.length === 0 && !searchTerm && (
+              <div className="px-3 py-2 text-center text-gray-500">
+                No data available
               </div>
             )}
           </div>
@@ -230,38 +264,47 @@ const SearchableDropdown = ({
 };
 
 export default function ReportPage() {
-  const [branch, setBranch] = useState("");
-  const [counselor, setCounselor] = useState("");
-  const [search, setSearch] = useState("");
-  const [reports, setReports] = useState([]);
-  const [branches, setBranches] = useState([]);
-  const [telecallers, setTelecallers] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [branchLoading, setBranchLoading] = useState(false);
-  const [telecallerLoading, setTelecallerLoading] = useState(false);
-  const [initialLoading, setInitialLoading] = useState(true);
-  const [exportLoading, setExportLoading] = useState(false);
-  const [showLoader, setShowLoader] = useState(false);
-const [loaderTimer, setLoaderTimer] = useState(null);
+  const [branch, setBranch] = useState<string>("");
+  const [counselor, setCounselor] = useState<string>("");
+  const [search, setSearch] = useState<string>("");
+  const [reports, setReports] = useState<Report[]>([]);
+  const [branches, setBranches] = useState<Branch[]>([]);
+  const [telecallers, setTelecallers] = useState<Telecaller[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [branchLoading, setBranchLoading] = useState<boolean>(false);
+  const [telecallerLoading, setTelecallerLoading] = useState<boolean>(false);
+  const [initialLoading, setInitialLoading] = useState<boolean>(true);
+  const [exportLoading, setExportLoading] = useState<boolean>(false);
+  const [branchSearchTerm, setBranchSearchTerm] = useState<string>("");
+  const [telecallerSearchTerm, setTelecallerSearchTerm] = useState<string>("");
+  const [allTelecallers, setAllTelecallers] = useState<Telecaller[]>([]);
+  const [filteredTelecallers, setFilteredTelecallers] = useState<Telecaller[]>(
+    []
+  );
 
-  const [pagination, setPagination] = useState({
+  const [pagination, setPagination] = useState<Pagination>({
     currentPage: 1,
     totalPages: 1,
     totalRecords: 0,
-    limit: 20,
+    limit: 10,
+    hasNext: false,
+    hasPrevious: false,
   });
-  const [branchPagination, setBranchPagination] = useState({
+
+  const [branchPagination, setBranchPagination] = useState<DropdownPagination>({
     currentPage: 1,
     hasMore: true,
     limit: 10,
   });
-  const [telecallerPagination, setTelecallerPagination] = useState({
-    currentPage: 1,
-    hasMore: true,
-    limit: 10,
-  });
-  const [filteredReports, setFilteredReports] = useState([]);
-  const searchTimeoutRef = useRef(null);
+
+  const [telecallerPagination, setTelecallerPagination] =
+    useState<DropdownPagination>({
+      currentPage: 1,
+      hasMore: true,
+      limit: 10,
+    });
+
+  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Get auth config helper function
   const getAuthConfig = () => {
@@ -279,23 +322,23 @@ const [loaderTimer, setLoaderTimer] = useState(null);
   };
 
   // Toast helper function
-  const showToast = (message, type) => {
+  const showToast = (message: string, type: "success" | "error") => {
     console.log(`${type.toUpperCase()}: ${message}`);
     // Replace with your actual toast implementation
   };
 
-  
-  const fetchAllReports = async (page = 1, limit = 10) => {
+  // Fetch reports with optimized pagination
+  const fetchAllReports = async (page: number = 1, limit: number = 10) => {
     setLoading(true);
     try {
       const authConfig = getAuthConfig();
       if (!authConfig) return;
 
-      // Build query parameters
       const params = new URLSearchParams({
         page: page.toString(),
         limit: limit.toString(),
       });
+
       if (branch) params.append("branch_name", branch);
       if (counselor) params.append("telecaller_name", counselor);
       if (search) params.append("search", search);
@@ -306,12 +349,25 @@ const [loaderTimer, setLoaderTimer] = useState(null);
       );
 
       if (response.data?.code === 200) {
-        setReports(response.data.data || []);
-        setPagination(response.data.pagination || pagination);
+        // Map positive/negative to qualified/not_interested for frontend
+        const mappedReports = (response.data.data || []).map((report: any) => ({
+          ...report,
+          qualified: report.qualified ?? report.positive ?? 0,
+          not_interested: report.not_interested ?? report.negative ?? 0,
+        }));
+        setReports(mappedReports);
+        setPagination({
+          currentPage: response.data.pagination?.page || page,
+          totalPages: response.data.pagination?.totalPages || 1,
+          totalRecords: response.data.pagination?.total || 0,
+          limit: response.data.pagination?.limit || limit,
+          hasNext: response.data.pagination?.hasNext || false,
+          hasPrevious: response.data.pagination?.hasPrevious || false,
+        });
       } else {
         showToast("Failed to fetch reports", "error");
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error fetching reports:", err);
       if (err.response?.status === 401) {
         showToast("Authentication failed. Please login again.", "error");
@@ -326,7 +382,12 @@ const [loaderTimer, setLoaderTimer] = useState(null);
     }
   };
 
-  const fetchAllBranches = async (page = 1, limit = 10, searchTerm = "") => {
+  // Fetch branches with pagination and search
+  const fetchAllBranches = async (
+    page: number = 1,
+    limit: number = 10,
+    searchTerm: string = ""
+  ) => {
     setBranchLoading(true);
     try {
       const authConfig = getAuthConfig();
@@ -348,15 +409,17 @@ const [loaderTimer, setLoaderTimer] = useState(null);
         setBranches((prevBranches) =>
           page === 1 ? newBranches : [...prevBranches, ...newBranches]
         );
-        setBranchPagination((prev) => ({
-          ...prev,
+        setBranchPagination({
           currentPage: page,
-          hasMore: newBranches.length === limit,
-        }));
+          hasMore:
+            response.data.pagination?.page <
+            response.data.pagination?.totalPages,
+          limit: limit,
+        });
       } else {
         showToast("Failed to fetch branches", "error");
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error fetching branches:", err);
       showToast(
         err.response?.data?.message || "Failed to fetch branches",
@@ -367,7 +430,12 @@ const [loaderTimer, setLoaderTimer] = useState(null);
     }
   };
 
-  const fetchTelecaller = async (page = 1, limit = 10, searchTerm = "") => {
+  // Fetch telecallers with pagination and search
+  const fetchTelecaller = async (
+    page: number = 1,
+    limit: number = 1000, // Increase limit to get all telecallers
+    searchTerm: string = ""
+  ) => {
     setTelecallerLoading(true);
     try {
       const authConfig = getAuthConfig();
@@ -377,9 +445,6 @@ const [loaderTimer, setLoaderTimer] = useState(null);
         page: page.toString(),
         limit: limit.toString(),
       });
-      if (searchTerm) params.append("search", searchTerm);
-
-      // Add branch filter if selected to get telecallers for specific branch
       if (branch) params.append("branch_name", branch);
 
       const response = await axiosInstance.get(
@@ -388,19 +453,20 @@ const [loaderTimer, setLoaderTimer] = useState(null);
       );
 
       if (response.data?.code === 200) {
-        const newTelecallers = response.data.data || [];
-        setTelecallers((prevTelecallers) =>
-          page === 1 ? newTelecallers : [...prevTelecallers, ...newTelecallers]
-        );
-        setTelecallerPagination((prev) => ({
-          ...prev,
+        const telecallersData = response.data.data || [];
+        setAllTelecallers(telecallersData);
+        setFilteredTelecallers(telecallersData);
+        setTelecallers(telecallersData);
+
+        setTelecallerPagination({
           currentPage: page,
-          hasMore: newTelecallers.length === limit,
-        }));
+          hasMore: false, // Disable pagination since we're loading all
+          limit: limit,
+        });
       } else {
         showToast("Failed to fetch telecallers", "error");
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error fetching telecallers:", err);
       showToast(
         err.response?.data?.message || "Failed to fetch telecallers",
@@ -411,42 +477,66 @@ const [loaderTimer, setLoaderTimer] = useState(null);
     }
   };
 
-  // Export to Excel using XLSX from frontend state
+  // Export to Excel with all data
   const exportToExcel = async () => {
     setExportLoading(true);
     try {
-      if (!reports || reports.length === 0) {
-        showToast("No data to export", "error");
-        return;
-      }
-      // Prepare export data (filtered if search is active)
-      const filteredData =
-        filteredReports.length > 0 || search ? filteredReports : reports;
-      const exportData = filteredData.map((report) => ({
-        Counselor: report.telecaller_name || "",
-        "Total Calls": report.total_calls || 0,
-        Contacted: report.contacted || 0,
-        "Not Contacted": report.not_contacted || 0,
-        Answered: report.answered || 0,
-        "Not Answered": report.not_answered || 0,
-        Positive: report.positive || 0,
-        Negative: report.negative || 0,
-        "Walk-in List": report.walk_in_list || 0,
-        "Follow-ups": report.total_follow_ups || 0,
-      }));
+      const authConfig = getAuthConfig();
+      if (!authConfig) return;
 
-      // Add a small delay to show the loading state
-      await new Promise((resolve) => setTimeout(resolve, 500));
+      // Fetch all data for export
+      const params = new URLSearchParams({
+        page: "1",
+        limit: "1000", // Large limit to get all data
+      });
 
-      const worksheet = XLSX.utils.json_to_sheet(exportData);
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, "Reports");
-      XLSX.writeFile(
-        workbook,
-        `counselor_reports_${new Date().toISOString().split("T")[0]}.xlsx`
+      if (branch) params.append("branch_name", branch);
+      if (counselor) params.append("telecaller_name", counselor);
+      if (search) params.append("search", search);
+
+      const response = await axiosInstance.get(
+        `${API_URLS.REPORTS.GET_REPORTS}?${params.toString()}`,
+        authConfig
       );
-      showToast("Report exported successfully", "success");
-    } catch (err) {
+
+      if (response.data?.code === 200) {
+        const allReports = (response.data.data || []).map((report: any) => ({
+          ...report,
+          qualified: report.qualified ?? report.positive ?? 0,
+          not_interested: report.not_interested ?? report.negative ?? 0,
+        }));
+
+        if (allReports.length === 0) {
+          showToast("No data to export", "error");
+          return;
+        }
+
+        const exportData = allReports.map((report: Report) => ({
+          Counselor: report.telecaller_name || "",
+          Branch: report.branch_name || "",
+          "Total Calls": report.total_calls || 0,
+          Contacted: report.contacted || 0,
+          "Not Contacted": report.not_contacted || 0,
+          Answered: report.answered || 0,
+          "Not Answered": report.not_answered || 0,
+          Qualified: report.qualified || 0,
+          "Not Interested": report.not_interested || 0,
+          "Walk-in List": report.walk_in_list || 0,
+          "Follow-ups": report.total_follow_ups || 0,
+        }));
+
+        const worksheet = XLSX.utils.json_to_sheet(exportData);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Reports");
+        XLSX.writeFile(
+          workbook,
+          `counselor_reports_${new Date().toISOString().split("T")[0]}.xlsx`
+        );
+        showToast("Report exported successfully", "success");
+      } else {
+        showToast("Failed to export report", "error");
+      }
+    } catch (err: any) {
       console.error("Error exporting report:", err);
       showToast("Failed to export report", "error");
     } finally {
@@ -454,20 +544,14 @@ const [loaderTimer, setLoaderTimer] = useState(null);
     }
   };
 
-  // Handle filter changes
-  const handleFilterChange = () => {
-    setPagination((prev) => ({ ...prev, currentPage: 1 }));
-    fetchAllReports(1, pagination.limit);
-  };
-
   // Handle pagination
-  const handlePageChange = (newPage) => {
+  const handlePageChange = (newPage: number) => {
     setPagination((prev) => ({ ...prev, currentPage: newPage }));
     fetchAllReports(newPage, pagination.limit);
   };
 
   // Handle search with debouncing
-  const handleSearchChange = (e) => {
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setSearch(value);
 
@@ -482,43 +566,70 @@ const [loaderTimer, setLoaderTimer] = useState(null);
   };
 
   // Handle branch search
-  const handleBranchSearch = (searchTerm) => {
+  const handleBranchSearch = (searchTerm: string) => {
+    setBranchSearchTerm(searchTerm);
     setBranchPagination({ currentPage: 1, hasMore: true, limit: 10 });
     fetchAllBranches(1, 10, searchTerm);
   };
 
-  // Handle telecaller search
-  const handleTelecallerSearch = (searchTerm) => {
-    setTelecallerPagination({ currentPage: 1, hasMore: true, limit: 10 });
-    fetchTelecaller(1, 10, searchTerm);
+  const handleTelecallerSearch = (searchTerm: string) => {
+    setTelecallerSearchTerm(searchTerm);
+
+    if (!searchTerm.trim()) {
+      setFilteredTelecallers(allTelecallers);
+      setTelecallers(allTelecallers);
+      return;
+    }
+
+    const filtered = allTelecallers.filter((telecaller) =>
+      telecaller.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    setFilteredTelecallers(filtered);
+    setTelecallers(filtered);
   };
 
   // Load more branches
   const loadMoreBranches = () => {
-    if (branchPagination.hasMore) {
-      fetchAllBranches(branchPagination.currentPage + 1, 10);
+    if (branchPagination.hasMore && !branchLoading) {
+      fetchAllBranches(branchPagination.currentPage + 1, 10, branchSearchTerm);
     }
   };
 
-  // Load more telecallers
   const loadMoreTelecallers = () => {
-    if (telecallerPagination.hasMore) {
-      fetchTelecaller(telecallerPagination.currentPage + 1, 10);
+    if (telecallerPagination.hasMore && !telecallerLoading) {
+      fetchTelecaller(
+        telecallerPagination.currentPage + 1,
+        10,
+        telecallerSearchTerm
+      );
     }
   };
 
-  // Reset telecaller when branch changes
-  const handleBranchChange = (branchValue) => {
+  // Handle branch change
+  const handleBranchChange = (branchValue: string) => {
     setBranch(branchValue);
-    setCounselor(""); // Reset counselor when branch changes
-    setTelecallers([]); // Clear telecallers list
-    setTelecallerPagination({ currentPage: 1, hasMore: true, limit: 10 });
+    setCounselor("");
+    setTelecallers([]);
+    setAllTelecallers([]);
+    setFilteredTelecallers([]);
+    setTelecallerSearchTerm("");
+    setTelecallerPagination({ currentPage: 1, hasMore: false, limit: 1000 });
 
-    // Fetch telecallers for new branch
     if (branchValue) {
-      fetchTelecaller(1, 100, ""); // Fetch more records for local search
+      fetchTelecaller(1, 1000, "");
     }
   };
+
+  // Handle filter changes
+  useEffect(() => {
+    const debounceTimer = setTimeout(() => {
+      setPagination((prev) => ({ ...prev, currentPage: 1 }));
+      fetchAllReports(1, 10);
+    }, 500);
+
+    return () => clearTimeout(debounceTimer);
+  }, [branch, counselor]);
 
   // Initial data fetch
   useEffect(() => {
@@ -526,9 +637,9 @@ const [loaderTimer, setLoaderTimer] = useState(null);
       setInitialLoading(true);
       try {
         await Promise.all([
-          fetchAllReports(),
-          fetchAllBranches(),
-          fetchTelecaller(1, 100, ""), // Fetch more records for local search
+          fetchAllReports(1, 10),
+          fetchAllBranches(1, 10),
+          fetchTelecaller(1, 10),
         ]);
       } catch (error) {
         console.error("Error initializing data:", error);
@@ -540,29 +651,6 @@ const [loaderTimer, setLoaderTimer] = useState(null);
     initializeData();
   }, []);
 
-  // Handle branch and counselor filter changes
-  useEffect(() => {
-    const debounceTimer = setTimeout(() => {
-      setPagination((prev) => ({ ...prev, currentPage: 1 }));
-      fetchAllReports(1, 10);
-    }, 500);
-
-    return () => clearTimeout(debounceTimer);
-  }, [branch, counselor]);
-
-  // Handle local search filtering
-  useEffect(() => {
-    if (!search) {
-      setFilteredReports(reports);
-    } else {
-      setFilteredReports(
-        reports.filter((r) =>
-          (r.telecaller_name || "").toLowerCase().includes(search.toLowerCase())
-        )
-      );
-    }
-  }, [search, reports]);
-
   // Cleanup timeout on unmount
   useEffect(() => {
     return () => {
@@ -572,10 +660,6 @@ const [loaderTimer, setLoaderTimer] = useState(null);
     };
   }, []);
 
-  console.log(branch);
-  console.log(reports);
-  console.log(telecallers);
-
   // Show initial loading screen
   if (initialLoading) {
     return <FullScreenLoader message="Loading reports..." />;
@@ -583,241 +667,269 @@ const [loaderTimer, setLoaderTimer] = useState(null);
 
   return (
     <div>
-      <DashboardHeader/>
+      <DashboardHeader />
       <div className="min-h-screen bg-gray-50 p-6">
-      {/* Export Loading Overlay */}
-      {exportLoading && <FullScreenLoader message="Exporting to Excel..." />}
+        {/* Export Loading Overlay */}
+        {exportLoading && <FullScreenLoader message="Exporting to Excel..." />}
 
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold mb-2">Reports</h1>
-        <div className="bg-white rounded-xl shadow p-6 flex flex-col gap-4">
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1">
-              <label className="block text-gray-700 mb-1">Branch</label>
-              <SearchableDropdown
-                options={branches}
-                value={branch}
-                onChange={handleBranchChange}
-                placeholder="All Branches"
-                displayKey="branch_name"
-                valueKey="branch_name"
-                onSearch={handleBranchSearch}
-                loading={branchLoading}
-                hasMore={branchPagination.hasMore}
-                onLoadMore={loadMoreBranches}
-              />
-            </div>
-            <div className="flex-1">
-              <label className="block text-gray-700 mb-1">Counselor</label>
-              <SearchableDropdown
-                options={telecallers}
-                value={counselor}
-                onChange={setCounselor}
-                placeholder="All Counsellors"
-                displayKey="name"
-                valueKey="name"
-                onSearch={() => {}} // Empty function to satisfy the prop requirement
-                loading={telecallerLoading}
-                hasMore={false} // Set to false since we're using local search
-                onLoadMore={() => {}} // Empty function to satisfy the prop requirement
-                useLocalSearch={true} // Enable local search for counselor dropdown
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="bg-white rounded-xl shadow p-6">
-        <div className="mb-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div className="flex-1">
-            <input
-              type="text"
-              placeholder="Search by counselor name..."
-              className="border rounded px-3 py-2 w-full md:w-64 bg-gray-100 text-gray-700"
-              value={search}
-              onChange={handleSearchChange}
-            />
-          </div>
-          <div className="flex gap-2">
-            <button
-              className="bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white px-4 py-2 rounded font-medium flex items-center gap-2"
-              onClick={exportToExcel}
-              disabled={exportLoading}
-            >
-              {exportLoading ? (
-                <>
-                  <LoadingSpinner size="w-4 h-4" />
-                  Exporting...
-                </>
-              ) : (
-                "Export to Excel"
-              )}
-            </button>
-            <button
-              className="bg-gray-100 text-gray-700 px-4 py-2 rounded hover:bg-gray-200 disabled:bg-gray-50 disabled:text-gray-400 font-medium flex items-center gap-1"
-              onClick={() => {
-                setBranch("");
-                setCounselor("");
-                setSearch("");
-                fetchAllReports(1, pagination.limit);
-              }}
-              disabled={loading}
-              title="Refresh Report"
-            >
-              <RefreshCw
-                className={`w-4 h-4 ${loading ? "animate-spin" : ""}`}
-              />
-            </button>
-          </div>
-        </div>
-
-        <div>
-          <h2 className="text-gray-700 font-semibold mb-2">
-            COUNSELOR ACTIVITIES
-          </h2>
-          {loading ? (
-            <div className="flex justify-center items-center py-8">
-              <div className="flex items-center gap-2 text-gray-500">
-                <LoadingSpinner size="w-6 h-6" />
-                Loading reports...
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold mb-2">Reports</h1>
+          <div className="bg-white rounded-xl shadow p-6 flex flex-col gap-4">
+            <div className="flex flex-col md:flex-row gap-4">
+              <div className="flex-1">
+                <label className="block text-gray-700 mb-1">Branch</label>
+                <SearchableDropdown
+                  options={branches}
+                  value={branch}
+                  onChange={handleBranchChange}
+                  placeholder="All Branches"
+                  displayKey="branch_name"
+                  valueKey="branch_name"
+                  onSearch={handleBranchSearch}
+                  loading={branchLoading}
+                  hasMore={branchPagination.hasMore}
+                  onLoadMore={loadMoreBranches}
+                />
+              </div>
+              <div className="flex-1">
+                <label className="block text-gray-700 mb-1">Counselor</label>
+                <SearchableDropdown
+                  options={filteredTelecallers}
+                  value={counselor}
+                  onChange={setCounselor}
+                  placeholder="All Counsellors"
+                  displayKey="name"
+                  valueKey="name"
+                  onSearch={handleTelecallerSearch}
+                  loading={telecallerLoading}
+                  hasMore={false}
+                  onLoadMore={() => {}}
+                />
               </div>
             </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="min-w-full border rounded-xl overflow-hidden">
-                <thead>
-                  <tr className="bg-gray-100">
-                    {columns.map((col, idx) => (
-                      <th
-                        key={idx}
-                        className="px-4 py-2 text-left text-xs font-semibold text-gray-600 whitespace-nowrap"
-                      >
-                        {col}
-                      </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredReports.length > 0 ? (
-                    filteredReports.map((report, i) => (
-                      <tr key={report.telecaller_id || i} className="border-t">
-                        <td className="px-4 py-2 font-medium text-gray-700 whitespace-nowrap">
-                          {report.telecaller_name}
-                        </td>
-                        <td className="px-4 py-2 font-medium text-gray-700 whitespace-nowrap">
-                          {report.branch_name || ""}
-                        </td>
-                        <td className="px-4 py-2">
-                          <span className="inline-block w-8 h-8 bg-blue-100 text-blue-600 rounded-full text-center text-sm font-bold leading-8">
-                            {report.total_calls || 0}
-                          </span>
-                        </td>
-                        <td className="px-4 py-2">
-                          <span className="inline-block w-8 h-8 bg-green-100 text-green-600 rounded-full text-center text-sm font-bold leading-8">
-                            {report.contacted || 0}
-                          </span>
-                        </td>
-                        <td className="px-4 py-2">
-                          <span className="inline-block w-8 h-8 bg-red-100 text-red-600 rounded-full text-center text-sm font-bold leading-8">
-                            {report.not_contacted || 0}
-                          </span>
-                        </td>
-                        <td className="px-4 py-2">
-                          <span className="inline-block w-8 h-8 bg-green-100 text-green-600 rounded-full text-center text-sm font-bold leading-8">
-                            {report.answered || 0}
-                          </span>
-                        </td>
-                        <td className="px-4 py-2">
-                          <span className="inline-block w-8 h-8 bg-red-100 text-red-600 rounded-full text-center text-sm font-bold leading-8">
-                            {report.not_answered || 0}
-                          </span>
-                        </td>
-                        <td className="px-4 py-2">
-                          <span className="inline-block w-8 h-8 bg-green-100 text-green-600 rounded-full text-center text-sm font-bold leading-8">
-                            {report.positive || 0}
-                          </span>
-                        </td>
-                        <td className="px-4 py-2">
-                          <span className="inline-block w-8 h-8 bg-red-100 text-red-600 rounded-full text-center text-sm font-bold leading-8">
-                            {report.negative || 0}
-                          </span>
-                        </td>
-                        <td className="px-4 py-2">
-                          <span className="inline-block w-8 h-8 bg-blue-100 text-blue-600 rounded-full text-center text-sm font-bold leading-8">
-                            {report.walk_in_list || 0}
-                          </span>
-                        </td>
-                        <td className="px-4 py-2">
-                          <span className="inline-block w-8 h-8 bg-purple-100 text-purple-600 rounded-full text-center text-sm font-bold leading-8">
-                            {report.total_follow_ups || 0}
-                          </span>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-xl shadow p-6">
+          <div className="mb-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div className="flex-1">
+              <div className="relative">
+                <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search by name and branch..."
+                  className="border rounded px-10 py-2 w-full md:w-64 bg-gray-100 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  value={search}
+                  onChange={handleSearchChange}
+                />
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <button
+                className="bg-green-600 hover:bg-green-700 disabled:bg-green-400 text-white px-4 py-2 rounded font-medium flex items-center gap-2"
+                onClick={exportToExcel}
+                disabled={exportLoading}
+              >
+                {exportLoading ? (
+                  <>
+                    <LoadingSpinner size="w-4 h-4" />
+                    Exporting...
+                  </>
+                ) : (
+                  "Export to Excel"
+                )}
+              </button>
+              <button
+                className="bg-gray-100 text-gray-700 px-4 py-2 rounded hover:bg-gray-200 disabled:bg-gray-50 disabled:text-gray-400 font-medium flex items-center gap-1"
+                onClick={() => {
+                  setBranch("");
+                  setCounselor("");
+                  setSearch("");
+                  setPagination((prev) => ({ ...prev, currentPage: 1 }));
+                  fetchAllReports(1, 10);
+                }}
+                disabled={loading}
+                title="Refresh Report"
+              >
+                <RefreshCw
+                  className={`w-4 h-4 ${loading ? "animate-spin" : ""}`}
+                />
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-4">
+              <h2 className="text-gray-700 font-semibold text-lg">
+                COUNSELOR ACTIVITIES
+              </h2>
+
+              {pagination.totalRecords > 0 && (
+                <div className="text-sm text-gray-500">
+                  <span>
+                    Page {pagination.currentPage} of {pagination.totalPages} •
+                  </span>
+                  <span className="ml-1">
+                    Showing{" "}
+                    {(pagination.currentPage - 1) * pagination.limit + 1}-
+                    {Math.min(
+                      pagination.currentPage * pagination.limit,
+                      pagination.totalRecords
+                    )}{" "}
+                    of {pagination.totalRecords} records
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {loading ? (
+              <div className="flex justify-center items-center py-8">
+                <div className="flex items-center gap-2 text-gray-500">
+                  <LoadingSpinner size="w-6 h-6" />
+                  Loading reports...
+                </div>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="min-w-full border rounded-xl overflow-hidden">
+                  <thead>
+                    <tr className="bg-gray-100">
+                      {columns.map((col, idx) => (
+                        <th
+                          key={idx}
+                          className="px-4 py-2 text-left text-xs font-semibold text-gray-600 whitespace-nowrap"
+                        >
+                          {col}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {reports.length > 0 ? (
+                      reports.map((report, i) => (
+                        <tr
+                          key={report.telecaller_id || i}
+                          className="border-t"
+                        >
+                          <td className="px-4 py-2 font-medium text-gray-700 whitespace-nowrap">
+                            {report.telecaller_name}
+                          </td>
+                          <td className="px-4 py-2 font-medium text-gray-700 whitespace-nowrap">
+                            {report.branch_name || ""}
+                          </td>
+                          <td className="px-4 py-2">
+                            <span className="inline-block w-8 h-8 bg-blue-100 text-blue-600 rounded-full text-center text-sm font-bold leading-8">
+                              {report.total_calls || 0}
+                            </span>
+                          </td>
+                          <td className="px-4 py-2">
+                            <span className="inline-block w-8 h-8 bg-green-100 text-green-600 rounded-full text-center text-sm font-bold leading-8">
+                              {report.contacted || 0}
+                            </span>
+                          </td>
+                          <td className="px-4 py-2">
+                            <span className="inline-block w-8 h-8 bg-red-100 text-red-600 rounded-full text-center text-sm font-bold leading-8">
+                              {report.not_contacted || 0}
+                            </span>
+                          </td>
+                          <td className="px-4 py-2">
+                            <span className="inline-block w-8 h-8 bg-green-100 text-green-600 rounded-full text-center text-sm font-bold leading-8">
+                              {report.answered || 0}
+                            </span>
+                          </td>
+                          <td className="px-4 py-2">
+                            <span className="inline-block w-8 h-8 bg-red-100 text-red-600 rounded-full text-center text-sm font-bold leading-8">
+                              {report.not_answered || 0}
+                            </span>
+                          </td>
+                          <td className="px-4 py-2">
+                            <span className="inline-block w-8 h-8 bg-green-100 text-green-600 rounded-full text-center text-sm font-bold leading-8">
+                              {report.qualified || 0}
+                            </span>
+                          </td>
+                          <td className="px-4 py-2">
+                            <span className="inline-block w-8 h-8 bg-red-100 text-red-600 rounded-full text-center text-sm font-bold leading-8">
+                              {report.not_interested || 0}
+                            </span>
+                          </td>
+                          <td className="px-4 py-2">
+                            <span className="inline-block w-8 h-8 bg-blue-100 text-blue-600 rounded-full text-center text-sm font-bold leading-8">
+                              {report.walk_in_list || 0}
+                            </span>
+                          </td>
+                          <td className="px-4 py-2">
+                            <span className="inline-block w-8 h-8 bg-purple-100 text-purple-600 rounded-full text-center text-sm font-bold leading-8">
+                              {report.total_follow_ups || 0}
+                            </span>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td
+                          colSpan={columns.length}
+                          className="px-4 py-8 text-center text-gray-500"
+                        >
+                          No reports found
                         </td>
                       </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td
-                        colSpan={columns.length}
-                        className="px-4 py-8 text-center text-gray-500"
-                      >
-                        No reports found
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          )}
-
-          {/* Pagination */}
-          {pagination.totalPages > 1 && (
-            <div className="mt-6 flex justify-between items-center">
-              <div className="text-sm text-gray-600">
-                Showing {(pagination.currentPage - 1) * pagination.limit + 1} to{" "}
-                {Math.min(
-                  pagination.currentPage * pagination.limit,
-                  pagination.totalRecords
-                )}{" "}
-                of {pagination.totalRecords} entries
+                    )}
+                  </tbody>
+                </table>
               </div>
+            )}
 
-              <div className="flex gap-2">
-                <button
-                  className="px-3 py-1 border rounded disabled:opacity-50 disabled:cursor-not-allowed"
-                  disabled={pagination.currentPage === 1 || loading}
-                  onClick={() => handlePageChange(pagination.currentPage - 1)}
-                >
-                  Previous
-                </button>
-                {[...Array(pagination.totalPages)].map((_, index) => (
+            {/* Pagination */}
+            {pagination.totalPages > 1 && (
+              <div className="mt-6 flex justify-between items-center">
+                <div className="text-sm text-gray-600">
+                  Showing {(pagination.currentPage - 1) * pagination.limit + 1}{" "}
+                  to{" "}
+                  {Math.min(
+                    pagination.currentPage * pagination.limit,
+                    pagination.totalRecords
+                  )}{" "}
+                  of {pagination.totalRecords} entries
+                </div>
+
+                <div className="flex gap-2">
                   <button
-                    key={index}
-                    className={`px-3 py-1 border rounded disabled:opacity-50 disabled:cursor-not-allowed ${
-                      pagination.currentPage === index + 1
-                        ? "bg-violet-100 text-violet-700 border-violet-300"
-                        : "hover:bg-gray-50"
-                    }`}
-                    disabled={loading}
-                    onClick={() => handlePageChange(index + 1)}
+                    className="px-3 py-1 border rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={pagination.currentPage === 1 || loading}
+                    onClick={() => handlePageChange(pagination.currentPage - 1)}
                   >
-                    {index + 1}
+                    Previous
                   </button>
-                ))}
-                <button
-                  className="px-3 py-1 border rounded disabled:opacity-50 disabled:cursor-not-allowed"
-                  disabled={
-                    pagination.currentPage === pagination.totalPages || loading
-                  }
-                  onClick={() => handlePageChange(pagination.currentPage + 1)}
-                >
-                  Next
-                </button>
+                  {[...Array(pagination.totalPages)].map((_, index) => (
+                    <button
+                      key={index}
+                      className={`px-3 py-1 border rounded disabled:opacity-50 disabled:cursor-not-allowed ${
+                        pagination.currentPage === index + 1
+                          ? "bg-violet-100 text-violet-700 border-violet-300"
+                          : "hover:bg-gray-50"
+                      }`}
+                      disabled={loading}
+                      onClick={() => handlePageChange(index + 1)}
+                    >
+                      {index + 1}
+                    </button>
+                  ))}
+                  <button
+                    className="px-3 py-1 border rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled={
+                      pagination.currentPage === pagination.totalPages ||
+                      loading
+                    }
+                    onClick={() => handlePageChange(pagination.currentPage + 1)}
+                  >
+                    Next
+                  </button>
+                </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
-    </div>
     </div>
   );
 }

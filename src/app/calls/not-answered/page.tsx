@@ -234,6 +234,37 @@ const NotAnsweredPage = () => {
   // Sort notAnswered by created_at ascending (oldest first, latest last)
   const sortedNotAnswered = [...notAnswered].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
 
+  const generatePaginationNumbers = () => {
+    const totalPages = pagination.totalPages;
+    const currentPage = pagination.currentPage;
+    const pages = [];
+    if (totalPages <= 7) {
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      pages.push(1);
+      if (currentPage > 3) {
+        pages.push('...');
+      }
+      const start = Math.max(2, currentPage - 1);
+      const end = Math.min(totalPages - 1, currentPage + 1);
+      for (let i = start; i <= end; i++) {
+        if (i !== 1 && i !== totalPages) {
+          pages.push(i);
+        }
+      }
+      if (currentPage < totalPages - 2) {
+        pages.push('...');
+      }
+      if (totalPages > 1) {
+        pages.push(totalPages);
+      }
+    }
+    return pages;
+  };
+  const paginationNumbers = generatePaginationNumbers();
+
   return (
     <div className="flex-1 flex flex-col">
       <DashboardHeader />
@@ -366,23 +397,28 @@ const NotAnsweredPage = () => {
                       <TableHead>Email</TableHead>
                       <TableHead>Call Status</TableHead>
                       <TableHead>Call Outcome</TableHead>
-                      <TableHead>Call Start Time</TableHead>
                       <TableHead>Telecaller Name</TableHead>
                       <TableHead>Branch Name</TableHead>
                       <TableHead>Created At</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {sortedNotAnswered.length === 0 ? (
+                    {loading ? (
                       <TableRow>
-                        <TableCell colSpan={10} className="text-center py-8 text-gray-500">
+                        <TableCell colSpan={9} className="text-center py-8">
+                          <RefreshCw className="w-6 h-6 animate-spin mx-auto" />
+                        </TableCell>
+                      </TableRow>
+                    ) : sortedNotAnswered.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={9} className="text-center py-8 text-gray-500">
                           {showNoDataMsg ? "No not answered calls found matching your criteria" : null}
                         </TableCell>
                       </TableRow>
                     ) : (
                       sortedNotAnswered.map((item, idx) => (
                         <TableRow key={item.id}>
-                          <TableCell>{idx + 1}</TableCell>
+                          <TableCell>{(pagination.currentPage - 1) * pagination.limit + idx + 1}</TableCell>
                           <TableCell>{item.enquiry_details?.candidate_name}</TableCell>
                           <TableCell>{item.enquiry_details?.phone}</TableCell>
                           <TableCell>{item.enquiry_details?.email}</TableCell>
@@ -396,7 +432,6 @@ const NotAnsweredPage = () => {
                             </span>
                           </TableCell>
                           <TableCell>{item.call_outcome}</TableCell>
-                          <TableCell>{formatDate(item.call_start_time)}</TableCell>
                           <TableCell>{item.telecaller_name}</TableCell>
                           <TableCell>{item.branch_name}</TableCell>
                           <TableCell>{formatDate(item.created_at)}</TableCell>
@@ -408,39 +443,40 @@ const NotAnsweredPage = () => {
               </div>
             )}
             {/* Pagination */}
-            {pagination.totalPages > 1 && (
-              <div className="mt-6 flex justify-between items-center">
+            {pagination.totalRecords > pagination.limit && (
+              <div className="mt-6 flex flex-col md:flex-row justify-between items-center gap-2">
                 <div className="text-sm text-gray-600">
                   Showing {(pagination.currentPage - 1) * pagination.limit + 1} to {Math.min(pagination.currentPage * pagination.limit, pagination.totalRecords)} of {pagination.totalRecords} entries
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-2 flex-wrap items-center">
                   <Button
                     variant="outline"
                     size="sm"
                     disabled={pagination.currentPage === 1}
                     onClick={() => handlePageChange(pagination.currentPage - 1)}
                   >
-                    Previous
+                    Prev
                   </Button>
-                  {[...Array(Math.min(pagination.totalPages, 5))].map((_, index) => {
-                    const pageNum = pagination.currentPage <= 3 ? index + 1 : 
-                                   pagination.currentPage >= pagination.totalPages - 2 ? pagination.totalPages - 4 + index :
-                                   pagination.currentPage - 2 + index;
-                    return (
-                      <Button
-                        key={pageNum}
-                        variant={pagination.currentPage === pageNum ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => handlePageChange(pageNum)}
-                      >
-                        {pageNum}
-                      </Button>
-                    );
-                  })}
+                  {paginationNumbers.map((pageNum, index) => (
+                    <React.Fragment key={index}>
+                      {pageNum === '...' ? (
+                        <span className="px-2 py-1 text-gray-500">...</span>
+                      ) : (
+                        <Button
+                          variant={pagination.currentPage === pageNum ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => handlePageChange(pageNum as number)}
+                          className={pagination.currentPage === pageNum ? "bg-green-500 hover:bg-green-600" : ""}
+                        >
+                          {pageNum}
+                        </Button>
+                      )}
+                    </React.Fragment>
+                  ))}
                   <Button
                     variant="outline"
                     size="sm"
-                    disabled={pagination.currentPage === pagination.totalPages}
+                    disabled={pagination.currentPage === Math.ceil(pagination.totalRecords / pagination.limit)}
                     onClick={() => handlePageChange(pagination.currentPage + 1)}
                   >
                     Next

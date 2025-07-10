@@ -87,12 +87,13 @@ const navigationItems = [
     icon: Calendar,
     type: "single"
   },
-  // {
-  //   title: "Call Register",
-  //   url: "/admin/call-analytics",
-  //   icon: Phone,
-  //   type: "single"
-  // },
+  {
+    title: "Call",
+    url: "/admin/calls",
+    icon: Phone,
+    type: "single"
+  },
+  
   {
     title: "Not Answer",
     url: "/admin/not-answer",
