@@ -94,7 +94,7 @@ export function SystemOverview() {
             <div className="flex justify-between items-center">
               <div className="flex items-center gap-2">
                 <Activity className="w-4 h-4 text-gray-500" />
-                <span className="text-gray-600">Pending Followups</span>
+                <span className="text-gray-600"> Followups</span>
               </div>
               <span className="font-medium">{stats.pending_followups}</span>
             </div>
