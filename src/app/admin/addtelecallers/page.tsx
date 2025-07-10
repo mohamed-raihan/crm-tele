@@ -12,6 +12,7 @@ import { API_URLS } from "../../../components/apiconfig/api_urls.ts";
 import axiosInstance from "../../../components/apiconfig/axios.ts";
 import { z } from "zod";
 import { useToast } from "@/components/ui/use-toast";
+import { DashboardHeader } from "@/components/DashboardHeader.tsx";
 
 // Define Telecaller interface
 
@@ -941,9 +942,9 @@ export default function TelecallersManagementPage() {
     { key: "email", label: "Email", sortable: true },
     { key: "contact", label: "Contact", sortable: true },
     { key: "address", label: "Address", sortable: true },
-    { 
-      key: "branch", 
-      label: "Branch", 
+    {
+      key: "branch",
+      label: "Branch",
       sortable: true,
       render: (value: any, row: Telecaller) => (
         <span>{getBranchNameFromId(row.branch)}</span>
@@ -1122,109 +1123,111 @@ export default function TelecallersManagementPage() {
   console.log("Form sections:", formSections);
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-8">
-      <div className="max-w-7xl mx-auto">
-        {/* Breadcrumb */}
-        <div className="text-xs text-gray-400 mb-1">
-          Telecallers Management {">"} All Telecallers
-        </div>
-
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4 sm:mb-0">
-            Telecallers Management
-          </h1>
-          <Button
-            onClick={openAddModal}
-            className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto"
-            disabled={loading}
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Add New Telecaller
-          </Button>
-        </div>
-
-        {/* Search Bar */}
-        <div className="mb-6">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-            <input
-              type="text"
-              placeholder="Search telecallers by name, email, contact, address, role, branch..."
-              value={searchTerm}
-              onChange={(e) => handleSearch(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
+    <div>
+      <DashboardHeader />
+      <div className="min-h-screen bg-gray-50 p-4 md:p-8">
+        <div className="max-w-7xl mx-auto">
+          {/* Breadcrumb */}
+          <div className="text-xs text-gray-400 mb-1">
+            Telecallers Management {">"} All Telecallers
           </div>
-          {isSearching && (
-            <p className="text-sm text-gray-500 mt-2">
-              Showing {telecallers.length} results for "{searchTerm}"
-            </p>
-          )}
-        </div>
 
-        {/* Table */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-          <DynamicTable
-            data={telecallers}
-            columns={columns}
-            rowIdKey="id"
-            actions={[
-              {
-                label: "Edit",
-                icon: <Pencil className="mr-2 h-4 w-4 text-gray-500" />,
-                onClick: handleEdit,
-                variant: "outline",
-              },
-              {
-                label: "Delete",
-                icon: <Trash2 className="mr-2 h-4 w-4 text-red-500" />,
-                onClick: handleDelete,
-                variant: "destructive",
-              },
-            ]}
-          />
+          {/* Header */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4 sm:mb-0">
+              Telecallers Management
+            </h1>
+            <Button
+              onClick={openAddModal}
+              className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto"
+              disabled={loading}
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Add New Telecaller
+            </Button>
+          </div>
 
-          {/* Pagination Info */}
-          {!isSearching && (
-            <div className="px-6 py-3 border-t border-gray-200 text-sm text-gray-500">
-              Showing {telecallers.length} of {pagination.total} telecallers
-              (Page {pagination.page} of {pagination.totalPages})
+          {/* Search Bar */}
+          <div className="mb-6">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <input
+                type="text"
+                placeholder="Search telecallers by name, email, contact, address, role, branch..."
+                value={searchTerm}
+                onChange={(e) => handleSearch(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
             </div>
-          )}
-        </div>
+            {isSearching && (
+              <p className="text-sm text-gray-500 mt-2">
+                Showing {telecallers.length} results for "{searchTerm}"
+              </p>
+            )}
+          </div>
 
-        {/* Add/Edit Modal */}
-        {isModalOpen && formSections.length > 0 && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto scrollbar-hide">
-              <div className="flex items-center justify-between p-6 border-b border-gray-200">
-                <h2 className="text-lg font-semibold text-gray-900">
-                  {editingTelecaller ? "Edit Telecaller" : "Add New Telecaller"}
-                </h2>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={closeModal}
-                  className="p-1"
-                >
-                  <X className="h-4 w-4" />
-                </Button>
+          {/* Table */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+            <DynamicTable
+              data={telecallers}
+              columns={columns}
+              rowIdKey="id"
+              actions={[
+                {
+                  label: "Edit",
+                  icon: <Pencil className="mr-2 h-4 w-4 text-gray-500" />,
+                  onClick: handleEdit,
+                  variant: "outline",
+                },
+                {
+                  label: "Delete",
+                  icon: <Trash2 className="mr-2 h-4 w-4 text-red-500" />,
+                  onClick: handleDelete,
+                  variant: "destructive",
+                },
+              ]}
+            />
+
+            {/* Pagination Info */}
+            {!isSearching && (
+              <div className="px-6 py-3 border-t border-gray-200 text-sm text-gray-500">
+                Showing {telecallers.length} of {pagination.total} telecallers
+                (Page {pagination.page} of {pagination.totalPages})
               </div>
+            )}
+          </div>
 
-              <div className="p-6">
-                <DynamicForm
-                  key={editingTelecaller?.id || "new"}
-                  sections={formSections as ImportedFormSection[]}
-                  onSubmit={handleFormSubmit}
-                  submitLabel={
-                    editingTelecaller ? "Update Telecaller" : "Add Telecaller"
-                  }
-                  showCancel={true}
-                  onCancel={closeModal}
-                  defaultValues={
-                    editingTelecaller
-                      ? {
+          {/* Add/Edit Modal */}
+          {isModalOpen && formSections.length > 0 && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+              <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto scrollbar-hide">
+                <div className="flex items-center justify-between p-6 border-b border-gray-200">
+                  <h2 className="text-lg font-semibold text-gray-900">
+                    {editingTelecaller ? "Edit Telecaller" : "Add New Telecaller"}
+                  </h2>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={closeModal}
+                    className="p-1"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+
+                <div className="p-6">
+                  <DynamicForm
+                    key={editingTelecaller?.id || "new"}
+                    sections={formSections as ImportedFormSection[]}
+                    onSubmit={handleFormSubmit}
+                    submitLabel={
+                      editingTelecaller ? "Update Telecaller" : "Add Telecaller"
+                    }
+                    showCancel={true}
+                    onCancel={closeModal}
+                    defaultValues={
+                      editingTelecaller
+                        ? {
                           name: editingTelecaller.name || "",
                           email: editingTelecaller.email || "",
                           contact: editingTelecaller.contact || "",
@@ -1234,7 +1237,7 @@ export default function TelecallersManagementPage() {
                           password:
                             editingTelecaller.password_display || "••••••", // Use password_display
                         }
-                      : {
+                        : {
                           name: "",
                           email: "",
                           contact: "",
@@ -1243,26 +1246,27 @@ export default function TelecallersManagementPage() {
                           branch: "",
                           password: "",
                         }
-                  }
-                  errors={formErrors}
-                  validationSchema={
-                    editingTelecaller
-                      ? telecallerEditSchema
-                      : telecallerCreateSchema
-                  }
-                  submitButtonProps={{ disabled: isSubmitting }}
-                />
+                    }
+                    errors={formErrors}
+                    validationSchema={
+                      editingTelecaller
+                        ? telecallerEditSchema
+                        : telecallerCreateSchema
+                    }
+                    submitButtonProps={{ disabled: isSubmitting }}
+                  />
 
-                {/* Show general error message if exists */}
-                {formErrors.general && (
-                  <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md">
-                    <p className="text-sm text-red-600">{formErrors.general}</p>
-                  </div>
-                )}
+                  {/* Show general error message if exists */}
+                  {formErrors.general && (
+                    <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md">
+                      <p className="text-sm text-red-600">{formErrors.general}</p>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );

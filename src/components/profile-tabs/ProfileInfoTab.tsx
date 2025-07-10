@@ -33,6 +33,9 @@ interface Profile {
 export function ProfileInfoTab(id:id) {
   const [profile, setProfile] = useState<Profile>()
   const [formData, setFormData] = useState<Partial<Profile>>({})
+  const [source, setSource] = useState<{ value: string, label: string }[]>([])
+  const [service, setService] = useState<{ value: string, label: string }[]>([])
+  const [course, setCourse] = useState<{ value: string, label: string }[]>([])
 
   const fetchEnquiry = async () => {
     try {
@@ -44,8 +47,71 @@ export function ProfileInfoTab(id:id) {
     }
   }
 
+  const fetchSource = async () => {
+    try {
+      const response = await axiosInstance.get(API_URLS.ADS.GET_ADS);
+      console.log(response);
+      // setSource(response.data.data)
+      // Map response to options for select
+      if (Array.isArray(response.data.data)) {
+        setSource(
+          response.data.data.map((item: any) => ({
+            value: String(item.id),
+            label: item.name || item.username || item.email || `Counselor ${item.id}`
+          }))
+        );
+      }
+    } catch (err) {
+      console.log(err);
+    }
+
+  };
+
+  const fetchCourses = async () => {
+    try {
+      const response = await axiosInstance.get(API_URLS.COURSES.GET_COURSES);
+      console.log(response);
+      // setSource(response.data.data)
+      // Map response to options for select
+      if (Array.isArray(response.data.data)) {
+        setCourse(
+          response.data.data.map((item: any) => ({
+            value: String(item.id),
+            label: item.name || item.username || item.email || `Counselor ${item.id}`
+          }))
+        );
+      }
+    } catch (err) {
+      console.log(err);
+    }
+
+  };
+
+  const fetchServices = async () => {
+    try {
+      const response = await axiosInstance.get(API_URLS.SERVICES.GET_SERVICES);
+      console.log(response);
+      // setSource(response.data.data)
+      // Map response to options for select
+      if (Array.isArray(response.data.data)) {
+        setService(
+          response.data.data.map((item: any) => ({
+            value: String(item.id),
+            label: item.name || item.username || item.email || `Counselor ${item.id}`
+          }))
+        );
+      }
+    } catch (err) {
+      console.log(err);
+    }
+
+  };
+
   useEffect(() => {
     fetchEnquiry();
+    fetchCourses();
+    fetchServices();
+    fetchSource();
   }, [])
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
@@ -95,7 +161,7 @@ export function ProfileInfoTab(id:id) {
               <Label htmlFor="email">Email</Label>
               <Input id="email" name="email" value={formData.email || ''} onChange={handleInputChange} />
             </div>
-            <div className="space-y-2">
+            {/* <div className="space-y-2">
               <Label htmlFor="mettad_name">Enquiry Source</Label>
               <Select value={formData.mettad_name || ''} onValueChange={val => handleSelectChange('mettad_name', val)}>
                 <SelectTrigger>
@@ -146,7 +212,7 @@ export function ProfileInfoTab(id:id) {
                   <SelectItem value="service3">Service 3</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
+            </div> */}
           </div>
           <div className="flex justify-end mt-6">
             <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md">Save Changes</button>

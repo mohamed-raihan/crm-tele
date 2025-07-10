@@ -1,107 +1,74 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Filter, Search, X } from "lucide-react";
+import { toast } from '@/hooks/use-toast';
+import axiosInstance from '../apiconfig/axios';
+import { API_URLS } from '../apiconfig/api_urls';
 
 // Mock data for contact history
-const contactHistory = [
-  {
-    counselor: "Bindhya",
-    status: "Positive",
-    date: "12/12/23",
-    time: "02:30 PM",
-    contactStatus: "Incoming",
-    response: "Will call tomorrow at 4pm"
-  },
-  {
-    counselor: "Bindhya",
-    status: "Positive",
-    date: "12/12/23",
-    time: "02:30 PM",
-    contactStatus: "Outgoing",
-    response: "Good to hear about topic"
-  },
-  {
-    counselor: "Bindhya",
-    status: "Positive",
-    date: "12/12/23",
-    time: "02:30 PM",
-    contactStatus: "Outgoing",
-    response: "I'll call later"
-  },
-  {
-    counselor: "Bindhya",
-    status: "Positive",
-    date: "12/12/23",
-    time: "02:30 PM",
-    contactStatus: "Outgoing",
-    response: "busy right now"
+interface history {
+    telecaller: string;
+    call_status: string;
+    call_type: string;
+    call_outcome: string;
+    call_start_time: string;
+    call_duration: string;
+    feedback: string;
   }
-];
 
-export function ContactHistoryTab() {
+interface id {
+  id: string;
+}
+
+export function ContactHistoryTab(id:id) {
+
+  const [history,setHistory] = useState<history[]>([])
+
+  const fetchHistory = async()=>{
+    try{
+      const response = await axiosInstance.get(API_URLS.HISTORY.GET_HISTORY(id.id))
+      console.log(response);
+      setHistory(response.data.call_history)
+    }catch(err){
+      console.log(err);
+      
+    }
+  }
+
+  useEffect(()=>{
+    fetchHistory();
+  },[])
+
   return (
     <Card>
       <CardContent className="p-6">
-        {/* Filters */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-2">
-            <Badge variant="secondary" className="bg-blue-100 text-blue-800">
-              All time
-              <X className="h-3 w-3 ml-1 cursor-pointer" />
-            </Badge>
-            <Badge variant="secondary" className="bg-blue-100 text-blue-800">
-              Recent
-              <X className="h-3 w-3 ml-1 cursor-pointer" />
-            </Badge>
-            <Button variant="outline" size="sm">
-              <Filter className="h-4 w-4 mr-2" />
-              More filters
-            </Button>
-          </div>
-          
-          <div className="relative">
-            <Search className="h-4 w-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-            <Input
-              placeholder="Search"
-              className="pl-10 w-64"
-            />
-          </div>
-        </div>
-
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Counselor</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Date</TableHead>
-              <TableHead>Time</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Response</TableHead>
+              <TableHead>Telecaller</TableHead>
+              <TableHead>Call Status</TableHead>
+              <TableHead>Call Type</TableHead>
+              <TableHead>Call Outcome</TableHead>
+              {/* <TableHead>Call Start Time</TableHead>
+              <TableHead>Call Duration</TableHead> */}
+              <TableHead>Feedback</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {contactHistory.map((contact, index) => (
+            {history?.map((contact, index) => (
               <TableRow key={index}>
-                <TableCell className="font-medium">{contact.counselor}</TableCell>
-                <TableCell>
-                  <Badge className="bg-green-100 text-green-800 hover:bg-green-100">
-                    {contact.status}
-                  </Badge>
-                </TableCell>
-                <TableCell>{contact.date}</TableCell>
-                <TableCell className="text-green-600">{contact.time}</TableCell>
-                <TableCell>
-                  <Badge variant={contact.contactStatus === 'Incoming' ? 'default' : 'secondary'} 
-                         className={contact.contactStatus === 'Incoming' ? 'bg-blue-100 text-blue-800' : 'bg-red-100 text-red-800'}>
-                    {contact.contactStatus}
-                  </Badge>
-                </TableCell>
-                <TableCell>{contact.response}</TableCell>
+                <TableCell className="font-medium">{contact.telecaller}</TableCell>
+                <TableCell>{contact.call_status}</TableCell>
+                <TableCell>{contact.call_type}</TableCell>
+                <TableCell>{contact.call_outcome}</TableCell>
+                {/* <TableCell>{contact.call_start_time ? contact.call_start_time : '-'}</TableCell>
+                <TableCell>{contact.call_duration ? contact.call_duration : '-'}</TableCell> */}
+                <TableCell>{contact.feedback}</TableCell>
               </TableRow>
             ))}
           </TableBody>

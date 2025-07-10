@@ -8,6 +8,7 @@ import { API_URLS } from "@/components/apiconfig/api_urls";
 import axiosInstance from "@/components/apiconfig/axios";
 import { RefreshCw } from "lucide-react";
 import ProgressBar from "@/components/ui/progressBar";
+import { DashboardHeader } from "@/components/DashboardHeader";
 
 interface JobData {
   telecaller_id: number;
@@ -45,7 +46,7 @@ const AdminJobPage = () => {
         limit: pagination.limit.toString(),
         status,
       });
-      if (name) params.append("name", name);
+      if (name) params.append("search", name);
 
       console.log(name);
       
@@ -92,14 +93,16 @@ const AdminJobPage = () => {
   };
 
   return (
-    <div className="flex-1 flex flex-col min-h-0 p-4 md:p-8 bg-gray-50">
-      <div className="max-w-7xl mx-auto w-full">
+    <div>
+      <DashboardHeader/>
+      <div className="flex-1 flex flex-col min-h-0 p-4 md:p-8 bg-gray-50">
+      <div className=" mx-auto w-full">
         <Card className="mb-6">
           <CardHeader>
             <CardTitle className="text-2xl font-bold">My Job - {job === "completed" ? "Completed" : "Remaining"}</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex flex-row items-center gap-2 mb-4">
+            {/* <div className="flex flex-row items-center gap-2 mb-4">
               <Input
                 type="text"
                 placeholder="Search by name..."
@@ -111,7 +114,7 @@ const AdminJobPage = () => {
               <Button onClick={handleSearch} variant="outline" className="w-auto">
                 Search
               </Button>
-            </div>
+            </div> */}
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
@@ -199,6 +202,7 @@ const AdminJobPage = () => {
           </CardContent>
         </Card>
       </div>
+    </div>
     </div>
   );
 };

@@ -3,10 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { DynamicTable, TableColumn, TableAction, TableFilter } from "@/components/ui/dynamic-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Edit, RotateCcw, Eye } from "lucide-react";
+import { Edit, RotateCcw, Eye, Trash } from "lucide-react";
 import axiosInstance from './apiconfig/axios';
 import { API_URLS } from './apiconfig/api_urls';
 import { error } from 'console';
+import { toast } from '@/hooks/use-toast';
 import {
   Pagination,
   PaginationContent,
@@ -16,70 +17,6 @@ import {
   PaginationNext,
 } from "@/components/ui/pagination";
 import * as XLSX from 'xlsx';
-
-// Mock data for active enquiries
-const activeEnquiries = [
-  {
-    id: "12122",
-    name: "Rishita Raj",
-    phone: "9997776543",
-    service: "Adm A",
-    serviceColor: "bg-green-100 text-green-800",
-    exams: "Customer",
-    examsColor: "bg-green-100 text-green-800",
-    source: "Direct",
-    branch: "Kozhikode",
-    job: "+ Create Job"
-  },
-  {
-    id: "12123",
-    name: "Rishita Raj",
-    phone: "9997776543",
-    service: "Customer",
-    serviceColor: "bg-blue-100 text-blue-800",
-    exams: "Customer",
-    examsColor: "bg-green-100 text-green-800",
-    source: "Mathrboomi Online",
-    branch: "Kozhikode",
-    job: "+ Create Job"
-  },
-  {
-    id: "12124",
-    name: "Rishita Raj",
-    phone: "9997776543",
-    service: "Customer",
-    serviceColor: "bg-blue-100 text-blue-800",
-    exams: "Customer",
-    examsColor: "bg-green-100 text-green-800",
-    source: "Direct",
-    branch: "Kozhikode",
-    job: "+ Create Job"
-  },
-  {
-    id: "12125",
-    name: "Rishita Raj",
-    phone: "9997776543",
-    service: "Customer",
-    serviceColor: "bg-blue-100 text-blue-800",
-    exams: "Customer",
-    examsColor: "bg-green-100 text-green-800",
-    source: "Direct",
-    branch: "Kozhikode",
-    job: "+ Create Job"
-  },
-  {
-    id: "12126",
-    name: "Rishita Raj",
-    phone: "9997776543",
-    service: "Customer",
-    serviceColor: "bg-blue-100 text-blue-800",
-    exams: "Customer",
-    examsColor: "bg-green-100 text-green-800",
-    source: "Direct",
-    branch: "Kozhikode",
-    job: "+ Create Job"
-  }
-];
 
 export function ActiveEnquiryTable() {
   const navigate = useNavigate();
@@ -108,10 +45,14 @@ export function ActiveEnquiryTable() {
     setFilters(filters.filter(f => f.key !== key));
   };
 
-  const fetchEnquiry = async (pageNum = 1) => {
+  const fetchEnquiry = async (pageNum = 1, searchTerm = "") => {
     setLoading(true);
     try {
-      const response = await axiosInstance.get(`${API_URLS.ENQUIRY.GET_ACTIVE_ENQUIRY}?page=${pageNum}`);
+      let url = `${API_URLS.ENQUIRY.GET_ACTIVE_ENQUIRY}?page=${pageNum}`;
+      if (searchTerm) {
+        url += `&candidate_name=${encodeURIComponent(searchTerm)}`;
+      }
+      const response = await axiosInstance.get(url);
       console.log(response);
       const filtered = response.data.data 
       setEnquiry(response.data.data);
@@ -132,6 +73,19 @@ export function ActiveEnquiryTable() {
     fetchEnquiry(page);
   }, [page]);
 
+  // Delete handler
+  const handleDelete = async (row: any) => {
+    if (!window.confirm('Are you sure you want to delete this enquiry?')) return;
+    try {
+      await axiosInstance.delete(`${API_URLS.ENQUIRY.DELETE_ENQUIRY(row.id)}`);
+      toast({ title: 'Enquiry deleted successfully', variant: 'success' });
+      fetchEnquiry(page);
+    } catch (err) {
+      toast({ title: 'Failed to delete enquiry', variant: 'destructive' });
+      console.error(err);
+    }
+  };
+
   const columns: TableColumn[] = [
     { 
       key: 'id',
@@ -144,14 +98,14 @@ export function ActiveEnquiryTable() {
     { key: 'candidate_name', label: 'Name' },
     { key: 'phone', label: 'Phone' },
     { 
-      key: 'required_service', 
+      key: 'required_service_name', 
       label: 'Service',
       // render: (value, row) => (
       //   <Badge className={row.serviceColor}>{value}</Badge>
       // )
     },
     { 
-      key: 'preferred_course', 
+      key: 'preferred_course_name', 
       label: 'Preferred Course',
       // render: (value, row) => (
       //   <Badge className={row.examsColor}>{value}</Badge>
@@ -178,11 +132,11 @@ export function ActiveEnquiryTable() {
         }
       }
     },
-    // {
-    //   label: 'Edit',
-    //   icon: <Edit className="h-4 w-4 mr-2" />,
-    //   onClick: (row) => console.log('Edit:', row)
-    // },
+    {
+      label: 'Delete',
+      icon: <Trash className="h-4 w-4 mr-2" />,
+      onClick: handleDelete
+    },
     // {
     //   label: 'Refresh',
     //   icon: <RotateCcw className="h-4 w-4 mr-2" />,
@@ -233,7 +187,7 @@ export function ActiveEnquiryTable() {
 
   const handleSelectAll = (selected: boolean) => {
     if (selected) {
-      setSelectedRows(activeEnquiries.map(item => item.id));
+      setSelectedRows(Enquiries.map(item => item.id));
     } else {
       setSelectedRows([]);
     }
@@ -249,8 +203,8 @@ export function ActiveEnquiryTable() {
 
 
   const handleSearch = (term: string) => {
-    console.log('Search:', term);
-    // Implement search functionality
+    fetchEnquiry(1, term);
+    setPage(1);
   };
 
   return (

@@ -67,6 +67,10 @@ export const API_URLS = {
     DELETE_ENQUIRY: (id) => `/api/enquiries/${id}/`,
   },
 
+  HISTORY:{
+    GET_HISTORY: (id) =>`/api/enquiry/${id}/call-history/`
+  },
+
   BULK_UPLOAD: {
     POST_CSV: "/api/enquiries/import/"
   },

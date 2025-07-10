@@ -3,6 +3,7 @@ import axiosInstance from "@/components/apiconfig/axios";
 import React, { useEffect, useState, useRef, useCallback } from "react";
 import * as XLSX from "xlsx";
 import { RefreshCw, Search, ChevronDown, X, Loader2 } from "lucide-react";
+import { DashboardHeader } from "@/components/DashboardHeader";
 
 const columns = [
   "Counselor",
@@ -580,7 +581,9 @@ const [loaderTimer, setLoaderTimer] = useState(null);
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div>
+      <DashboardHeader/>
+      <div className="min-h-screen bg-gray-50 p-6">
       {/* Export Loading Overlay */}
       {exportLoading && <FullScreenLoader message="Exporting to Excel..." />}
 
@@ -810,6 +813,7 @@ const [loaderTimer, setLoaderTimer] = useState(null);
           )}
         </div>
       </div>
+    </div>
     </div>
   );
 }

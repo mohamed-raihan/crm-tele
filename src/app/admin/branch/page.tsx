@@ -12,6 +12,7 @@ import { z } from "zod";
 import { useToast } from "@/components/ui/use-toast";
 import axiosInstance from "@/components/apiconfig/axios.js";
 import { API_URLS } from "@/components/apiconfig/api_urls";
+import { DashboardHeader } from "@/components/DashboardHeader";
 
 // Define Branch interface
 interface Branch {
@@ -631,7 +632,9 @@ export default function BranchManagementPage() {
   console.log(editingBranch);
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-8">
+    <div>
+      <DashboardHeader/>
+      <div className="min-h-screen bg-gray-50 p-4 md:p-8">
       <div className="max-w-7xl mx-auto">
         {/* Breadcrumb */}
         <div className="text-xs text-gray-400 mb-1">
@@ -749,6 +752,7 @@ export default function BranchManagementPage() {
           </div>
         )}
       </div>
+    </div>
     </div>
   );
 }
