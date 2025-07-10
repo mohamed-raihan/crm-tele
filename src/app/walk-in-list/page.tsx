@@ -207,7 +207,6 @@ const WalkInListPage = () => {
         "Call Type",
         "Call Status",
         "Call Outcome",
-        "Start Time",
         "Created At",
       ];
       const csvContent = [
@@ -222,7 +221,6 @@ const WalkInListPage = () => {
           item.call_type,
           item.call_status,
           item.call_outcome,
-          item.call_start_time,
           item.created_at,
         ].join(",")),
       ].join("\n");
@@ -367,14 +365,13 @@ const WalkInListPage = () => {
                       <TableHead>Call Type</TableHead>
                       <TableHead>Call Status</TableHead>
                       <TableHead>Call Outcome</TableHead>
-                      <TableHead>Start Time</TableHead>
                       <TableHead>Created At</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {walkIns.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={11} className="text-center py-8 text-gray-500">
+                        <TableCell colSpan={10} className="text-center py-8 text-gray-500">
                           {showNoDataMsg ? "No walk-in data found matching your criteria" : null}
                         </TableCell>
                       </TableRow>
@@ -399,7 +396,6 @@ const WalkInListPage = () => {
                             </span>
                           </TableCell>
                           <TableCell>{item.call_outcome}</TableCell>
-                          <TableCell>{formatDate(item.call_start_time)}</TableCell>
                           <TableCell>{formatDate(item.created_at)}</TableCell>
                         </TableRow>
                       ))

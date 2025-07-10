@@ -76,17 +76,20 @@ export function DynamicForm({
           let fieldSchema: z.ZodTypeAny = z.string();
           
           if (field.type === 'email') {
-            fieldSchema = z.string().email('Invalid email address');
+            if (field.required) {
+              fieldSchema = z.string().min(1, `${field.label} is required`).email('Invalid email address');
+            } else {
+              fieldSchema = z.string().email('Invalid email address').optional();
+            }
           } else if (field.type === 'date') {
             fieldSchema = z.date().optional();
           } else {
             fieldSchema = z.string();
-          }
-          
-          if (field.required && field.type !== 'date') {
-            fieldSchema = (fieldSchema as z.ZodString).min(1, `${field.label} is required`);
-          } else if (!field.required) {
-            fieldSchema = fieldSchema.optional();
+            if (field.required) {
+              fieldSchema = (fieldSchema as z.ZodString).min(1, `${field.label} is required`);
+            } else {
+              fieldSchema = fieldSchema.optional();
+            }
           }
           
           schemaFields[field.name] = fieldSchema;
@@ -202,7 +205,16 @@ export function DynamicForm({
                   <Input 
                     placeholder={field.placeholder}
                     type={field.type === 'email' ? 'email' : field.type === 'phone' ? 'tel' : 'text'}
-                    {...formField} 
+                    {...formField}
+                    onInput={
+                      field.name === "contact"
+                        ? (e) => {
+                            const input = e.target as HTMLInputElement;
+                            input.value = input.value.replace(/[^0-9]/g, "");
+                            formField.onChange(input.value);
+                          }
+                        : undefined
+                    }
                   />
                 )}
               </FormControl>

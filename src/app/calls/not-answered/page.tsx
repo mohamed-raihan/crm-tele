@@ -231,6 +231,9 @@ const NotAnsweredPage = () => {
     }
   };
 
+  // Sort notAnswered by created_at ascending (oldest first, latest last)
+  const sortedNotAnswered = [...notAnswered].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+
   return (
     <div className="flex-1 flex flex-col">
       <DashboardHeader />
@@ -370,16 +373,16 @@ const NotAnsweredPage = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {notAnswered.length === 0 ? (
+                    {sortedNotAnswered.length === 0 ? (
                       <TableRow>
                         <TableCell colSpan={10} className="text-center py-8 text-gray-500">
                           {showNoDataMsg ? "No not answered calls found matching your criteria" : null}
                         </TableCell>
                       </TableRow>
                     ) : (
-                      notAnswered.map((item, idx) => (
+                      sortedNotAnswered.map((item, idx) => (
                         <TableRow key={item.id}>
-                          <TableCell>{(pagination.currentPage - 1) * pagination.limit + idx + 1}</TableCell>
+                          <TableCell>{idx + 1}</TableCell>
                           <TableCell>{item.enquiry_details?.candidate_name}</TableCell>
                           <TableCell>{item.enquiry_details?.phone}</TableCell>
                           <TableCell>{item.enquiry_details?.email}</TableCell>
