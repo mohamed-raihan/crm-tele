@@ -1167,24 +1167,6 @@ export default function TelecallersManagementPage() {
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
               <input
                 type="text"
-                placeholder="Search telecallers by name, email, contact, address, role, branch..."
-                value={searchTerm}
-                onChange={(e) => handleSearch(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
-            {isSearching && (
-              <p className="text-sm text-gray-500 mt-2">
-                Showing {telecallers.length} results for "{searchTerm}"
-              </p>
-            )}
-          </div>
-          {/* Search Bar */}
-          <div className="mb-6">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-              <input
-                type="text"
                 placeholder="Search telecallers by name, email, contact, address, branch..."
                 value={searchTerm}
                 onChange={(e) => handleSearch(e.target.value)}
@@ -1201,7 +1183,10 @@ export default function TelecallersManagementPage() {
           {/* Table */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
             <DynamicTable
-              data={telecallers}
+              data={sortedTelecallers.map((row, idx) => ({
+                ...row,
+                serial: idx + 1,
+              }))}
               columns={columns}
               rowIdKey="id"
               actions={[
@@ -1219,39 +1204,15 @@ export default function TelecallersManagementPage() {
                 },
               ]}
             />
-            {/* Table */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-              <DynamicTable
-                data={sortedTelecallers.map((row, idx) => ({
-                  ...row,
-                  serial: idx + 1,
-                }))}
-                columns={columns}
-                rowIdKey="id"
-                actions={[
-                  {
-                    label: "Edit",
-                    icon: <Pencil className="mr-2 h-4 w-4 text-gray-500" />,
-                    onClick: handleEdit,
-                    variant: "outline",
-                  },
-                  {
-                    label: "Delete",
-                    icon: <Trash2 className="mr-2 h-4 w-4 text-red-500" />,
-                    onClick: handleDelete,
-                    variant: "destructive",
-                  },
-                ]}
-              />
 
-              {/* Pagination Info */}
-              {!isSearching && (
-                <div className="px-6 py-3 border-t border-gray-200 text-sm text-gray-500">
-                  Showing {telecallers.length} of {pagination.total} telecallers
-                  (Page {pagination.page} of {pagination.totalPages})
-                </div>
-              )}
-            </div>
+            {/* Pagination Info */}
+            {!isSearching && (
+              <div className="px-6 py-3 border-t border-gray-200 text-sm text-gray-500">
+                Showing {telecallers.length} of {pagination.total} telecallers
+                (Page {pagination.page} of {pagination.totalPages})
+              </div>
+            )}
+          </div>
 
             {/* Add/Edit Modal */}
             {isModalOpen && formSections.length > 0 && (
@@ -1331,6 +1292,6 @@ export default function TelecallersManagementPage() {
           </div>
         </div>
       </div>
-    </div>
+    // </div>
   );
 }
