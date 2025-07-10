@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { DynamicTable, TableColumn, TableAction, TableFilter } from "@/components/ui/dynamic-table";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Edit, RotateCcw, Eye } from "lucide-react";
+import { Edit, RotateCcw, Eye, Trash } from "lucide-react";
 import axiosInstance from './apiconfig/axios';
 import { API_URLS } from './apiconfig/api_urls';
 import { error } from 'console';
@@ -14,8 +14,10 @@ import {
   PaginationLink,
   PaginationPrevious,
   PaginationNext,
+  PaginationEllipsis,
 } from "@/components/ui/pagination";
 import * as XLSX from 'xlsx';
+import { toast } from '@/hooks/use-toast';
 
 export function ClosedEnquiryTable() {
   const navigate = useNavigate();
@@ -65,6 +67,19 @@ export function ClosedEnquiryTable() {
       console.log(err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Delete handler
+  const handleDelete = async (row: any) => {
+    if (!window.confirm('Are you sure you want to delete this enquiry?')) return;
+    try {
+      await axiosInstance.delete(`${API_URLS.ENQUIRY.DELETE_ENQUIRY(row.id)}`);
+      toast({ title: 'Enquiry deleted successfully', variant: 'success' });
+      fetchEnquiry(page);
+    } catch (err) {
+      toast({ title: 'Failed to delete enquiry', variant: 'destructive' });
+      console.error(err);
     }
   };
 
@@ -119,15 +134,10 @@ export function ClosedEnquiryTable() {
       }
     },
     {
-      label: 'Edit',
-      icon: <Edit className="h-4 w-4 mr-2" />,
-      onClick: (row) => console.log('Edit:', row)
+      label: 'Delete',
+      icon: <Trash className="h-4 w-4 mr-2" />,
+      onClick: handleDelete
     },
-    {
-      label: 'Refresh',
-      icon: <RotateCcw className="h-4 w-4 mr-2" />,
-      onClick: (row) => console.log('Refresh:', row)
-    }
   ];
 
   const handleExportExcel = () => {
@@ -193,6 +203,23 @@ export function ClosedEnquiryTable() {
     setPage(1);
   };
 
+  // Helper to generate page numbers with ellipsis
+  function getPageNumbers(current: number, total: number) {
+    const pages = [];
+    if (total <= 7) {
+      for (let i = 1; i <= total; i++) pages.push(i);
+    } else {
+      if (current <= 3) {
+        pages.push(1, 2, 3, 4, '...', total);
+      } else if (current >= total - 2) {
+        pages.push(1, '...', total - 3, total - 2, total - 1, total);
+      } else {
+        pages.push(1, '...', current - 1, current, current + 1, '...', total);
+      }
+    }
+    return pages;
+  }
+
   return (
     <>
       <div className="px-2 md:px-6 w-full">
@@ -234,20 +261,22 @@ export function ClosedEnquiryTable() {
                   className={page === 1 ? 'pointer-events-none opacity-50' : ''}
                 />
               </PaginationItem>
-              {Array.from({ length: totalPages }, (_, i) => (
-                <PaginationItem key={i + 1}>
-                  <PaginationLink
-                    href="#"
-                    isActive={page === i + 1}
-                    onClick={e => {
-                      e.preventDefault();
-                      setPage(i + 1);
-                    }}
-                  >
-                    {i + 1}
-                  </PaginationLink>
-                </PaginationItem>
-              ))}
+              {getPageNumbers(page, totalPages).map((p, idx) =>
+                p === '...'
+                  ? <PaginationEllipsis key={"ellipsis-" + idx} />
+                  : <PaginationItem key={p}>
+                      <PaginationLink
+                        href="#"
+                        isActive={page === p}
+                        onClick={e => {
+                          e.preventDefault();
+                          setPage(Number(p));
+                        }}
+                      >
+                        {p}
+                      </PaginationLink>
+                    </PaginationItem>
+              )}
               <PaginationItem>
                 <PaginationNext
                   href="#"

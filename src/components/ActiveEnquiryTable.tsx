@@ -15,11 +15,14 @@ import {
   PaginationLink,
   PaginationPrevious,
   PaginationNext,
+  PaginationEllipsis,
 } from "@/components/ui/pagination";
 import * as XLSX from 'xlsx';
 
 export function ActiveEnquiryTable() {
   const navigate = useNavigate();
+  const token = localStorage.getItem("access_token")
+  
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
   const [Enquiries, setEnquiry] = useState([]);
   const [filters, setFilters] = useState<TableFilter[]>([
@@ -37,7 +40,7 @@ export function ActiveEnquiryTable() {
     }
   ]);
   const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(5); // Default to 5, update if API returns total
+  const [totalPages, setTotalPages] = useState(1); // Will be set from API response
   const pageSize = 10;
   const [loading, setLoading] = useState(false);
 
@@ -52,12 +55,20 @@ export function ActiveEnquiryTable() {
       if (searchTerm) {
         url += `&candidate_name=${encodeURIComponent(searchTerm)}`;
       }
-      const response = await axiosInstance.get(url);
+      console.log(url);
+      
+      const response = await axiosInstance.get(url,{
+        headers:{
+          "Authorization":`Bearer ${token}`
+        }
+      });
       console.log(response);
       const filtered = response.data.data 
       setEnquiry(response.data.data);
-      // If API returns total count or total pages, update totalPages here
-      if (response.data.total_pages) {
+      // Set totalPages from API pagination response
+      if (response.data.pagination && response.data.pagination.totalPages) {
+        setTotalPages(response.data.pagination.totalPages);
+      } else if (response.data.total_pages) {
         setTotalPages(response.data.total_pages);
       } else if (response.data.total) {
         setTotalPages(Math.ceil(response.data.total / pageSize));
@@ -207,6 +218,23 @@ export function ActiveEnquiryTable() {
     setPage(1);
   };
 
+  // Helper to generate page numbers with ellipsis
+  function getPageNumbers(current: number, total: number) {
+    const pages = [];
+    if (total <= 7) {
+      for (let i = 1; i <= total; i++) pages.push(i);
+    } else {
+      if (current <= 3) {
+        pages.push(1, 2, 3, 4, '...', total);
+      } else if (current >= total - 2) {
+        pages.push(1, '...', total - 3, total - 2, total - 1, total);
+      } else {
+        pages.push(1, '...', current - 1, current, current + 1, '...', total);
+      }
+    }
+    return pages;
+  }
+
   return (
     <>
       <div className="px-2 md:px-6 w-full">
@@ -248,20 +276,22 @@ export function ActiveEnquiryTable() {
                   className={page === 1 ? 'pointer-events-none opacity-50' : ''}
                 />
               </PaginationItem>
-              {Array.from({ length: totalPages }, (_, i) => (
-                <PaginationItem key={i + 1}>
-                  <PaginationLink
-                    href="#"
-                    isActive={page === i + 1}
-                    onClick={e => {
-                      e.preventDefault();
-                      setPage(i + 1);
-                    }}
-                  >
-                    {i + 1}
-                  </PaginationLink>
-                </PaginationItem>
-              ))}
+              {getPageNumbers(page, totalPages).map((p, idx) =>
+                p === '...'
+                  ? <PaginationEllipsis key={"ellipsis-" + idx} />
+                  : <PaginationItem key={p}>
+                      <PaginationLink
+                        href="#"
+                        isActive={page === p}
+                        onClick={e => {
+                          e.preventDefault();
+                          setPage(Number(p));
+                        }}
+                      >
+                        {p}
+                      </PaginationLink>
+                    </PaginationItem>
+              )}
               <PaginationItem>
                 <PaginationNext
                   href="#"
