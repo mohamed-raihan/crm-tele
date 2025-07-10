@@ -93,71 +93,64 @@ export function DynamicTable({
       <CardContent className="p-0">
         {/* Table Controls */}
         <div className="p-4 border-b">
-          {(showBulkActions || exportActions.length > 0) && (
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                {showBulkActions && bulkActions.map((action, index) => (
+          <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2 w-full justify-between">
+            {/* Left: Search and filters */}
+            <div className="flex items-center gap-2 min-w-0">
+              {onSearch && (
+                <div className="relative w-full sm:w-64 min-w-0 flex">
+                  <Search className="h-4 w-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                  <Input
+                    placeholder={searchPlaceholder}
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10 w-full"
+                    onKeyDown={(e) => { if (e.key === 'Enter') onSearch?.(searchTerm); }}
+                  />
                   <Button
-                    key={index}
-                    variant={action.variant || "outline"}
-                    size="sm"
-                    onClick={() => action.onClick(selectedRows)}
-                    disabled={selectedRows.length === 0}
+                    className="ml-2"
+                    variant="outline"
+                    onClick={() => onSearch?.(searchTerm)}
                   >
-                    {action.label}
+                    Search
                   </Button>
-                ))}
-                {exportActions.map((action, index) => (
-                  <Button
-                    key={index}
-                    variant={action.variant || "outline"}
-                    size="sm"
-                    onClick={action.onClick}
-                    className={
-                      action.label === 'EXCEL' || action.label === 'Export Excel' || action.label === 'Export to Excel'
-                        ? 'bg-green-600 hover:bg-green-700 text-white'
-                        : ''
-                    }
-                  >
-                    {action.label}
-                  </Button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2 w-full">
-            <div className="flex flex-wrap items-center gap-2 min-w-0">
+                </div>
+              )}
               {filters.map((filter, index) => (
                 <Badge key={index} variant="secondary" className="bg-blue-100 text-blue-800">
                   {filter.label}: {filter.value}
                   <X className="h-3 w-3 ml-1 cursor-pointer" onClick={filter.onRemove} />
                 </Badge>
               ))}
-              {/* <Button variant="outline" size="sm">
-                <Filter className="h-4 w-4 mr-2" />
-                More filters
-              </Button> */}
             </div>
-            {onSearch && (
-              <div className="relative w-full sm:w-64 min-w-0 flex">
-                <Search className="h-4 w-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                <Input
-                  placeholder={searchPlaceholder}
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 w-full"
-                  onKeyDown={(e) => { if (e.key === 'Enter') onSearch?.(searchTerm); }}
-                />
+            {/* Right: Export and bulk actions */}
+            <div className="flex items-center gap-2">
+              {showBulkActions && bulkActions.map((action, index) => (
                 <Button
-                  className="ml-2"
-                  variant="outline"
-                  onClick={() => onSearch?.(searchTerm)}
+                  key={index}
+                  variant={action.variant || "outline"}
+                  size="sm"
+                  onClick={() => action.onClick(selectedRows)}
+                  disabled={selectedRows.length === 0}
                 >
-                  Search
+                  {action.label}
                 </Button>
-              </div>
-            )}
+              ))}
+              {exportActions.map((action, index) => (
+                <Button
+                  key={index}
+                  variant={action.variant || "outline"}
+                  size="sm"
+                  onClick={action.onClick}
+                  className={
+                    action.label === 'EXCEL' || action.label === 'Export Excel' || action.label === 'Export to Excel'
+                      ? 'bg-green-600 hover:bg-green-700 text-white'
+                      : ''
+                  }
+                >
+                  {action.label}
+                </Button>
+              ))}
+            </div>
           </div>
         </div>
 

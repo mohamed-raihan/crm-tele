@@ -89,7 +89,9 @@ export default function CoursePage() {
       toast({ title: "Course deleted successfully", variant:"success" });
       fetchAds();
     } catch (err) {
-      toast({ title: "Failed to delete cource", description: "Please try again.", variant: "destructive" });
+      console.log(err);
+      
+      toast({ title: err.response.data.message, description: "Please try again.", variant: "destructive" });
     }
   };
 
