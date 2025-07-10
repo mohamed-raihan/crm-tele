@@ -12,12 +12,16 @@ import {
   DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu"
 import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu"
+import axiosInstance from "@/components/apiconfig/axios"
+import { API_URLS } from "@/components/apiconfig/api_urls"
 
 export function DashboardHeader() {
   const navigate = useNavigate();
   const [showConfirm, setShowConfirm] = useState(false);
   const [userName, setUserName] = useStateReact("");
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [notificationCount, setNotificationCount] = useState(0);
+  const [hasNewNotifications, setHasNewNotifications] = useState(false);
 
   useEffect(() => {
     let name = "User";
@@ -39,6 +43,50 @@ export function DashboardHeader() {
     setUserName(name);
   }, []);
 
+  // Fetch notification count
+  const fetchNotificationCount = async () => {
+    try {
+      const token = localStorage.getItem("access_token");
+      if (!token) return;
+      
+      const response = await axiosInstance.get(API_URLS.NOTIFICATIONS.GET_NOTIFICATIONS, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+      
+      if (response.data?.code === 200) {
+        const reminders = response.data.reminders || [];
+        const count = reminders.length;
+        setNotificationCount(count);
+        
+        // Check if there are new notifications since last visit
+        const lastVisited = localStorage.getItem("last_notification_visit");
+        const hasNew = lastVisited ? new Date(lastVisited) < new Date() : count > 0;
+        setHasNewNotifications(hasNew && count > 0);
+      }
+    } catch (error) {
+      console.error("Error fetching notifications:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchNotificationCount();
+    
+    // Set up polling for real-time updates
+    const interval = setInterval(fetchNotificationCount, 30000); // Check every 30 seconds
+    
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleNotificationClick = () => {
+    // Reset notification indicator
+    setHasNewNotifications(false);
+    localStorage.setItem("last_notification_visit", new Date().toISOString());
+    navigate('/notifications');
+  };
+
   const handleLogout = () => {
     setShowConfirm(true);
   };
@@ -51,6 +99,7 @@ export function DashboardHeader() {
     localStorage.setItem("isAuthenticated", "false");
     localStorage.setItem("isLoggedIn", "false");
     localStorage.removeItem("user_data");
+    localStorage.removeItem("last_notification_visit");
     navigate("/login");
   };
 
@@ -66,14 +115,31 @@ export function DashboardHeader() {
         </div>
 
         <div className="flex flex-row items-center justify-end gap-4 w-full">
-          {/* Notification Icon */}
+          {/* Enhanced Notification Icon */}
           <button
-            onClick={() => navigate('/notifications')}
-            className="relative flex items-center justify-center h-10 w-10 rounded-full hover:bg-gray-100 transition-colors focus:outline-none"
+            onClick={handleNotificationClick}
+            className="relative flex items-center justify-center h-10 w-10 rounded-full hover:bg-gray-100 transition-all duration-300 focus:outline-none group"
             aria-label="Notifications"
           >
-            <Bell className="h-6 w-6 text-gray-700" />
+            <Bell className={`h-6 w-6 transition-all duration-300 ${
+              hasNewNotifications ? 'text-red-500 animate-pulse' : 'text-gray-700'
+            } group-hover:scale-110`} />
+            
+            {/* Notification Count Badge */}
+            {notificationCount > 0 && (
+              <span className={`absolute -top-1 -right-1 h-5 w-5 rounded-full text-xs font-bold text-white flex items-center justify-center transition-all duration-300 ${
+                hasNewNotifications ? 'bg-red-500 animate-bounce' : 'bg-gray-500'
+              }`}>
+                {notificationCount > 99 ? '99+' : notificationCount}
+              </span>
+            )}
+            
+            {/* Notification Pulse Ring */}
+            {hasNewNotifications && (
+              <div className="absolute inset-0 rounded-full bg-red-500 opacity-20 animate-ping"></div>
+            )}
           </button>
+
           {/* User Dropdown */}
           <DropdownMenu onOpenChange={setDropdownOpen}>
             <DropdownMenuTrigger asChild>
@@ -93,6 +159,7 @@ export function DashboardHeader() {
           </DropdownMenu>
         </div>
       </div>
+      
       {/* Confirm Alert inside Dropdown */}
       {showConfirm && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50">

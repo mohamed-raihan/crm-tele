@@ -7,6 +7,7 @@ import { DashboardHeader } from "@/components/DashboardHeader";
 
 const columns = [
   "Counselor",
+  "Branch", // Added Branch column
   "Total Calls",
   "Contacted",
   "Not Contacted",
@@ -702,6 +703,9 @@ const [loaderTimer, setLoaderTimer] = useState(null);
                       <tr key={report.telecaller_id || i} className="border-t">
                         <td className="px-4 py-2 font-medium text-gray-700 whitespace-nowrap">
                           {report.telecaller_name}
+                        </td>
+                        <td className="px-4 py-2 font-medium text-gray-700 whitespace-nowrap">
+                          {report.branch_name || ""}
                         </td>
                         <td className="px-4 py-2">
                           <span className="inline-block w-8 h-8 bg-blue-100 text-blue-600 rounded-full text-center text-sm font-bold leading-8">
