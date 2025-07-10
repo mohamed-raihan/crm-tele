@@ -66,6 +66,9 @@ export function DashboardStats() {
   const followups = useCountUp(stats.pending_followups);
   const walkins = useCountUp(stats.walkin_list);
 
+
+  console.log(stats);
+  
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
       {/* Total Calls - Always show */}

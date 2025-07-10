@@ -29,7 +29,7 @@ interface Pagination {
 const MyJobPage = () => {
   const { tab } = useParams<{ tab: string }>();
   console.log(tab);
-  
+
   const [jobs, setJobs] = useState<JobData[]>([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
@@ -84,6 +84,50 @@ const MyJobPage = () => {
 
   // Sort jobs by assigned_date ascending (oldest first, latest last)
   const sortedJobs = [...jobs].sort((a, b) => new Date(a.assigned_date).getTime() - new Date(b.assigned_date).getTime());
+
+  // Generate pagination numbers with ellipsis
+  const generatePaginationNumbers = () => {
+    const totalPages = Math.ceil(pagination.total / pagination.limit);
+    const currentPage = pagination.page;
+    const pages = [];
+
+    if (totalPages <= 7) {
+      // Show all pages if total is 7 or less
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      // Always show first page
+      pages.push(1);
+
+      if (currentPage > 3) {
+        pages.push('...');
+      }
+
+      // Show pages around current page
+      const start = Math.max(2, currentPage - 1);
+      const end = Math.min(totalPages - 1, currentPage + 1);
+
+      for (let i = start; i <= end; i++) {
+        if (i !== 1 && i !== totalPages) {
+          pages.push(i);
+        }
+      }
+
+      if (currentPage < totalPages - 2) {
+        pages.push('...');
+      }
+
+      // Always show last page
+      if (totalPages > 1) {
+        pages.push(totalPages);
+      }
+    }
+
+    return pages;
+  };
+
+  const paginationNumbers = generatePaginationNumbers();
 
   return (
     <div className="flex-1 flex flex-col">
@@ -142,7 +186,7 @@ const MyJobPage = () => {
                   ) : (
                     sortedJobs.map((job, idx) => (
                       <TableRow key={job.enquiry_id}>
-                        <TableCell>{idx + 1}</TableCell>
+                        <TableCell>{(pagination.page - 1) * pagination.limit + idx + 1}</TableCell>
                         <TableCell>{job.name}</TableCell>
                         <TableCell>{job.contact}</TableCell>
                         <TableCell>{job.email}</TableCell>
@@ -161,24 +205,30 @@ const MyJobPage = () => {
                 <div className="text-sm text-gray-600">
                   Showing {(pagination.page - 1) * pagination.limit + 1} to {Math.min(pagination.page * pagination.limit, pagination.total)} of {pagination.total} entries
                 </div>
-                <div className="flex gap-2 flex-wrap">
+                <div className="flex gap-2 flex-wrap items-center">
                   <Button
                     variant="outline"
                     size="sm"
                     disabled={pagination.page === 1}
                     onClick={() => handlePageChange(pagination.page - 1)}
                   >
-                    Previous
+                    Prev
                   </Button>
-                  {[...Array(Math.ceil(pagination.total / pagination.limit))].map((_, index) => (
-                    <Button
-                      key={index}
-                      variant={pagination.page === index + 1 ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => handlePageChange(index + 1)}
-                    >
-                      {index + 1}
-                    </Button>
+                  {paginationNumbers.map((pageNum, index) => (
+                    <React.Fragment key={index}>
+                      {pageNum === '...' ? (
+                        <span className="px-2 py-1 text-gray-500">...</span>
+                      ) : (
+                        <Button
+                          variant={pagination.page === pageNum ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => handlePageChange(pageNum as number)}
+                          className={pagination.page === pageNum ? "bg-green-500 hover:bg-green-600" : ""}
+                        >
+                          {pageNum}
+                        </Button>
+                      )}
+                    </React.Fragment>
                   ))}
                   <Button
                     variant="outline"
@@ -198,4 +248,4 @@ const MyJobPage = () => {
   );
 };
 
-export default MyJobPage; 
+export default MyJobPage;

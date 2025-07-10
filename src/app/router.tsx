@@ -16,6 +16,7 @@ import CallRegisterPage from "./call-register/page";
 import AdminBranches from "../app/admin/branch/page";
 import Adminaddtelecallers from "../app/admin/addtelecallers/page";
 import AdminaWalkinlist from "../app/admin/walkinlist/page";
+import AdminCalls from "../app/admin/calls/page";
 
 import NotAnswerPage from "./not-answer/page";
 import ReportPage from "./report/page";
@@ -63,17 +64,103 @@ export function AppRouter() {
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
 
       {/* Admin Routes */}
-      <Route path="/admin" element={<AdminRoute><AdminDashboardPage /></AdminRoute>} />
-      <Route path="/admin/enquiries" element={<AdminRoute><LeadsPage /></AdminRoute>} />
-      <Route path="/admin/telecallers" element={<AdminRoute><ExecutivePage /></AdminRoute>} />
-      <Route path="/admin/jobs" element={<AdminRoute><JobListPage /></AdminRoute>} />
-      <Route path="/admin/walk-ins" element={<AdminRoute><AdminaWalkinlist /></AdminRoute>} />
-      <Route path="/admin/follow-ups" element={<AdminRoute><FollowUps /></AdminRoute>} />
-      <Route path="/admin/call-analytics" element={<AdminRoute><CallRegisterPage /></AdminRoute>} />
-      <Route path="/admin/ads" element={<AdminRoute><AdsPage /></AdminRoute>} />
-      <Route path="/admin/service" element={<AdminRoute><ServicePage /></AdminRoute>} />
-      <Route path="/admin/course" element={<AdminRoute><CoursePage /></AdminRoute>} />
-      <Route path="/admin/:job" element={<AdminRoute><AdminJobPage /></AdminRoute>} />
+      <Route
+        path="/admin"
+        element={
+          <AdminRoute>
+            <AdminDashboardPage />
+          </AdminRoute>
+        }
+      />
+      <Route
+        path="/admin/enquiries"
+        element={
+          <AdminRoute>
+            <LeadsPage />
+          </AdminRoute>
+        }
+      />
+      <Route
+        path="/admin/calls"
+        element={
+          <AdminRoute>
+            <AdminCalls />
+          </AdminRoute>
+        }
+      />
+
+      <Route
+        path="/admin/telecallers"
+        element={
+          <AdminRoute>
+            <ExecutivePage />
+          </AdminRoute>
+        }
+      />
+      <Route
+        path="/admin/jobs"
+        element={
+          <AdminRoute>
+            <JobListPage />
+          </AdminRoute>
+        }
+      />
+      <Route
+        path="/admin/walk-ins"
+        element={
+          <AdminRoute>
+            <AdminaWalkinlist />
+          </AdminRoute>
+        }
+      />
+      <Route
+        path="/admin/follow-ups"
+        element={
+          <AdminRoute>
+            <FollowUps />
+          </AdminRoute>
+        }
+      />
+      <Route
+        path="/admin/call-analytics"
+        element={
+          <AdminRoute>
+            <CallRegisterPage />
+          </AdminRoute>
+        }
+      />
+      <Route
+        path="/admin/ads"
+        element={
+          <AdminRoute>
+            <AdsPage />
+          </AdminRoute>
+        }
+      />
+      <Route
+        path="/admin/service"
+        element={
+          <AdminRoute>
+            <ServicePage />
+          </AdminRoute>
+        }
+      />
+      <Route
+        path="/admin/course"
+        element={
+          <AdminRoute>
+            <CoursePage />
+          </AdminRoute>
+        }
+      />
+      <Route
+        path="/admin/:job"
+        element={
+          <AdminRoute>
+            <AdminJobPage />
+          </AdminRoute>
+        }
+      />
       {/* <Route path="/admin/:job" element={<AdminRoute><RemainingJobList /></AdminRoute>} /> */}
       <Route
         path="/admin/branches"
@@ -100,12 +187,38 @@ export function AppRouter() {
           </AdminRoute>
         }
       />
-      <Route path="/admin/not-answer" element={<AdminRoute><NotAnswerPage /></AdminRoute>} />
-      <Route path="/admin/reports" element={<AdminRoute><ReportPage /></AdminRoute>} />
-      <Route path="/admin/settings" element={<AdminRoute><div>Settings Page</div></AdminRoute>} />
-      <Route path="/admin/closed-enquiry" element={<AdminRoute><ClosedEnquiryTable /></AdminRoute>} />
-
-
+      <Route
+        path="/admin/not-answer"
+        element={
+          <AdminRoute>
+            <NotAnswerPage />
+          </AdminRoute>
+        }
+      />
+      <Route
+        path="/admin/reports"
+        element={
+          <AdminRoute>
+            <ReportPage />
+          </AdminRoute>
+        }
+      />
+      <Route
+        path="/admin/settings"
+        element={
+          <AdminRoute>
+            <div>Settings Page</div>
+          </AdminRoute>
+        }
+      />
+      <Route
+        path="/admin/closed-enquiry"
+        element={
+          <AdminRoute>
+            <ClosedEnquiryTable />
+          </AdminRoute>
+        }
+      />
 
       {/* Telecaller Routes */}
       <Route

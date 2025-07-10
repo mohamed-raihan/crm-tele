@@ -240,6 +240,37 @@ const WalkInListPage = () => {
     }
   };
 
+  const generatePaginationNumbers = () => {
+    const totalPages = pagination.totalPages;
+    const currentPage = pagination.currentPage;
+    const pages = [];
+    if (totalPages <= 7) {
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      pages.push(1);
+      if (currentPage > 3) {
+        pages.push('...');
+      }
+      const start = Math.max(2, currentPage - 1);
+      const end = Math.min(totalPages - 1, currentPage + 1);
+      for (let i = start; i <= end; i++) {
+        if (i !== 1 && i !== totalPages) {
+          pages.push(i);
+        }
+      }
+      if (currentPage < totalPages - 2) {
+        pages.push('...');
+      }
+      if (totalPages > 1) {
+        pages.push(totalPages);
+      }
+    }
+    return pages;
+  };
+  const paginationNumbers = generatePaginationNumbers();
+
   return (
     <div className="flex-1 flex flex-col">
       <DashboardHeader />
@@ -285,12 +316,18 @@ const WalkInListPage = () => {
               </div>
               <div>
                 <Label htmlFor="call_status">Call Status</Label>
-                <Input
-                  id="call_status"
+                <Select
                   value={filterInputs.call_status}
-                  onChange={(e) => handleFilterChange("call_status", e.target.value)}
-                  placeholder="Enter call status..."
-                />
+                  onValueChange={(value) => handleFilterChange("call_status", value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="contacted">contacted</SelectItem>
+                    <SelectItem value="Not Answered">Not Answered</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
               <div>
                 <Label htmlFor="follow_up_date">Follow Up Date</Label>
@@ -369,7 +406,13 @@ const WalkInListPage = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {walkIns.length === 0 ? (
+                    {loading ? (
+                      <TableRow>
+                        <TableCell colSpan={10} className="text-center py-8">
+                          <RefreshCw className="w-6 h-6 animate-spin mx-auto" />
+                        </TableCell>
+                      </TableRow>
+                    ) : walkIns.length === 0 ? (
                       <TableRow>
                         <TableCell colSpan={10} className="text-center py-8 text-gray-500">
                           {showNoDataMsg ? "No walk-in data found matching your criteria" : null}
@@ -405,39 +448,40 @@ const WalkInListPage = () => {
               </div>
             )}
             {/* Pagination */}
-            {pagination.totalPages > 1 && (
-              <div className="mt-6 flex justify-between items-center">
+            {pagination.totalRecords > pagination.limit && (
+              <div className="mt-6 flex flex-col md:flex-row justify-between items-center gap-2">
                 <div className="text-sm text-gray-600">
                   Showing {(pagination.currentPage - 1) * pagination.limit + 1} to {Math.min(pagination.currentPage * pagination.limit, pagination.totalRecords)} of {pagination.totalRecords} entries
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-2 flex-wrap items-center">
                   <Button
                     variant="outline"
                     size="sm"
                     disabled={pagination.currentPage === 1}
                     onClick={() => handlePageChange(pagination.currentPage - 1)}
                   >
-                    Previous
+                    Prev
                   </Button>
-                  {[...Array(Math.min(pagination.totalPages, 5))].map((_, index) => {
-                    const pageNum = pagination.currentPage <= 3 ? index + 1 :
-                      pagination.currentPage >= pagination.totalPages - 2 ? pagination.totalPages - 4 + index :
-                        pagination.currentPage - 2 + index;
-                    return (
-                      <Button
-                        key={pageNum}
-                        variant={pagination.currentPage === pageNum ? "default" : "outline"}
-                        size="sm"
-                        onClick={() => handlePageChange(pageNum)}
-                      >
-                        {pageNum}
-                      </Button>
-                    );
-                  })}
+                  {paginationNumbers.map((pageNum, index) => (
+                    <React.Fragment key={index}>
+                      {pageNum === '...' ? (
+                        <span className="px-2 py-1 text-gray-500">...</span>
+                      ) : (
+                        <Button
+                          variant={pagination.currentPage === pageNum ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => handlePageChange(pageNum as number)}
+                          className={pagination.currentPage === pageNum ? "bg-green-500 hover:bg-green-600" : ""}
+                        >
+                          {pageNum}
+                        </Button>
+                      )}
+                    </React.Fragment>
+                  ))}
                   <Button
                     variant="outline"
                     size="sm"
-                    disabled={pagination.currentPage === pagination.totalPages}
+                    disabled={pagination.currentPage === Math.ceil(pagination.totalRecords / pagination.limit)}
                     onClick={() => handlePageChange(pagination.currentPage + 1)}
                   >
                     Next
