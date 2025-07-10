@@ -92,6 +92,9 @@ const AdminJobPage = () => {
     fetchJobs(newPage, job, search);
   };
 
+  // Sort jobs by assigned_date ascending (oldest first, latest last)
+  const sortedJobs = [...jobs].sort((a, b) => new Date(a.assigned_date).getTime() - new Date(b.assigned_date).getTime());
+
   return (
     <div>
       <DashboardHeader/>
@@ -134,18 +137,18 @@ const AdminJobPage = () => {
                         <RefreshCw className="w-6 h-6 animate-spin mx-auto" />
                       </TableCell>
                     </TableRow>
-                  ) : jobs.length === 0 ? (
+                  ) : sortedJobs.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={8} className="text-center py-8 text-gray-500">
                         No jobs found
                       </TableCell>
                     </TableRow>
                   ) : (
-                    jobs.map((job) => {
+                    sortedJobs.map((job, idx) => {
                       const [completed, total] = job.progress.split("/").map(Number);
                       return (
                         <TableRow key={`${job.telecaller_id}-${job.assigned_date}`}>
-                          <TableCell>{job.telecaller_id}</TableCell>
+                          <TableCell>{idx + 1}</TableCell>
                           <TableCell>{job.telecaller_name}</TableCell>
                           <TableCell>{job.status}</TableCell>
                           <TableCell>

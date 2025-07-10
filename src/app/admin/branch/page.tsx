@@ -631,6 +631,12 @@ export default function BranchManagementPage() {
 
   console.log(editingBranch);
 
+  // Sort branches by createdAt ascending (oldest first, latest last)
+  const sortedBranches = [...branches].sort((a, b) => {
+    if (!a.createdAt || !b.createdAt) return 0;
+    return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+  });
+
   return (
     <div>
       <DashboardHeader/>
@@ -678,7 +684,7 @@ export default function BranchManagementPage() {
         {/* Table */}
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
           <DynamicTable
-            data={branches}
+            data={sortedBranches.map((row, idx) => ({ ...row, serial: idx + 1 }))}
             columns={columns}
             rowIdKey="id"
             actions={[

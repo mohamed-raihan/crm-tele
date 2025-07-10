@@ -147,9 +147,12 @@ export default function RemainingJobList() {
     alert('Edit: ' + row.id);
   }
 
+  // Sort data by jobName ascending (alphabetical order)
+  const sortedData = [...data].sort((a, b) => a.jobName.localeCompare(b.jobName));
+
   return (
     <div className="min-h-screen bg-[#f7f7fb] p-8">
-      <div className="text-xs text-gray-400 mb-1">Job List {'>'} Remaining Job List</div>
+      <div className="text-xs text-gray-400 mb-1">Job List {'>'}  Remaining Job List</div>
       <h1 className="text-3xl font-bold mb-6">Remaining Job List</h1>
       <div className="mb-6">
         <DynamicForm
@@ -161,7 +164,7 @@ export default function RemainingJobList() {
         />
       </div>
       <DynamicTable
-        data={data}
+        data={sortedData.map((row, idx) => ({ ...row, id: idx + 1 }))}
         columns={columns}
         filters={filters}
         searchPlaceholder="Search"
