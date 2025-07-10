@@ -85,11 +85,14 @@ export default function ServicePage() {
     const handleDeleteAd = async (ad: Ad) => {
         if (!window.confirm(`Delete ad '${ad.name}'?`)) return;
         try {
-            await axiosInstance.delete(API_URLS.SERVICES.DELETE_SERVICES(ad.id));
-            toast({ title: "Source deleted successfully", variant: "success" });
+            const response = await axiosInstance.delete(API_URLS.SERVICES.DELETE_SERVICES(ad.id));
+            console.log(response);
+            toast({ title: "Service deleted successfully", variant: "success" });
             fetchAds();
         } catch (err) {
-            toast({ title: "Failed to delete source", description: "Please try again.", variant: "destructive" });
+            console.log(err);
+            
+            toast({ title: err.response.data.message, description: "Please try again.", variant: "destructive" });
         }
     };
 
