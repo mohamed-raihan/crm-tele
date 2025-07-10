@@ -82,6 +82,9 @@ const MyJobPage = () => {
     fetchJobs(newPage, tab, search);
   };
 
+  // Sort jobs by assigned_date ascending (oldest first, latest last)
+  const sortedJobs = [...jobs].sort((a, b) => new Date(a.assigned_date).getTime() - new Date(b.assigned_date).getTime());
+
   return (
     <div className="flex-1 flex flex-col">
       <DashboardHeader />
@@ -130,16 +133,16 @@ const MyJobPage = () => {
                         <RefreshCw className="w-6 h-6 animate-spin mx-auto" />
                       </TableCell>
                     </TableRow>
-                  ) : jobs.length === 0 ? (
+                  ) : sortedJobs.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={7} className="text-center py-8 text-gray-500">
                         No jobs found
                       </TableCell>
                     </TableRow>
                   ) : (
-                    jobs.map((job, idx) => (
+                    sortedJobs.map((job, idx) => (
                       <TableRow key={job.enquiry_id}>
-                        <TableCell>{(pagination.page - 1) * pagination.limit + idx + 1}</TableCell>
+                        <TableCell>{idx + 1}</TableCell>
                         <TableCell>{job.name}</TableCell>
                         <TableCell>{job.contact}</TableCell>
                         <TableCell>{job.email}</TableCell>

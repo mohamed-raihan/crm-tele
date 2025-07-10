@@ -707,7 +707,10 @@ export default function TelecallersManagementPage() {
         await fetchAllTelecallers();
         setIsModalOpen(false);
         resetForm();
-        toast({ title: "Telecaller created successfully!", variant: "success" });
+        toast({
+          title: "Telecaller created successfully!",
+          variant: "success",
+        });
       } else {
         toast({
           title: response.data?.message || "Failed to create telecaller",
@@ -815,7 +818,10 @@ export default function TelecallersManagementPage() {
         setIsModalOpen(false);
         setEditingTelecaller(null);
         resetForm();
-        toast({ title: "Telecaller updated successfully!", variant: "success" });
+        toast({
+          title: "Telecaller updated successfully!",
+          variant: "success",
+        });
       } else {
         toast({
           title: response.data?.message || "Failed to update telecaller",
@@ -863,7 +869,10 @@ export default function TelecallersManagementPage() {
         setSelectedRows((prev) =>
           prev.filter((rowId) => rowId !== id.toString())
         );
-        toast({ title: "Telecaller deleted successfully!", variant: "success" });
+        toast({
+          title: "Telecaller deleted successfully!",
+          variant: "success",
+        });
       } else {
         toast({
           title: response.data?.message || "Failed to delete telecaller",
@@ -929,7 +938,6 @@ export default function TelecallersManagementPage() {
     return branch ? branch.branch_name : "Unknown";
   };
 
-
   const columns: TableColumn[] = [
     {
       key: "serial",
@@ -948,7 +956,7 @@ export default function TelecallersManagementPage() {
       sortable: true,
       render: (value: any, row: Telecaller) => (
         <span>{getBranchNameFromId(row.branch)}</span>
-      )
+      ),
     },
   ];
   // Reset form function
@@ -1122,6 +1130,12 @@ export default function TelecallersManagementPage() {
   console.log("Current editing telecaller:", editingTelecaller);
   console.log("Form sections:", formSections);
 
+  // Sort telecallers by createdAt ascending (oldest first, latest last)
+  const sortedTelecallers = [...telecallers].sort((a, b) => {
+    if (!a.createdAt || !b.createdAt) return 0;
+    return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+  });
+
   return (
     <div>
       <DashboardHeader />
@@ -1165,6 +1179,24 @@ export default function TelecallersManagementPage() {
               </p>
             )}
           </div>
+          {/* Search Bar */}
+          <div className="mb-6">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <input
+                type="text"
+                placeholder="Search telecallers by name, email, contact, address, branch..."
+                value={searchTerm}
+                onChange={(e) => handleSearch(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+            {isSearching && (
+              <p className="text-sm text-gray-500 mt-2">
+                Showing {telecallers.length} results for "{searchTerm}"
+              </p>
+            )}
+          </div>
 
           {/* Table */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
@@ -1187,85 +1219,116 @@ export default function TelecallersManagementPage() {
                 },
               ]}
             />
+            {/* Table */}
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+              <DynamicTable
+                data={sortedTelecallers.map((row, idx) => ({
+                  ...row,
+                  serial: idx + 1,
+                }))}
+                columns={columns}
+                rowIdKey="id"
+                actions={[
+                  {
+                    label: "Edit",
+                    icon: <Pencil className="mr-2 h-4 w-4 text-gray-500" />,
+                    onClick: handleEdit,
+                    variant: "outline",
+                  },
+                  {
+                    label: "Delete",
+                    icon: <Trash2 className="mr-2 h-4 w-4 text-red-500" />,
+                    onClick: handleDelete,
+                    variant: "destructive",
+                  },
+                ]}
+              />
 
-            {/* Pagination Info */}
-            {!isSearching && (
-              <div className="px-6 py-3 border-t border-gray-200 text-sm text-gray-500">
-                Showing {telecallers.length} of {pagination.total} telecallers
-                (Page {pagination.page} of {pagination.totalPages})
+              {/* Pagination Info */}
+              {!isSearching && (
+                <div className="px-6 py-3 border-t border-gray-200 text-sm text-gray-500">
+                  Showing {telecallers.length} of {pagination.total} telecallers
+                  (Page {pagination.page} of {pagination.totalPages})
+                </div>
+              )}
+            </div>
+
+            {/* Add/Edit Modal */}
+            {isModalOpen && formSections.length > 0 && (
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+                <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto scrollbar-hide">
+                  <div className="flex items-center justify-between p-6 border-b border-gray-200">
+                    <h2 className="text-lg font-semibold text-gray-900">
+                      {editingTelecaller
+                        ? "Edit Telecaller"
+                        : "Add New Telecaller"}
+                    </h2>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={closeModal}
+                      className="p-1"
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+
+                  <div className="p-6">
+                    <DynamicForm
+                      key={editingTelecaller?.id || "new"}
+                      sections={formSections as ImportedFormSection[]}
+                      onSubmit={handleFormSubmit}
+                      submitLabel={
+                        editingTelecaller
+                          ? "Update Telecaller"
+                          : "Add Telecaller"
+                      }
+                      showCancel={true}
+                      onCancel={closeModal}
+                      defaultValues={
+                        editingTelecaller
+                          ? {
+                              name: editingTelecaller.name || "",
+                              email: editingTelecaller.email || "",
+                              contact: editingTelecaller.contact || "",
+                              address: editingTelecaller.address || "",
+                              role: editingTelecaller.role.toString(),
+                              branch: editingTelecaller.branch.toString(),
+                              password:
+                                editingTelecaller.password_display || "••••••", // Use password_display
+                            }
+                          : {
+                              name: "",
+                              email: "",
+                              contact: "",
+                              address: "",
+                              role: "2",
+                              branch: "",
+                              password: "",
+                            }
+                      }
+                      errors={formErrors}
+                      validationSchema={
+                        editingTelecaller
+                          ? telecallerEditSchema
+                          : telecallerCreateSchema
+                      }
+                      submitButtonProps={{ disabled: isSubmitting }}
+                    />
+
+                    {/* Show general error message if exists */}
+                    {formErrors.general && (
+                      <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md">
+                        <p className="text-sm text-red-600">
+                          {formErrors.general}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
             )}
           </div>
-
-          {/* Add/Edit Modal */}
-          {isModalOpen && formSections.length > 0 && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-              <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto scrollbar-hide">
-                <div className="flex items-center justify-between p-6 border-b border-gray-200">
-                  <h2 className="text-lg font-semibold text-gray-900">
-                    {editingTelecaller ? "Edit Telecaller" : "Add New Telecaller"}
-                  </h2>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={closeModal}
-                    className="p-1"
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-
-                <div className="p-6">
-                  <DynamicForm
-                    key={editingTelecaller?.id || "new"}
-                    sections={formSections as ImportedFormSection[]}
-                    onSubmit={handleFormSubmit}
-                    submitLabel={
-                      editingTelecaller ? "Update Telecaller" : "Add Telecaller"
-                    }
-                    showCancel={true}
-                    onCancel={closeModal}
-                    defaultValues={
-                      editingTelecaller
-                        ? {
-                          name: editingTelecaller.name || "",
-                          email: editingTelecaller.email || "",
-                          contact: editingTelecaller.contact || "",
-                          address: editingTelecaller.address || "",
-                          role: editingTelecaller.role.toString(),
-                          branch: editingTelecaller.branch.toString(),
-                          password:
-                            editingTelecaller.password_display || "••••••", // Use password_display
-                        }
-                        : {
-                          name: "",
-                          email: "",
-                          contact: "",
-                          address: "",
-                          role: "2",
-                          branch: "",
-                          password: "",
-                        }
-                    }
-                    errors={formErrors}
-                    validationSchema={
-                      editingTelecaller
-                        ? telecallerEditSchema
-                        : telecallerCreateSchema
-                    }
-                    submitButtonProps={{ disabled: isSubmitting }}
-                  />
-
-                  {/* Show general error message if exists */}
-                  {formErrors.general && (
-                    <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md">
-                      <p className="text-sm text-red-600">{formErrors.general}</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
         </div>
       </div>
     </div>
