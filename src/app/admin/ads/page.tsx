@@ -94,7 +94,13 @@ export default function AdsPage() {
 
   // Table columns
   const columns: TableColumn[] = [
-    { key: "id", label: "ID", sortable: true, width: "w-24" },
+    {
+      key: "id",
+      label: "ID",
+      sortable: false,
+      width: "w-24",
+      render: (_value, _row, index) => index + 1
+    },
     { key: "name", label: "Name" },
   ];
 

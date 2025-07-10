@@ -85,7 +85,7 @@ export default function ServicePage() {
     const handleDeleteAd = async (ad: Ad) => {
         if (!window.confirm(`Delete ad '${ad.name}'?`)) return;
         try {
-            await axiosInstance.delete(API_URLS.ADS.DELETE_ADS(ad.id));
+            await axiosInstance.delete(API_URLS.SERVICES.DELETE_SERVICES(ad.id));
             toast({ title: "Source deleted successfully", variant: "success" });
             fetchAds();
         } catch (err) {
@@ -95,7 +95,13 @@ export default function ServicePage() {
 
     // Table columns
     const columns: TableColumn[] = [
-        { key: "id", label: "ID", sortable: true, width: "w-24" },
+        {
+            key: "id",
+            label: "ID",
+            sortable: false,
+            width: "w-24",
+            render: (_value, _row, index) => index + 1
+          },
         { key: "name", label: "Name" },
     ];
 
@@ -121,16 +127,16 @@ export default function ServicePage() {
             <div className=" mx-8 py-8">
             <Card>
                 <CardHeader className="flex flex-row items-center justify-between pb-2">
-                    <CardTitle className="text-2xl font-bold">SOURCE</CardTitle>
+                    <CardTitle className="text-2xl font-bold">SERVICE</CardTitle>
                     <Dialog open={open} onOpenChange={setOpen}>
                         <DialogTrigger asChild>
                             <Button variant="default" className="gap-2 bg-violet-500" size="sm">
-                                <Plus className="h-4 w-4" />Add Source
+                                <Plus className="h-4 w-4" />Add Service
                             </Button>
                         </DialogTrigger>
                         <DialogContent>
                             <DialogHeader>
-                                <DialogTitle>Add New Ad</DialogTitle>
+                                <DialogTitle>{ad.id ? "Edit Service" : "Add New Service"}</DialogTitle>
                             </DialogHeader>
                             <form onSubmit={handleAddAd} className="space-y-4">
                                 <div>
@@ -140,7 +146,7 @@ export default function ServicePage() {
                                         name="name"
                                         value={ad.name}
                                         onChange={e => setAd({ ...ad, name: e.target.value })}
-                                        placeholder="Enter source name"
+                                        placeholder="Enter service name"
                                         required
                                     />
                                 </div>
