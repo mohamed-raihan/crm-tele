@@ -44,8 +44,8 @@ interface Enquiry {
   mettad_name: string | null;
   phone: string;
   phone2: string;
-  preferred_course: string;
-  required_service: string;
+  preferred_course_name: string;
+  required_service_name: string;
 }
 
 interface id {
@@ -207,13 +207,13 @@ export function EnquiryProfile(id: id) {
             </div>
 
             <div>
-              <h3 className="font-medium text-gray-900 mb-2">Prefered </h3>
-              <p className="text-gray-600">{enquiry.mettad_name}</p>
+              <h3 className="font-medium text-gray-900 mb-2">Prefered Course</h3>
+              <p className="text-gray-600">{enquiry.preferred_course_name}</p>
             </div>
 
             <div>
-              <h3 className="font-medium text-gray-900 mb-2">Source</h3>
-              <p className="text-gray-600">{enquiry.mettad_name}</p>
+              <h3 className="font-medium text-gray-900 mb-2">Service</h3>
+              <p className="text-gray-600">{enquiry.required_service_name}</p>
             </div>
 
             <div>
