@@ -72,12 +72,15 @@ export function DashboardStats() {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
       {/* Total Calls - Always show */}
-      <Card className="relative overflow-hidden">
+      <Card
+        className="relative overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
+        onClick={() => navigate("/calls")}
+      >
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium text-gray-600">
             Total Calls
           </CardTitle>
-          <Phone className="h-4 w-4 text-gray-400 cursor-pointer" onClick={() => navigate("/calls")} />
+          <Phone className="h-4 w-4 text-gray-400" />
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold text-gray-900 mb-1">
@@ -87,16 +90,19 @@ export function DashboardStats() {
       </Card>
 
       {/* Total Leads - Always show */}
-      <Card className="relative overflow-hidden">
+      <Card
+        className="relative overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
+        onClick={() =>
+          stats.dashboard_type === "admin"
+            ? navigate("/admin/enquiries")
+            : navigate("/leads")
+        }
+      >
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="text-sm font-medium text-gray-600">
             Total Leads
           </CardTitle>
-          {stats.dashboard_type === "admin" ? (
-            <Users className="h-4 w-4 text-gray-400 cursor-pointer" onClick={() => navigate("/admin/enquiries")} />
-          ) : (
-            <Users className="h-4 w-4 text-gray-400 cursor-pointer" onClick={() => navigate("/leads")} />
-          )}
+          <Users className="h-4 w-4 text-gray-400" />
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold text-gray-900 mb-1">
@@ -107,12 +113,15 @@ export function DashboardStats() {
 
       {/* Conditional third card based on dashboard type */}
       {stats.dashboard_type === "admin" ? (
-        <Card className="relative overflow-hidden">
+        <Card
+          className="relative overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
+          onClick={() => navigate("/admin/addtelecallers")}
+        >
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-gray-600">
               Total Telecallers
             </CardTitle>
-            <Users className="h-4 w-4 text-gray-400 cursor-pointer" onClick={() => navigate("/admin/addtelecallers")} />
+            <Users className="h-4 w-4 text-gray-400" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-gray-900 mb-1">
@@ -122,12 +131,15 @@ export function DashboardStats() {
         </Card>
       ) : (
         <>
-          <Card className="relative overflow-hidden">
+          <Card
+            className="relative overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
+            onClick={() => navigate("/calls/follow-ups")}
+          >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-gray-600">
                  Followups
               </CardTitle>
-              <Target className="h-4 w-4 text-gray-400 cursor-pointer" onClick={() => navigate("/follow-ups")} />
+              <Target className="h-4 w-4 text-gray-400" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-gray-900 mb-1">
@@ -135,12 +147,15 @@ export function DashboardStats() {
               </div>
             </CardContent>
           </Card>
-          <Card className="relative overflow-hidden">
+          <Card
+            className="relative overflow-hidden cursor-pointer hover:shadow-lg transition-shadow"
+            onClick={() => navigate("/walk-in-list")}
+          >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-gray-600">
                 Walk-in List
               </CardTitle>
-              <TrendingUp className="h-4 w-4 text-gray-400 cursor-pointer" onClick={() => navigate("/walk-in-list")} />
+              <TrendingUp className="h-4 w-4 text-gray-400" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-gray-900 mb-1">
