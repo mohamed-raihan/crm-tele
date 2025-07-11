@@ -213,7 +213,7 @@ export function NewEnquiryForm() {
           required: true,
           options: [
             { value: 'Active', label: 'Active' },
-            { value: 'Closed', label: 'Closed' },
+            { value: 'Not interested', label: 'Not interested' },
           ],
           validation: z.string().min(1, 'Required service is required')
         },

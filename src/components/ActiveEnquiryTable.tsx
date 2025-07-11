@@ -21,7 +21,7 @@ import * as XLSX from 'xlsx';
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import {CalendarIcon} from "lucide-react";
+import { CalendarIcon } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { format } from "date-fns";
@@ -55,8 +55,8 @@ export function ActiveEnquiryTable() {
     candidate_name: '',
     email: '',
     phone: '',
-    branch: '',
-    assigned_by_name: '',
+    branch_name: '',
+    telecaller_name: '',
     mettad_name: ''
   });
 
@@ -81,6 +81,18 @@ export function ActiveEnquiryTable() {
           "Authorization": `Bearer ${token}`
         }
       });
+      console.log(searchParams);
+      
+      if (Object.keys(searchParams).length === 0) {
+        setSearchFields({
+          candidate_name: '',
+          email: '',
+          phone: '',
+          branch_name: '',
+          telecaller_name: '',
+          mettad_name: ''
+        });
+      }
       setEnquiry(response.data.data);
       if (response.data.pagination && response.data.pagination.totalPages) {
         setTotalPages(response.data.pagination.totalPages);
@@ -291,14 +303,14 @@ export function ActiveEnquiryTable() {
                   <input
                     className="border rounded px-3 py-2"
                     placeholder="Branch"
-                    value={searchFields.branch}
-                    onChange={e => setSearchFields(f => ({ ...f, branch: e.target.value }))}
+                    value={searchFields.branch_name}
+                    onChange={e => setSearchFields(f => ({ ...f, branch_name: e.target.value }))}
                   />
                   <input
                     className="border rounded px-3 py-2"
-                    placeholder="Assigned By Name"
-                    value={searchFields.assigned_by_name}
-                    onChange={e => setSearchFields(f => ({ ...f, assigned_by_name: e.target.value }))}
+                    placeholder="Telecaller Name"
+                    value={searchFields.telecaller_name}
+                    onChange={e => setSearchFields(f => ({ ...f, telecaller_name: e.target.value }))}
                   />
                   <input
                     className="border rounded px-3 py-2"
@@ -308,8 +320,8 @@ export function ActiveEnquiryTable() {
                   />
                 </div>
                 <div className="flex justify-end gap-3">
-                  <Button className="bg-blue-600 hover:bg-blue-700" onClick={()=>fetchEnquiry()}>
-                    Refreash
+                  <Button className="bg-blue-600 hover:bg-blue-700" onClick={() => fetchEnquiry()}>
+                    Refresh
                   </Button>
                   <Button className="bg-blue-600 hover:bg-blue-700" onClick={handleSearch}>
                     Search
@@ -381,7 +393,7 @@ export function ActiveEnquiryTable() {
                   </div>
                 </div> */}
 
-                {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-gray-700">Starting Date</label>
                     <Popover>
@@ -436,7 +448,7 @@ export function ActiveEnquiryTable() {
                     </Popover>
                   </div>
                 </div> */}
-              {/* </CardContent>
+            {/* </CardContent>
             </Card> */}
             <div className="overflow-x-auto w-full">
               <DynamicTable
