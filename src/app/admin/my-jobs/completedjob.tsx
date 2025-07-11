@@ -102,7 +102,7 @@ const AdminJobPage = () => {
       <div className=" mx-auto w-full">
         <Card className="mb-6">
           <CardHeader>
-            <CardTitle className="text-2xl font-bold">Job - {job === "completed" ? "Completed" : "Remining"}</CardTitle>
+            <CardTitle className="text-2xl font-bold">Job - {job === "completed" ? "Completed" : "Remaining"}</CardTitle>
           </CardHeader>
           <CardContent>
             {/* <div className="flex flex-row items-center gap-2 mb-4">
