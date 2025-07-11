@@ -65,16 +65,18 @@ export function DynamicForm({
   submitButtonProps
 }: DynamicFormProps) {
   // Create dynamic schema from fields
+  // In DynamicForm component, update the createSchema function:
+
   const createSchema = () => {
     const schemaFields: Record<string, z.ZodTypeAny> = {};
-    
+
     sections.forEach(section => {
       section.fields.forEach(field => {
         if (field.validation) {
           schemaFields[field.name] = field.validation;
         } else {
           let fieldSchema: z.ZodTypeAny = z.string();
-          
+
           if (field.type === 'email') {
             if (field.required) {
               fieldSchema = z.string().min(1, `${field.label} is required`).email('Invalid email address');
@@ -83,6 +85,17 @@ export function DynamicForm({
             }
           } else if (field.type === 'date') {
             fieldSchema = z.date().optional();
+          } else if (field.name === 'contact') {
+            // Add specific validation for contact field
+            if (field.required) {
+              fieldSchema = z.string()
+                .min(1, `${field.label} is required`)
+                .regex(/^[0-9]{10}$/, 'Contact number must be exactly 10 digits');
+            } else {
+              fieldSchema = z.string()
+                .regex(/^[0-9]{10}$/, 'Contact number must be exactly 10 digits')
+                .optional();
+            }
           } else {
             fieldSchema = z.string();
             if (field.required) {
@@ -91,12 +104,12 @@ export function DynamicForm({
               fieldSchema = fieldSchema.optional();
             }
           }
-          
+
           schemaFields[field.name] = fieldSchema;
         }
       });
     });
-    
+
     return z.object(schemaFields);
   };
 
@@ -155,10 +168,10 @@ export function DynamicForm({
                     </button>
                   </div>
                 ) : field.type === 'textarea' ? (
-                  <Textarea 
+                  <Textarea
                     placeholder={field.placeholder}
                     className="min-h-[100px]"
-                    {...formField} 
+                    {...formField}
                   />
                 ) : field.type === 'select' ? (
                   <Select onValueChange={formField.onChange} defaultValue={formField.value}>
@@ -202,27 +215,27 @@ export function DynamicForm({
                     </PopoverContent>
                   </Popover>
                 ) : (
-                  <Input 
+                  <Input
                     placeholder={field.placeholder}
                     type={field.type === 'email' ? 'email' : field.type === 'phone' ? 'tel' : 'text'}
                     {...formField}
                     onInput={
                       field.name === "contact"
                         ? (e) => {
-                            const input = e.target as HTMLInputElement;
-                            input.value = input.value.replace(/[^0-9]/g, "");
-                            formField.onChange(input.value);
-                          }
+                          const input = e.target as HTMLInputElement;
+                          input.value = input.value.replace(/[^0-9]/g, "");
+                          formField.onChange(input.value);
+                        }
                         : undefined
                     }
                   />
                 )}
               </FormControl>
               {field.showAddButton && (
-                <Button 
-                  type="button" 
-                  variant="outline" 
-                  size="icon" 
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
                   className="mt-0"
                   onClick={field.onAddClick}
                 >
@@ -257,12 +270,11 @@ export function DynamicForm({
                 {section.title && (
                   <h3 className="text-lg font-medium mb-4">{section.title}</h3>
                 )}
-                <div className={`grid gap-4 ${
-                  section.columns === 1 ? 'grid-cols-1' :
-                  section.columns === 2 ? 'grid-cols-1 md:grid-cols-2' :
-                  section.columns === 3 ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' :
-                  'grid-cols-1 md:grid-cols-2 lg:grid-cols-4'
-                }`}>
+                <div className={`grid gap-4 ${section.columns === 1 ? 'grid-cols-1' :
+                    section.columns === 2 ? 'grid-cols-1 md:grid-cols-2' :
+                      section.columns === 3 ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' :
+                        'grid-cols-1 md:grid-cols-2 lg:grid-cols-4'
+                  }`}>
                   {section.fields.map(renderField)}
                 </div>
               </div>
