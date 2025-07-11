@@ -97,6 +97,7 @@ const FollowUpsPage = () => {
     return params.toString();
   };
 
+  
   // Fetch follow-ups from API with filters and pagination
   const fetchFollowUps = async (filters: FiltersType, page: number, limit: number, isInitial = false) => {
     setLoading(true);
@@ -369,10 +370,10 @@ const FollowUpsPage = () => {
                 <RefreshCw className="w-4 h-4 mr-2" />
                 Reset
               </Button>
-              <Button variant="outline" className="bg-green-600 hover:bg-green-700 text-white" onClick={exportToExcel} disabled={loading || followUps.length === 0}>
+              {/* <Button variant="outline" className="bg-green-600 hover:bg-green-700 text-white" onClick={exportToExcel} disabled={loading || followUps.length === 0}>
                 <FileDown className="w-4 h-4 mr-2" />
                 Export Excel
-              </Button>
+              </Button> */}
             </div>
           </CardContent>
         </Card>
