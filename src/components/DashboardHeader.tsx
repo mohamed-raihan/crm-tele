@@ -49,6 +49,14 @@ export function DashboardHeader() {
       const token = localStorage.getItem("access_token");
       if (!token) return;
       
+      // Check if notifications have been reset
+      const isReset = localStorage.getItem("notificationCountReset") === "true";
+      if (isReset) {
+        setNotificationCount(0);
+        setHasNewNotifications(false);
+        return;
+      }
+      
       const response = await axiosInstance.get(API_URLS.NOTIFICATIONS.GET_NOTIFICATIONS, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -81,8 +89,10 @@ export function DashboardHeader() {
   }, []);
 
   const handleNotificationClick = () => {
-    // Reset notification indicator
+    // Reset notification indicator and count
     setHasNewNotifications(false);
+    setNotificationCount(0);
+    localStorage.setItem("notificationCountReset", "true");
     localStorage.setItem("last_notification_visit", new Date().toISOString());
     navigate('/notifications');
   };
