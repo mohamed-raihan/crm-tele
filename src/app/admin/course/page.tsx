@@ -38,7 +38,7 @@ export default function CoursePage() {
       setAds(res.data.data || []);
     } catch (err) {
         console.log(err);
-      toast({ title: "Failed to fetch ads", description: "Please try again later.", variant: "destructive" });
+      toast({ title: "Failed to fetch course", description: "Please try again later.", variant: "destructive" });
     } finally {
       setLoading(false);
     }
@@ -59,16 +59,16 @@ export default function CoursePage() {
     try {
       if(ad.id){
         await axiosInstance.patch(API_URLS.COURSES.PATCH_COURSES(ad.id), { name: ad.name });
-        toast({ title: "Source Updated successfully", variant: "success" });
+        toast({ title: "Course Updated successfully", variant: "success" });
       }else{
         await axiosInstance.post(API_URLS.COURSES.POST_COURSES, { name: ad.name });
-        toast({ title: "Source added successfully", variant: "success" });
+        toast({ title: "Course added successfully", variant: "success" });
       }
       setAd({ id: "", name: "" });
       setOpen(false);
       fetchAds();
     } catch (err) {
-      toast({ title: "Failed to add ad", description: "Please try again.", variant: "destructive" });
+      toast({ title: "Failed to add course", description: "Please try again.", variant: "destructive" });
     } finally {
       setAdding(false);
     }
@@ -148,7 +148,7 @@ export default function CoursePage() {
                     name="name"
                     value={ad.name}
                     onChange={e => setAd({...ad, name: e.target.value})}
-                    placeholder="Enter source name"
+                    placeholder="Enter course name"
                     required
                   />
                 </div>

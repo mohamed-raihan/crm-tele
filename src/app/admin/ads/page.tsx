@@ -135,7 +135,7 @@ export default function AdsPage() {
             </DialogTrigger>
             <DialogContent>
               <DialogHeader>
-                <DialogTitle>Add New Ad</DialogTitle>
+                <DialogTitle>{ad.id ? "Edit Source" : "Add New Source"}</DialogTitle>
               </DialogHeader>
               <form onSubmit={handleAddAd} className="space-y-4">
                 <div>

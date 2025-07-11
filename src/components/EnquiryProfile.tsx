@@ -44,8 +44,8 @@ interface Enquiry {
   mettad_name: string | null;
   phone: string;
   phone2: string;
-  preferred_course: string;
-  required_service: string;
+  preferred_course_name: string;
+  required_service_name: string;
 }
 
 interface id {
@@ -199,11 +199,21 @@ export function EnquiryProfile(id: id) {
 
 
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6 pt-6 border-t">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mt-6 pt-6 border-t">
             {/* Enquiry Status */}
             <div>
               <h3 className="font-medium text-gray-900 mb-2">Follow Ups</h3>
               <p className="text-gray-600">{enquiry.follow_up_on}</p>
+            </div>
+
+            <div>
+              <h3 className="font-medium text-gray-900 mb-2">Prefered Course</h3>
+              <p className="text-gray-600">{enquiry.preferred_course_name}</p>
+            </div>
+
+            <div>
+              <h3 className="font-medium text-gray-900 mb-2">Service</h3>
+              <p className="text-gray-600">{enquiry.required_service_name}</p>
             </div>
 
             <div>
@@ -263,7 +273,7 @@ export function EnquiryProfile(id: id) {
                       <SelectItem value="Not Answered">Not Answered</SelectItem>
                       <SelectItem value="Busy">Busy</SelectItem>
                       <SelectItem value="Switched Off">Switched Off</SelectItem>
-                      <SelectItem value="Answered">Answered</SelectItem>
+                      {/* <SelectItem value="Answered">Answered</SelectItem> */}
                       <SelectItem value="No Response">No Response</SelectItem>
                       <SelectItem value="Invalid Number">Invalid Number</SelectItem>
                       <SelectItem value="not_contacted">Not Contacted</SelectItem>

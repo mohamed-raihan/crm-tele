@@ -201,7 +201,8 @@ export function NewEnquiryForm() {
           name: 'follow_up_on',
           label: 'Follow Up On',
           type: 'date',
-          placeholder: 'Sep 30, 2025',
+          required: true,
+          placeholder: 'Select date',
           // description: 'Set Follow up Date for Already Contacted Enquiries',
           validation: z.date().optional()
         },
@@ -213,7 +214,7 @@ export function NewEnquiryForm() {
           required: true,
           options: [
             { value: 'Active', label: 'Active' },
-            { value: 'Closed', label: 'Closed' },
+            { value: 'Not interested', label: 'Not interested' },
           ],
           validation: z.string().min(1, 'Required service is required')
         },
@@ -235,6 +236,7 @@ export function NewEnquiryForm() {
           name: 'feedback',
           label: 'FeedBack',
           type: 'textarea',
+          required: true,
           placeholder: 'Type Feedback',
           // description: 'Provide Feed Back for Already Contacted Enquiries',
           validation: z.string().optional()
