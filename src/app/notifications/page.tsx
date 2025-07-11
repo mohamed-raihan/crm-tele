@@ -16,10 +16,18 @@ interface Reminder {
   enquiry_id: number;
 }
 
+interface PaginationInfo {
+  total: number;
+  page: number;
+  limit: number;
+  totalPages: number;
+}
+
 interface ApiResponse {
   code: number;
   message: string;
-  reminders: Reminder[];
+  data: Reminder[];
+  pagination: PaginationInfo;
 }
 
 function formatDate(dateStr: string | null | undefined) {
@@ -188,23 +196,60 @@ const NotificationItem = ({
 };
 
 const NotificationPage = () => {
-  const [allReminders, setAllReminders] = useState<Reminder[]>([]);
-  const [filteredReminders, setFilteredReminders] = useState<Reminder[]>([]);
+  const [reminders, setReminders] = useState<Reminder[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
-  const remindersPerPage = 10;
+  const [pagination, setPagination] = useState<PaginationInfo>({
+    total: 0,
+    page: 1,
+    limit: 10,
+    totalPages: 0
+  });
+  const [tabCounts, setTabCounts] = useState({
+    all: 0,
+    walkin: 0,
+    followup: 0
+  });
 
-  // Fetch reminders from API
-  const fetchReminders = async () => {
+  // Debounce search term
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
+  
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  // Filter reminders by category
+  const filterRemindersByTab = (reminders: Reminder[], tab: string) => {
+    if (tab === "walkin") {
+      return reminders.filter(r => /walk[- ]?in/i.test(r.reminder_message));
+    }
+    if (tab === "followup") {
+      return reminders.filter(r => /follow[- ]?up/i.test(r.reminder_message));
+    }
+    return reminders;
+  };
+
+  // Fetch reminders from API with filters
+  const fetchReminders = async (page: number = 1, search: string = "", filter: string = "all") => {
     setLoading(true);
     try {
       const token = localStorage.getItem("access_token");
       if (!token) return;
 
+      // Build query parameters
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: "10",
+        ...(search && { search })
+      });
+
       const response = await axiosInstance.get(
-        API_URLS.NOTIFICATIONS.GET_NOTIFICATIONS,
+        `${API_URLS.NOTIFICATIONS.GET_NOTIFICATIONS}?${params}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -214,96 +259,147 @@ const NotificationPage = () => {
       );
 
       if (response.data?.code === 200) {
-        let reminders = response.data.reminders || [];
-        // Sort reminders by created_at in descending order (latest first)
-        reminders = reminders.sort((a: Reminder, b: Reminder) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-        setAllReminders(reminders);
-        filterRemindersByTab(reminders, activeTab, searchTerm);
-
+        let data = response.data.data || [];
+        // Sort reminders by created_at descending (latest first)
+        data = data.slice().sort((a: Reminder, b: Reminder) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+        // Filter by tab if not 'all'
+        const filteredData = filterRemindersByTab(data, filter);
+        const paginationData = {
+          total: filteredData.length,
+          page: 1,
+          limit: 10,
+          totalPages: 1
+        };
+        setReminders(filteredData);
+        setPagination(paginationData);
         // Mark notifications as viewed
         localStorage.setItem(
           "last_notification_visit",
           new Date().toISOString()
         );
       } else {
-        setAllReminders([]);
-        setFilteredReminders([]);
+        setReminders([]);
+        setPagination({
+          total: 0,
+          page: 1,
+          limit: 10,
+          totalPages: 0
+        });
       }
     } catch (error) {
       console.error("Error fetching reminders:", error);
-      setAllReminders([]);
-      setFilteredReminders([]);
+      setReminders([]);
+      setPagination({
+        total: 0,
+        page: 1,
+        limit: 10,
+        totalPages: 0
+      });
     } finally {
       setLoading(false);
     }
   };
 
-  // Filter reminders by tab and search
-  const filterRemindersByTab = (reminders: Reminder[], tab: string, search: string) => {
-    let filtered = reminders;
-
-    // Filter by tab
-    if (tab !== "all") {
-      filtered = reminders.filter(reminder =>
-        categorizeNotification(reminder.reminder_message) === tab
-      );
+  // Fetch tab counts
+  const fetchTabCounts = async () => {
+    try {
+      const token = localStorage.getItem("access_token");
+      if (!token) return;
+      // Fetch all data for accurate counts
+      const response = await axiosInstance.get(`${API_URLS.NOTIFICATIONS.GET_NOTIFICATIONS}?limit=1000`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      let data = response.data?.data || [];
+      const all = data.length;
+      const walkin = data.filter((r: Reminder) => /walk[- ]?in/i.test(r.reminder_message)).length;
+      const followup = data.filter((r: Reminder) => /follow[- ]?up/i.test(r.reminder_message)).length;
+      setTabCounts({
+        all,
+        walkin,
+        followup
+      });
+    } catch (error) {
+      console.error("Error fetching tab counts:", error);
     }
-
-    // Filter by search
-    if (search.trim()) {
-      filtered = filtered.filter(reminder =>
-        reminder.enquiry_name.toLowerCase().includes(search.toLowerCase()) ||
-        reminder.reminder_message.toLowerCase().includes(search.toLowerCase())
-      );
-    }
-
-    setFilteredReminders(filtered);
-    setCurrentPage(1);
   };
 
   // Handle tab change
   const handleTabChange = (tab: string) => {
     setActiveTab(tab);
-    filterRemindersByTab(allReminders, tab, searchTerm);
+    setCurrentPage(1);
+    fetchReminders(1, debouncedSearchTerm, tab);
   };
 
   // Handle search
   const handleSearch = (value: string) => {
     setSearchTerm(value);
-    filterRemindersByTab(allReminders, activeTab, value);
   };
 
-  // Get tab counts
-  const getTabCounts = () => {
-    const all = allReminders.length;
-    const walkin = allReminders.filter(r => categorizeNotification(r.reminder_message) === "walkin").length;
-    const followup = allReminders.filter(r => categorizeNotification(r.reminder_message) === "followup").length;
-    return { all, walkin, followup };
+  // Handle page change
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    fetchReminders(page, debouncedSearchTerm, activeTab);
   };
+
+  // Generate pagination buttons
+  const generatePaginationButtons = () => {
+    const buttons = [];
+    const totalPages = pagination.totalPages;
+    const current = currentPage;
+
+    if (totalPages <= 5) {
+      // Show all pages if total pages <= 5
+      for (let i = 1; i <= totalPages; i++) {
+        buttons.push(i);
+      }
+    } else {
+      // Show first page
+      buttons.push(1);
+
+      if (current > 3) {
+        buttons.push("...");
+      }
+
+      // Show current page and neighbors
+      const start = Math.max(2, current - 1);
+      const end = Math.min(totalPages - 1, current + 1);
+
+      for (let i = start; i <= end; i++) {
+        if (i !== 1 && i !== totalPages) {
+          buttons.push(i);
+        }
+      }
+
+      if (current < totalPages - 2) {
+        buttons.push("...");
+      }
+
+      // Show last page
+      if (totalPages > 1) {
+        buttons.push(totalPages);
+      }
+    }
+
+    return buttons;
+  };
+
+  // Effects
+  useEffect(() => {
+    fetchReminders(currentPage, debouncedSearchTerm, activeTab);
+  }, [debouncedSearchTerm]);
 
   useEffect(() => {
     fetchReminders();
+    fetchTabCounts();
   }, []);
-
-  useEffect(() => {
-    filterRemindersByTab(allReminders, activeTab, searchTerm);
-  }, [activeTab]);
-
-  // Pagination logic
-  const totalPages = Math.ceil(filteredReminders.length / remindersPerPage);
-  const paginatedReminders = filteredReminders.slice(
-    (currentPage - 1) * remindersPerPage,
-    currentPage * remindersPerPage
-  );
-  const handlePageChange = (page: number) => setCurrentPage(page);
-
-  const tabCounts = getTabCounts();
 
   const tabs = [
     { id: "all", label: "All", count: tabCounts.all, icon: Bell },
     { id: "walkin", label: "Walk-in", count: tabCounts.walkin, icon: Users },
     { id: "followup", label: "Follow-ups", count: tabCounts.followup, icon: UserCheck },
   ];
+
+  const paginationButtons = generatePaginationButtons();
 
   return (
     <div className="flex-1 flex flex-col min-h-0 bg-gray-50">
@@ -321,8 +417,8 @@ const NotificationPage = () => {
                   Notifications
                 </h1>
                 <p className="text-gray-600 mt-1 text-sm md:text-base">
-                  {allReminders.length > 0
-                    ? `${allReminders.length} notification${allReminders.length > 1 ? "s" : ""}`
+                  {pagination.total > 0
+                    ? `${pagination.total} notification${pagination.total > 1 ? "s" : ""}`
                     : "No notifications"}
                 </p>
               </div>
@@ -343,7 +439,7 @@ const NotificationPage = () => {
             </div>
           </div>
 
-          {/* Tabs - Improved Responsive Design */}
+          {/* Tabs */}
           <div className="mb-4 md:mb-6">
             <div className="bg-white rounded-lg border border-gray-200 p-1">
               <nav className="flex space-x-1 overflow-x-auto scrollbar-hide" aria-label="Tabs">
@@ -386,7 +482,7 @@ const NotificationPage = () => {
                 </div>
               ) : (
                 <div>
-                  {paginatedReminders.length === 0 ? (
+                  {reminders.length === 0 ? (
                     <div className="text-center py-12 md:py-16">
                       <div className="w-12 h-12 md:w-16 md:h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                         <Bell className="w-6 h-6 md:w-8 md:h-8 text-gray-400" />
@@ -405,7 +501,7 @@ const NotificationPage = () => {
                   ) : (
                     <>
                       <div className="space-y-3 md:space-y-4">
-                        {paginatedReminders.map((reminder, index) => (
+                        {reminders.map((reminder, index) => (
                           <NotificationItem
                             key={reminder.id}
                             reminder={reminder}
@@ -414,38 +510,46 @@ const NotificationPage = () => {
                         ))}
                       </div>
 
-                      {totalPages > 1 && (
+                      {pagination.totalPages > 1 && (
                         <div className="flex flex-col gap-4 mt-6">
                           <div className="text-sm text-gray-600 text-center md:text-left">
-                            Showing {((currentPage - 1) * remindersPerPage) + 1} to {Math.min(currentPage * remindersPerPage, filteredReminders.length)} of {filteredReminders.length} notifications
+                            Showing {((currentPage - 1) * pagination.limit) + 1} to {Math.min(currentPage * pagination.limit, pagination.total)} of {pagination.total} notifications
                           </div>
                           <div className="flex justify-center">
-                            <div className="flex items-center space-x-1 md:space-x-2">
+                            <div className="flex items-center bg-white rounded-lg border border-gray-200 overflow-hidden">
                               <button
                                 onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
                                 disabled={currentPage === 1}
-                                className="px-2 md:px-3 py-1 text-xs md:text-sm text-gray-600 hover:text-gray-900 disabled:text-gray-400 border border-gray-300 rounded-md hover:bg-gray-50 disabled:bg-gray-100"
+                                className="px-4 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-50 disabled:text-gray-400 disabled:bg-gray-100 disabled:cursor-not-allowed border-r border-gray-200"
                               >
-                                Previous
+                                Prev
                               </button>
-                              <div className="flex space-x-1 max-w-[200px] overflow-x-auto scrollbar-hide">
-                                {[...Array(totalPages)].map((_, idx) => (
-                                  <button
-                                    key={idx}
-                                    onClick={() => handlePageChange(idx + 1)}
-                                    className={`px-2 md:px-3 py-1 text-xs md:text-sm rounded-md transition-colors whitespace-nowrap ${currentPage === idx + 1
-                                      ? "bg-red-500 text-white"
-                                      : "text-gray-600 hover:bg-gray-100 border border-gray-300"
-                                      }`}
-                                  >
-                                    {idx + 1}
-                                  </button>
+                              <div className="flex">
+                                {paginationButtons.map((button, index) => (
+                                  <React.Fragment key={index}>
+                                    {button === "..." ? (
+                                      <span className="px-4 py-2 text-sm text-gray-500 bg-gray-50 border-r border-gray-200">
+                                        ...
+                                      </span>
+                                    ) : (
+                                      <button
+                                        onClick={() => handlePageChange(button as number)}
+                                        className={`px-4 py-2 text-sm border-r border-gray-200 transition-colors ${
+                                          currentPage === button
+                                            ? "bg-blue-500 text-white"
+                                            : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                                        }`}
+                                      >
+                                        {button}
+                                      </button>
+                                    )}
+                                  </React.Fragment>
                                 ))}
                               </div>
                               <button
-                                onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
-                                disabled={currentPage === totalPages}
-                                className="px-2 md:px-3 py-1 text-xs md:text-sm text-gray-600 hover:text-gray-900 disabled:text-gray-400 border border-gray-300 rounded-md hover:bg-gray-50 disabled:bg-gray-100"
+                                onClick={() => handlePageChange(Math.min(pagination.totalPages, currentPage + 1))}
+                                disabled={currentPage === pagination.totalPages}
+                                className="px-4 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-50 disabled:text-gray-400 disabled:bg-gray-100 disabled:cursor-not-allowed"
                               >
                                 Next
                               </button>

@@ -105,163 +105,160 @@ const SearchableDropdown: React.FC<{
   onLoadMore,
   disabled = false,
 }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
-  const dropdownRef = useRef<HTMLDivElement>(null);
-  const listRef = useRef<HTMLDivElement>(null);
-  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const [isOpen, setIsOpen] = useState(false);
+    const [searchTerm, setSearchTerm] = useState("");
+    const dropdownRef = useRef<HTMLDivElement>(null);
+    const listRef = useRef<HTMLDivElement>(null);
+    const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target as Node)
-      ) {
-        setIsOpen(false);
-        setSearchTerm("");
-      }
+    useEffect(() => {
+      const handleClickOutside = (event: MouseEvent) => {
+        if (
+          dropdownRef.current &&
+          !dropdownRef.current.contains(event.target as Node)
+        ) {
+          setIsOpen(false);
+          setSearchTerm("");
+        }
+      };
+
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
+    const handleSearch = useCallback(
+      (term: string) => {
+        if (searchTimeoutRef.current) {
+          clearTimeout(searchTimeoutRef.current);
+        }
+
+        searchTimeoutRef.current = setTimeout(() => {
+          if (onSearch) {
+            onSearch(term);
+          }
+        }, 300);
+      },
+      [onSearch]
+    );
+
+    const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const term = e.target.value;
+      setSearchTerm(term);
+      handleSearch(term);
     };
 
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  const handleSearch = useCallback(
-    (term: string) => {
-      if (searchTimeoutRef.current) {
-        clearTimeout(searchTimeoutRef.current);
-      }
-
-      searchTimeoutRef.current = setTimeout(() => {
-        if (onSearch) {
-          onSearch(term);
-        }
-      }, 300);
-    },
-    [onSearch]
-  );
-
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const term = e.target.value;
-    setSearchTerm(term);
-    handleSearch(term);
-  };
-
-  const handleScroll = useCallback(() => {
-    if (listRef.current && hasMore && !loading) {
-      const { scrollTop, scrollHeight, clientHeight } = listRef.current;
-      if (scrollTop + clientHeight >= scrollHeight - 5) {
-        if (onLoadMore) {
-          onLoadMore();
+    const handleScroll = useCallback(() => {
+      if (listRef.current && hasMore && !loading) {
+        const { scrollTop, scrollHeight, clientHeight } = listRef.current;
+        if (scrollTop + clientHeight >= scrollHeight - 5) {
+          if (onLoadMore) {
+            onLoadMore();
+          }
         }
       }
-    }
-  }, [hasMore, loading, onLoadMore]);
+    }, [hasMore, loading, onLoadMore]);
 
-  const selectedOption = options.find((opt) => opt[valueKey] === value);
+    const selectedOption = options.find((opt) => opt[valueKey] === value);
 
-  return (
-    <div className="relative" ref={dropdownRef}>
-      <div
-        className={`w-full border rounded px-3 py-2 bg-gray-100 text-gray-700 cursor-pointer flex items-center justify-between ${
-          disabled ? "opacity-50 cursor-not-allowed" : ""
-        }`}
-        onClick={() => !disabled && setIsOpen(!isOpen)}
-      >
-        <span className={!value ? "text-gray-500" : ""}>
-          {selectedOption ? selectedOption[displayKey] : placeholder}
-        </span>
-        <ChevronDown
-          className={`w-4 h-4 transition-transform ${
-            isOpen ? "rotate-180" : ""
-          }`}
-        />
-      </div>
+    return (
+      <div className="relative" ref={dropdownRef}>
+        <div
+          className={`w-full border rounded px-3 py-2 bg-gray-100 text-gray-700 cursor-pointer flex items-center justify-between ${disabled ? "opacity-50 cursor-not-allowed" : ""
+            }`}
+          onClick={() => !disabled && setIsOpen(!isOpen)}
+        >
+          <span className={!value ? "text-gray-500" : ""}>
+            {selectedOption ? selectedOption[displayKey] : placeholder}
+          </span>
+          <ChevronDown
+            className={`w-4 h-4 transition-transform ${isOpen ? "rotate-180" : ""
+              }`}
+          />
+        </div>
 
-      {isOpen && !disabled && (
-        <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-64 overflow-hidden">
-          <div className="p-2 border-b">
-            <div className="relative">
-              <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-400" />
-              <input
-                type="text"
-                className="w-full pl-8 pr-8 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder={`Search ${placeholder.toLowerCase()}...`}
-                value={searchTerm}
-                onChange={handleSearchChange}
-                onClick={(e) => e.stopPropagation()}
-                autoFocus
-              />
-              {searchTerm && (
-                <button
-                  className="absolute right-2 top-2.5 h-4 w-4 text-gray-400 hover:text-gray-600"
-                  onClick={() => {
-                    setSearchTerm("");
-                    handleSearch("");
-                  }}
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              )}
+        {isOpen && !disabled && (
+          <div className="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-64 overflow-hidden">
+            <div className="p-2 border-b">
+              <div className="relative">
+                <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-400" />
+                <input
+                  type="text"
+                  className="w-full pl-8 pr-8 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder={`Search ${placeholder.toLowerCase()}...`}
+                  value={searchTerm}
+                  onChange={handleSearchChange}
+                  onClick={(e) => e.stopPropagation()}
+                  autoFocus
+                />
+                {searchTerm && (
+                  <button
+                    className="absolute right-2 top-2.5 h-4 w-4 text-gray-400 hover:text-gray-600"
+                    onClick={() => {
+                      setSearchTerm("");
+                      handleSearch("");
+                    }}
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
             </div>
-          </div>
 
-          <div
-            ref={listRef}
-            className="max-h-48 overflow-y-auto"
-            onScroll={handleScroll}
-          >
             <div
-              className="px-3 py-2 hover:bg-gray-100 cursor-pointer text-gray-500"
-              onClick={() => {
-                onChange("");
-                setIsOpen(false);
-                setSearchTerm("");
-              }}
+              ref={listRef}
+              className="max-h-48 overflow-y-auto"
+              onScroll={handleScroll}
             >
-              {placeholder}
-            </div>
-
-            {options.map((option, index) => (
               <div
-                key={option.id || option[valueKey] || index}
-                className={`px-3 py-2 hover:bg-gray-100 cursor-pointer ${
-                  value === option[valueKey] ? "bg-blue-50 text-blue-600" : ""
-                }`}
+                className="px-3 py-2 hover:bg-gray-100 cursor-pointer text-gray-500"
                 onClick={() => {
-                  onChange(option[valueKey]);
+                  onChange("");
                   setIsOpen(false);
                   setSearchTerm("");
                 }}
               >
-                {option[displayKey]}
+                {placeholder}
               </div>
-            ))}
 
-            {loading && (
-              <div className="px-3 py-2 text-center text-gray-500 flex items-center justify-center gap-2">
-                <LoadingSpinner size="w-4 h-4" />
-                Loading...
-              </div>
-            )}
+              {options.map((option, index) => (
+                <div
+                  key={option.id || option[valueKey] || index}
+                  className={`px-3 py-2 hover:bg-gray-100 cursor-pointer ${value === option[valueKey] ? "bg-blue-50 text-blue-600" : ""
+                    }`}
+                  onClick={() => {
+                    onChange(option[valueKey]);
+                    setIsOpen(false);
+                    setSearchTerm("");
+                  }}
+                >
+                  {option[displayKey]}
+                </div>
+              ))}
 
-            {!loading && options.length === 0 && searchTerm && (
-              <div className="px-3 py-2 text-center text-gray-500">
-                No results found
-              </div>
-            )}
+              {loading && (
+                <div className="px-3 py-2 text-center text-gray-500 flex items-center justify-center gap-2">
+                  <LoadingSpinner size="w-4 h-4" />
+                  Loading...
+                </div>
+              )}
 
-            {!loading && options.length === 0 && !searchTerm && (
-              <div className="px-3 py-2 text-center text-gray-500">
-                No data available
-              </div>
-            )}
+              {!loading && options.length === 0 && searchTerm && (
+                <div className="px-3 py-2 text-center text-gray-500">
+                  No results found
+                </div>
+              )}
+
+              {!loading && options.length === 0 && !searchTerm && (
+                <div className="px-3 py-2 text-center text-gray-500">
+                  No data available
+                </div>
+              )}
+            </div>
           </div>
-        </div>
-      )}
-    </div>
-  );
-};
+        )}
+      </div>
+    );
+  };
 
 export default function ReportPage() {
   const [branch, setBranch] = useState<string>("");
@@ -433,7 +430,7 @@ export default function ReportPage() {
   // Fetch telecallers with pagination and search
   const fetchTelecaller = async (
     page: number = 1,
-    limit: number = 1000, // Increase limit to get all telecallers
+    limit: number = 1000,
     searchTerm: string = ""
   ) => {
     setTelecallerLoading(true);
@@ -445,7 +442,18 @@ export default function ReportPage() {
         page: page.toString(),
         limit: limit.toString(),
       });
-      if (branch) params.append("branch_name", branch);
+
+      // Only add branch filter if a branch is selected
+      if (branch) {
+        params.append("branch_name", branch);
+      }
+
+      // Add search parameters for API filtering
+      if (searchTerm) {
+        params.append("search", searchTerm);
+        params.append("key", "name");
+        params.append("field", "name");
+      }
 
       const response = await axiosInstance.get(
         `${API_URLS.TELLE_CALLERS.GET_TELLE_CALLERS}?${params.toString()}`,
@@ -455,12 +463,11 @@ export default function ReportPage() {
       if (response.data?.code === 200) {
         const telecallersData = response.data.data || [];
         setAllTelecallers(telecallersData);
-        setFilteredTelecallers(telecallersData);
         setTelecallers(telecallersData);
 
         setTelecallerPagination({
           currentPage: page,
-          hasMore: false, // Disable pagination since we're loading all
+          hasMore: false,
           limit: limit,
         });
       } else {
@@ -476,6 +483,7 @@ export default function ReportPage() {
       setTelecallerLoading(false);
     }
   };
+
 
   // Export to Excel with all data
   const exportToExcel = async () => {
@@ -575,19 +583,10 @@ export default function ReportPage() {
   const handleTelecallerSearch = (searchTerm: string) => {
     setTelecallerSearchTerm(searchTerm);
 
-    if (!searchTerm.trim()) {
-      setFilteredTelecallers(allTelecallers);
-      setTelecallers(allTelecallers);
-      return;
-    }
-
-    const filtered = allTelecallers.filter((telecaller) =>
-      telecaller.name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-
-    setFilteredTelecallers(filtered);
-    setTelecallers(filtered);
+    // Always call API with search term (empty or not)
+    fetchTelecaller(1, 1000, searchTerm);
   };
+
 
   // Load more branches
   const loadMoreBranches = () => {
@@ -610,22 +609,22 @@ export default function ReportPage() {
   const handleBranchChange = (branchValue: string) => {
     setBranch(branchValue);
     setCounselor("");
-    setTelecallers([]);
-    setAllTelecallers([]);
-    setFilteredTelecallers([]);
     setTelecallerSearchTerm("");
     setTelecallerPagination({ currentPage: 1, hasMore: false, limit: 1000 });
 
-    if (branchValue) {
-      fetchTelecaller(1, 1000, "");
-    }
+    // Fetch telecallers for the selected branch (or all if no branch selected)
+    fetchTelecaller(1, 1000, "");
   };
+
 
   // Handle filter changes
   useEffect(() => {
     const debounceTimer = setTimeout(() => {
       setPagination((prev) => ({ ...prev, currentPage: 1 }));
       fetchAllReports(1, 10);
+
+      // Refetch telecallers when branch changes
+      fetchTelecaller(1, 1000, telecallerSearchTerm);
     }, 500);
 
     return () => clearTimeout(debounceTimer);
@@ -639,7 +638,7 @@ export default function ReportPage() {
         await Promise.all([
           fetchAllReports(1, 10),
           fetchAllBranches(1, 10),
-          fetchTelecaller(1, 10),
+          fetchTelecaller(1, 1000, ""), // This will load all telecallers initially
         ]);
       } catch (error) {
         console.error("Error initializing data:", error);
@@ -650,6 +649,8 @@ export default function ReportPage() {
 
     initializeData();
   }, []);
+
+
 
   // Cleanup timeout on unmount
   useEffect(() => {
@@ -694,7 +695,7 @@ export default function ReportPage() {
               <div className="flex-1">
                 <label className="block text-gray-700 mb-1">Counselor</label>
                 <SearchableDropdown
-                  options={filteredTelecallers}
+                  options={telecallers}  // Change from filteredTelecallers to telecallers
                   value={counselor}
                   onChange={setCounselor}
                   placeholder="All Counsellors"
@@ -703,7 +704,7 @@ export default function ReportPage() {
                   onSearch={handleTelecallerSearch}
                   loading={telecallerLoading}
                   hasMore={false}
-                  onLoadMore={() => {}}
+                  onLoadMore={() => { }}
                 />
               </div>
             </div>
@@ -903,11 +904,10 @@ export default function ReportPage() {
                   {[...Array(pagination.totalPages)].map((_, index) => (
                     <button
                       key={index}
-                      className={`px-3 py-1 border rounded disabled:opacity-50 disabled:cursor-not-allowed ${
-                        pagination.currentPage === index + 1
-                          ? "bg-violet-100 text-violet-700 border-violet-300"
-                          : "hover:bg-gray-50"
-                      }`}
+                      className={`px-3 py-1 border rounded disabled:opacity-50 disabled:cursor-not-allowed ${pagination.currentPage === index + 1
+                        ? "bg-violet-100 text-violet-700 border-violet-300"
+                        : "hover:bg-gray-50"
+                        }`}
                       disabled={loading}
                       onClick={() => handlePageChange(index + 1)}
                     >
