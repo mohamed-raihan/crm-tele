@@ -117,7 +117,7 @@ const navigationItems = [
 const myJobSubItems = [
   {
     title: "Remaining",
-    url: "/admin/remaining",
+    url: "/admin/remining",
     icon: Briefcase,
   },
   {
