@@ -36,6 +36,8 @@ export function DashboardStats() {
     walkin_list: 0,
     total_telecallers: 0,
   });
+
+
   const navigate = useNavigate();
 
   useEffect(() => {
