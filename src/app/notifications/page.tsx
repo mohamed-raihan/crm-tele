@@ -402,168 +402,156 @@ const NotificationPage = () => {
   const paginationButtons = generatePaginationButtons();
 
   return (
-    <div className="flex-1 flex flex-col min-h-0 bg-gray-50">
+    <div className="flex-1 flex flex-col">
       <DashboardHeader />
-      <main className="flex-1 p-3 md:p-4 lg:p-6">
-        <div className="w-full max-w-7xl mx-auto">
-          {/* Header */}
-          <div className="mb-4 md:mb-6">
-            <div className="flex items-center mb-3 md:mb-4">
-              <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-gradient-to-r from-red-500 to-red-600 flex items-center justify-center mr-3 md:mr-4">
-                <Bell className="w-5 h-5 md:w-6 md:h-6 text-white" />
+      <main className="flex-1 p-6">
+        <div className="mb-8">
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Notifications</h2>
+          <p className="text-gray-600">
+            {pagination.total > 0
+              ? `${pagination.total} notification${pagination.total > 1 ? "s" : ""}`
+              : "No notifications"}
+          </p>
+        </div>
+
+        {/* Search */}
+        <div className="mb-6">
+          <div className="relative w-full max-w-md">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <Input
+              type="text"
+              placeholder="Search notifications..."
+              value={searchTerm}
+              onChange={(e) => handleSearch(e.target.value)}
+              className="pl-9 pr-4 py-2 bg-white border border-gray-300 focus:border-red-500 focus:ring-1 focus:ring-red-500 rounded-lg"
+            />
+          </div>
+        </div>
+
+        {/* Tabs */}
+        <div className="mb-6">
+          <div className="bg-white rounded-lg border border-gray-200 p-1">
+            <nav className="flex space-x-1 overflow-x-auto scrollbar-hide" aria-label="Tabs">
+              {tabs.map((tab) => {
+                const Icon = tab.icon;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => handleTabChange(tab.id)}
+                    className={`${activeTab === tab.id
+                      ? "bg-red-500 text-white shadow-sm"
+                      : "text-gray-600 hover:text-gray-800 hover:bg-gray-50"
+                      } flex items-center justify-center px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 whitespace-nowrap min-w-0 flex-1 md:flex-none`}
+                  >
+                    <Icon className="w-4 h-4 mr-2 flex-shrink-0" />
+                    <span className="truncate">{tab.label}</span>
+                    <span className={`ml-2 px-2 py-1 text-xs rounded-full flex-shrink-0 ${activeTab === tab.id
+                      ? "bg-red-400 text-white"
+                      : "bg-gray-200 text-gray-700"
+                      }`}>
+                      {tab.count}
+                    </span>
+                  </button>
+                );
+              })}
+            </nav>
+          </div>
+        </div>
+
+        {/* Notifications Card */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Notifications</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {loading ? (
+              <div className="flex flex-col items-center justify-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-500 mb-4"></div>
+                <span className="text-gray-600">Loading notifications...</span>
               </div>
+            ) : (
               <div>
-                <h1 className="text-xl md:text-2xl lg:text-3xl font-bold text-gray-900">
-                  Notifications
-                </h1>
-                <p className="text-gray-600 mt-1 text-sm md:text-base">
-                  {pagination.total > 0
-                    ? `${pagination.total} notification${pagination.total > 1 ? "s" : ""}`
-                    : "No notifications"}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Search */}
-          <div className="mb-4 md:mb-6">
-            <div className="relative w-full max-w-md">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 md:w-5 md:h-5" />
-              <Input
-                type="text"
-                placeholder="Search notifications..."
-                value={searchTerm}
-                onChange={(e) => handleSearch(e.target.value)}
-                className="pl-9 md:pl-10 pr-4 py-2 md:py-3 bg-white border border-gray-300 focus:border-red-500 focus:ring-1 focus:ring-red-500 rounded-lg text-sm md:text-base"
-              />
-            </div>
-          </div>
-
-          {/* Tabs */}
-          <div className="mb-4 md:mb-6">
-            <div className="bg-white rounded-lg border border-gray-200 p-1">
-              <nav className="flex space-x-1 overflow-x-auto scrollbar-hide" aria-label="Tabs">
-                {tabs.map((tab) => {
-                  const Icon = tab.icon;
-                  return (
-                    <button
-                      key={tab.id}
-                      onClick={() => handleTabChange(tab.id)}
-                      className={`${activeTab === tab.id
-                        ? "bg-red-500 text-white shadow-sm"
-                        : "text-gray-600 hover:text-gray-800 hover:bg-gray-50"
-                        } flex items-center justify-center px-3 md:px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 whitespace-nowrap min-w-0 flex-1 md:flex-none`}
-                    >
-                      <Icon className="w-4 h-4 mr-1 md:mr-2 flex-shrink-0" />
-                      <span className="truncate">{tab.label}</span>
-                      <span className={`ml-1 md:ml-2 px-1.5 md:px-2 py-0.5 md:py-1 text-xs rounded-full flex-shrink-0 ${activeTab === tab.id
-                        ? "bg-red-400 text-white"
-                        : "bg-gray-200 text-gray-700"
-                        }`}>
-                        {tab.count}
-                      </span>
-                    </button>
-                  );
-                })}
-              </nav>
-            </div>
-          </div>
-
-          {/* Notifications Card */}
-          <Card className="w-full">
-            <CardHeader className="p-4 md:p-6">
-              <CardTitle className="text-base md:text-lg">Notifications</CardTitle>
-            </CardHeader>
-            <CardContent className="p-4 md:p-6">
-              {loading ? (
-                <div className="flex flex-col items-center justify-center py-12 md:py-16">
-                  <div className="animate-spin rounded-full h-10 w-10 md:h-12 md:w-12 border-b-2 border-red-500 mb-4"></div>
-                  <span className="text-gray-600 text-sm md:text-base">Loading notifications...</span>
-                </div>
-              ) : (
-                <div>
-                  {reminders.length === 0 ? (
-                    <div className="text-center py-12 md:py-16">
-                      <div className="w-12 h-12 md:w-16 md:h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <Bell className="w-6 h-6 md:w-8 md:h-8 text-gray-400" />
-                      </div>
-                      <p className="text-gray-500 text-base md:text-lg mb-2">
-                        {searchTerm
-                          ? "No matching notifications found"
-                          : `No ${activeTab === "all" ? "" : activeTab} notifications`}
-                      </p>
-                      <p className="text-gray-400 text-sm">
-                        {searchTerm
-                          ? "Try adjusting your search terms"
-                          : "You're all caught up!"}
-                      </p>
+                {reminders.length === 0 ? (
+                  <div className="text-center py-12">
+                    <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <Bell className="w-8 h-8 text-gray-400" />
                     </div>
-                  ) : (
-                    <>
-                      <div className="space-y-3 md:space-y-4">
-                        {reminders.map((reminder, index) => (
-                          <NotificationItem
-                            key={reminder.id}
-                            reminder={reminder}
-                            index={index}
-                          />
-                        ))}
-                      </div>
+                    <p className="text-gray-500 text-lg mb-2">
+                      {searchTerm
+                        ? "No matching notifications found"
+                        : `No ${activeTab === "all" ? "" : activeTab} notifications`}
+                    </p>
+                    <p className="text-gray-400 text-sm">
+                      {searchTerm
+                        ? "Try adjusting your search terms"
+                        : "You're all caught up!"}
+                    </p>
+                  </div>
+                ) : (
+                  <>
+                    <div className="space-y-4">
+                      {reminders.map((reminder, index) => (
+                        <NotificationItem
+                          key={reminder.id}
+                          reminder={reminder}
+                          index={index}
+                        />
+                      ))}
+                    </div>
 
-                      {pagination.totalPages > 1 && (
-                        <div className="flex flex-col gap-4 mt-6">
-                          <div className="text-sm text-gray-600 text-center md:text-left">
-                            Showing {((currentPage - 1) * pagination.limit) + 1} to {Math.min(currentPage * pagination.limit, pagination.total)} of {pagination.total} notifications
-                          </div>
-                          <div className="flex justify-center">
-                            <div className="flex items-center bg-white rounded-lg border border-gray-200 overflow-hidden">
-                              <button
-                                onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
-                                disabled={currentPage === 1}
-                                className="px-4 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-50 disabled:text-gray-400 disabled:bg-gray-100 disabled:cursor-not-allowed border-r border-gray-200"
-                              >
-                                Prev
-                              </button>
-                              <div className="flex">
-                                {paginationButtons.map((button, index) => (
-                                  <React.Fragment key={index}>
-                                    {button === "..." ? (
-                                      <span className="px-4 py-2 text-sm text-gray-500 bg-gray-50 border-r border-gray-200">
-                                        ...
-                                      </span>
-                                    ) : (
-                                      <button
-                                        onClick={() => handlePageChange(button as number)}
-                                        className={`px-4 py-2 text-sm border-r border-gray-200 transition-colors ${
-                                          currentPage === button
-                                            ? "bg-blue-500 text-white"
-                                            : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
-                                        }`}
-                                      >
-                                        {button}
-                                      </button>
-                                    )}
-                                  </React.Fragment>
-                                ))}
-                              </div>
-                              <button
-                                onClick={() => handlePageChange(Math.min(pagination.totalPages, currentPage + 1))}
-                                disabled={currentPage === pagination.totalPages}
-                                className="px-4 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-50 disabled:text-gray-400 disabled:bg-gray-100 disabled:cursor-not-allowed"
-                              >
-                                Next
-                              </button>
+                    {pagination.totalPages > 1 && (
+                      <div className="flex flex-col gap-4 mt-6">
+                        <div className="text-sm text-gray-600 text-center md:text-left">
+                          Showing {((currentPage - 1) * pagination.limit) + 1} to {Math.min(currentPage * pagination.limit, pagination.total)} of {pagination.total} notifications
+                        </div>
+                        <div className="flex justify-center">
+                          <div className="flex items-center bg-white rounded-lg border border-gray-200 overflow-hidden">
+                            <button
+                              onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
+                              disabled={currentPage === 1}
+                              className="px-4 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-50 disabled:text-gray-400 disabled:bg-gray-100 disabled:cursor-not-allowed border-r border-gray-200"
+                            >
+                              Prev
+                            </button>
+                            <div className="flex">
+                              {paginationButtons.map((button, index) => (
+                                <React.Fragment key={index}>
+                                  {button === "..." ? (
+                                    <span className="px-4 py-2 text-sm text-gray-500 bg-gray-50 border-r border-gray-200">
+                                      ...
+                                    </span>
+                                  ) : (
+                                    <button
+                                      onClick={() => handlePageChange(button as number)}
+                                      className={`px-4 py-2 text-sm border-r border-gray-200 transition-colors ${
+                                        currentPage === button
+                                          ? "bg-blue-500 text-white"
+                                          : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                                      }`}
+                                    >
+                                      {button}
+                                    </button>
+                                  )}
+                                </React.Fragment>
+                              ))}
                             </div>
+                            <button
+                              onClick={() => handlePageChange(Math.min(pagination.totalPages, currentPage + 1))}
+                              disabled={currentPage === pagination.totalPages}
+                              className="px-4 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-50 disabled:text-gray-400 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                            >
+                              Next
+                            </button>
                           </div>
                         </div>
-                      )}
-                    </>
-                  )}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </main>
     </div>
   );
