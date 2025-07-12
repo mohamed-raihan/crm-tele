@@ -19,17 +19,20 @@ export function DashboardHeader() {
   const navigate = useNavigate();
   const [showConfirm, setShowConfirm] = useState(false);
   const [userName, setUserName] = useStateReact("");
+  const [userEmail, setUserEmail] = useStateReact("");
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [notificationCount, setNotificationCount] = useState(0);
   const [hasNewNotifications, setHasNewNotifications] = useState(false);
 
   useEffect(() => {
     let name = "User";
+    let email = "";
     if (typeof window !== "undefined") {
       try {
         const userData = localStorage.getItem("user_data");
         if (userData) {
           const parsed = JSON.parse(userData);
+          email = parsed.email || "";
           if (parsed.role === "Admin") {
             name = "Admin";
           } else if (parsed.role === "Telecaller" && parsed.telecaller && parsed.telecaller.name) {
@@ -41,6 +44,7 @@ export function DashboardHeader() {
       }
     }
     setUserName(name);
+    setUserEmail(email);
   }, []);
 
   // Fetch notification count
@@ -160,7 +164,7 @@ export function DashboardHeader() {
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Account</DropdownMenuLabel>
+              <DropdownMenuLabel>{userEmail || "Account"}</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => setShowConfirm(true)} className="text-red-600 focus:bg-red-100">
                 <LogOut className="h-4 w-4 mr-2" /> Logout

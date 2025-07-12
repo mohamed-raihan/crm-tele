@@ -519,27 +519,51 @@ export default function ReportPage() {
           return;
         }
 
-        const exportData = allReports.map((report: Report) => ({
-          Counselor: report.telecaller_name || "",
-          Branch: report.branch_name || "",
-          "Total Calls": report.total_calls || 0,
-          Contacted: report.contacted || 0,
-          "Not Contacted": report.not_contacted || 0,
-          Answered: report.answered || 0,
-          "Not Answered": report.not_answered || 0,
-          Qualified: report.qualified || 0,
-          "Not Interested": report.not_interested || 0,
-          "Walk-in List": report.walk_in_list || 0,
-          "Follow-ups": report.total_follow_ups || 0,
+        // Prepare data for Excel export
+        const excelData = allReports.map((report: Report) => ({
+          'Counselor': report.telecaller_name || "",
+          'Branch': report.branch_name || "",
+          'Total Calls': report.total_calls || 0,
+          'Contacted': report.contacted || 0,
+          'Not Contacted': report.not_contacted || 0,
+          'Answered': report.answered || 0,
+          'Not Answered': report.not_answered || 0,
+          'Qualified': report.qualified || 0,
+          'Not Interested': report.not_interested || 0,
+          'Walk-in List': report.walk_in_list || 0,
+          'Follow-ups': report.total_follow_ups || 0,
         }));
 
-        const worksheet = XLSX.utils.json_to_sheet(exportData);
+        // Create Excel workbook
+        const worksheet = XLSX.utils.json_to_sheet(excelData);
         const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, "Reports");
-        XLSX.writeFile(
-          workbook,
-          `counselor_reports_${new Date().toISOString().split("T")[0]}.xlsx`
-        );
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Counselor Reports");
+
+        // Auto-size columns
+        const columnWidths = Object.keys(excelData[0] || {}).map(key => ({
+          wch: Math.max(
+            key.length,
+            ...excelData.map(row => String(row[key as keyof typeof row]).length)
+          ) + 2
+        }));
+        worksheet['!cols'] = columnWidths;
+
+        // Generate Excel file
+        const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+        const blob = new Blob([excelBuffer], {
+          type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        });
+
+        const link = document.createElement("a");
+        const url = URL.createObjectURL(blob);
+        link.setAttribute("href", url);
+        link.setAttribute("download", `counselor_reports_${new Date().toISOString().split("T")[0]}.xlsx`);
+        link.style.visibility = "hidden";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+
         showToast("Report exported successfully", "success");
       } else {
         showToast("Failed to export report", "error");
