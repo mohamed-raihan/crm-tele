@@ -204,7 +204,7 @@ export function NewEnquiryForm() {
           required: true,
           placeholder: 'Select date',
           // description: 'Set Follow up Date for Already Contacted Enquiries',
-          validation: z.date().optional()
+          validation: z.string().min(1, 'Follow up date is required')
         },
         {
           name: 'enquiry_status',
@@ -239,7 +239,7 @@ export function NewEnquiryForm() {
           required: true,
           placeholder: 'Type Feedback',
           // description: 'Provide Feed Back for Already Contacted Enquiries',
-          validation: z.string().optional()
+          validation: z.string().min(1, 'Feedback is required')
         },
       ]
     }
