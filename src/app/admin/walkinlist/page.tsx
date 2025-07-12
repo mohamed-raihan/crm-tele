@@ -221,7 +221,8 @@ const WalkInListPage = () => {
         ...data.map((item: WalkInData, index: number) => [
           csvSafe(index + 1),
           csvSafe(item.enquiry_details?.candidate_name),
-          csvSafe(item.enquiry_details?.phone),
+          // Fix: Prepend tab to phone number to force Excel to treat as text
+          csvSafe(item.enquiry_details?.phone ? `\t${item.enquiry_details.phone}` : ""),
           csvSafe(item.enquiry_details?.email),
           csvSafe(item.telecaller_name),
           csvSafe(item.branch_name),

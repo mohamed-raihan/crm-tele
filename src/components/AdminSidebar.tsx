@@ -263,9 +263,11 @@ export function AdminSidebar() {
       <SidebarHeader className="p-6">
         <div className="flex items-center gap-2">
           <Link to="/admin" className="flex items-center gap-2 hover:bg-gray-100 rounded-lg p-1 transition-colors">
-            <div className="h-8 w-8 rounded-lg bg-blue-600 flex items-center justify-center">
-              <Shield className="h-4 w-4 text-white" />
-            </div>
+            <img 
+              src="/telecrmicon.png" 
+              alt="TeleCRM Logo" 
+              className="h-12 w-12 rounded-lg object-cover"
+            />
             <div>
               <h1 className="text-lg font-semibold text-gray-900">TeleCRM</h1>
               <p className="text-xs text-gray-500">Admin Portal</p>
