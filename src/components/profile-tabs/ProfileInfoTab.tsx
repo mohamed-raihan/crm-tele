@@ -47,8 +47,59 @@ export function ProfileInfoTab(id:id) {
 
   // Validation functions
   const validateEmail = (email: string): boolean => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
+    // More comprehensive email validation regex
+    const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
+    
+    // Additional checks for common email issues
+    if (!emailRegex.test(email)) {
+      return false;
+    }
+    
+    // Check for valid domain structure
+    const parts = email.split('@');
+    if (parts.length !== 2) {
+      return false;
+    }
+    
+    const [localPart, domain] = parts;
+    
+    // Local part validation
+    if (localPart.length === 0 || localPart.length > 64) {
+      return false;
+    }
+    
+    // Domain validation
+    if (domain.length === 0 || domain.length > 253) {
+      return false;
+    }
+    
+    // Check for valid TLD (top-level domain)
+    const domainParts = domain.split('.');
+    if (domainParts.length < 2) {
+      return false;
+    }
+    
+    const tld = domainParts[domainParts.length - 1];
+    if (tld.length < 2 || tld.length > 6) {
+      return false;
+    }
+    
+    // Check for consecutive dots
+    if (email.includes('..')) {
+      return false;
+    }
+    
+    // Check for dots at start or end of local part
+    if (localPart.startsWith('.') || localPart.endsWith('.')) {
+      return false;
+    }
+    
+    // Check for dots at start or end of domain
+    if (domain.startsWith('.') || domain.endsWith('.')) {
+      return false;
+    }
+    
+    return true;
   };
 
   const validatePhone = (phone: string): boolean => {
@@ -199,6 +250,8 @@ export function ProfileInfoTab(id:id) {
       toast({ title: "Please fix the validation errors", variant: "destructive" });
       return;
     }
+    console.log(formData);
+    
 
     try {
       const response = await axiosInstance.patch(API_URLS.ENQUIRY.PATCH_ENQUIRY(id.id), formData);

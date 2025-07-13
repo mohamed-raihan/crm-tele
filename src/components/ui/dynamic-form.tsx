@@ -187,33 +187,17 @@ export function DynamicForm({
                     </SelectContent>
                   </Select>
                 ) : field.type === 'date' ? (
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className={cn(
-                          "w-full pl-3 text-left font-normal",
-                          !formField.value && "text-muted-foreground"
-                        )}
-                      >
-                        {formField.value ? (
-                          format(formField.value, "MMM dd, yyyy")
-                        ) : (
-                          <span>{field.placeholder || "Select date"}</span>
-                        )}
-                        <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={formField.value}
-                        onSelect={formField.onChange}
-                        initialFocus
-                        className="pointer-events-auto"
-                      />
-                    </PopoverContent>
-                  </Popover>
+                  // Use a native date input instead of custom calendar
+                  <Input
+                    type="date"
+                    placeholder={field.placeholder}
+                    value={formField.value ? format(formField.value, 'yyyy-MM-dd') : ''}
+                    onChange={e => {
+                      const val = e.target.value;
+                      formField.onChange(val ? new Date(val) : undefined);
+                    }}
+                    className="text-center pr-0"
+                  />
                 ) : (
                   <Input
                     placeholder={field.placeholder}

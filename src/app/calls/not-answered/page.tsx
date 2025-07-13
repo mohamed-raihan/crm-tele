@@ -60,7 +60,6 @@ const NotAnsweredPage = () => {
     phone: string;
     email: string;
     call_status: string;
-    call_start_time: string;
     telecaller_name: string;
     search: string;
   };
@@ -69,7 +68,6 @@ const NotAnsweredPage = () => {
     phone: "",
     email: "",
     call_status: "",
-    call_start_time: "",
     telecaller_name: "",
     search: "",
   };
@@ -89,7 +87,6 @@ const NotAnsweredPage = () => {
     if (filters.phone) params.append("phone", filters.phone);
     if (filters.email) params.append("email", filters.email);
     if (filters.call_status && filters.call_status !== "all") params.append("call_status", filters.call_status);
-    if (filters.call_start_time) params.append("call_start_time", filters.call_start_time);
     if (filters.telecaller_name) params.append("telecaller_name", filters.telecaller_name);
     if (filters.search) params.append("search", filters.search);
     params.append("page", String(page));
@@ -173,6 +170,7 @@ const NotAnsweredPage = () => {
     setPagination((prev) => ({ ...prev, currentPage: newPage }));
   };
 
+  
   // Helper to safely wrap CSV fields
   function csvSafe(val: any) {
     if (val === null || val === undefined) return '""';
@@ -327,15 +325,6 @@ const NotAnsweredPage = () => {
                     <SelectItem value="Do Not Call">Do Not Call</SelectItem>
                   </SelectContent>
                 </Select>
-              </div>
-              <div>
-                <Label htmlFor="call_start_time">Call Start Time</Label>
-                <Input
-                  id="call_start_time"
-                  type="date"
-                  value={filterInputs.call_start_time}
-                  onChange={(e) => handleFilterChange("call_start_time", e.target.value)}
-                />
               </div>
               <div>
                 <Label htmlFor="telecaller_name">Telecaller Name</Label>

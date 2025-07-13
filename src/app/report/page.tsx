@@ -15,7 +15,7 @@ interface Report {
   not_contacted: number;
   answered: number;
   not_answered: number;
-  qualified: number; // changed from positive
+  won: number; // changed from qualified
   not_interested: number; // changed from negative
   walk_in_list: number;
   total_follow_ups: number;
@@ -55,7 +55,7 @@ const columns = [
   "Not Contacted",
   "Answered",
   "Not Answered",
-  "Qualified",
+  "Won",
   "Not Interested",
   "Walk-in List",
   "Follow-ups",
@@ -278,6 +278,15 @@ export default function ReportPage() {
   const [filteredTelecallers, setFilteredTelecallers] = useState<Telecaller[]>(
     []
   );
+  const [isDrillDown, setIsDrillDown] = useState<boolean>(false);
+  const [drillDownData, setDrillDownData] = useState<any[]>([]);
+  const [currentFilter, setCurrentFilter] = useState<{
+    telecaller_id: string;
+    report_type: string;
+    telecaller_name: string;
+    additional_filter?: string;
+  }>({ telecaller_id: '', report_type: '', telecaller_name: '', additional_filter: '' });
+
 
   const [pagination, setPagination] = useState<Pagination>({
     currentPage: 1,
@@ -324,6 +333,96 @@ export default function ReportPage() {
     // Replace with your actual toast implementation
   };
 
+
+  const fetchDrillDownData = async (telecaller_id: string, report_type: string, additionalFilter: string = '') => {
+    setLoading(true);
+    try {
+      const authConfig = getAuthConfig();
+      if (!authConfig) return;
+
+      const params = new URLSearchParams({
+        report: report_type,
+        telecaller_id: telecaller_id,
+      });
+
+      // Add additional filters if needed
+      if (additionalFilter) {
+        const additionalParams = new URLSearchParams(additionalFilter.replace('&', ''));
+        additionalParams.forEach((value, key) => {
+          params.append(key, value);
+        });
+      }
+
+      const response = await axiosInstance.get(
+        `${API_URLS.REPORTS.GET_REPORTS}?${params.toString()}`,
+        authConfig
+      );
+
+      if (response.data?.code === 200) {
+        setDrillDownData(response.data.data || []);
+      } else {
+        showToast("Failed to fetch detailed data", "error");
+      }
+    } catch (err: any) {
+      console.error("Error fetching drill-down data:", err);
+      showToast("Failed to fetch detailed data", "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getColorClass = (value: number) => {
+    if (value === 0) return 'bg-gray-100 text-gray-500';
+    if (value === 1) return 'bg-red-100 text-red-700';
+    if (value === 2) return 'bg-yellow-100 text-yellow-700';
+    if (value >= 3 && value <= 5) return 'bg-blue-100 text-blue-700';
+    if (value >= 6 && value <= 10) return 'bg-green-100 text-green-700';
+    return 'bg-purple-100 text-purple-700'; // for values > 10
+  };
+
+
+  const handleCellClick = (report: Report, columnType: string) => {
+    const reportTypeMap: { [key: string]: string } = {
+      'total_calls': 'total_calls',
+      'contacted': 'contacted',
+      'not_contacted': 'not_contacted',
+      'answered': 'answered',
+      'not_answered': 'not_answered',
+      'won': 'contacted', // For won, we need to filter contacted calls
+      'not_interested': 'contacted', // For not_interested, we need to filter contacted calls
+      'walk_in_list': 'walk_in_list',
+      'total_follow_ups': 'follow_up'
+    };
+
+    const reportType = reportTypeMap[columnType];
+    if (!reportType) return;
+
+    // For won and not_interested, we need additional filtering
+    let additionalFilter = '';
+    if (columnType === 'won') {
+      additionalFilter = '&status=won'; // or whatever the API expects for won filter
+    } else if (columnType === 'not_interested') {
+      additionalFilter = '&status=not_interested'; // or whatever the API expects for not_interested filter
+    }
+
+    setCurrentFilter({
+      telecaller_id: report.telecaller_id.toString(),
+      report_type: reportType,
+      telecaller_name: report.telecaller_name || '',
+      additional_filter: additionalFilter
+    });
+
+    setIsDrillDown(true);
+    fetchDrillDownData(report.telecaller_id.toString(), reportType, additionalFilter);
+  };
+
+  const handleBackToReport = () => {
+    setIsDrillDown(false);
+    setDrillDownData([]);
+    setCurrentFilter({ telecaller_id: '', report_type: '', telecaller_name: '' });
+  };
+
+
   // Fetch reports with optimized pagination
   const fetchAllReports = async (page: number = 1, limit: number = 10) => {
     setLoading(true);
@@ -346,10 +445,10 @@ export default function ReportPage() {
       );
 
       if (response.data?.code === 200) {
-        // Map positive/negative to qualified/not_interested for frontend
+        // Map positive/negative to won/not_interested for frontend
         const mappedReports = (response.data.data || []).map((report: any) => ({
           ...report,
-          qualified: report.qualified ?? report.positive ?? 0,
+          won: report.won ?? report.qualified ?? report.positive ?? 0,
           not_interested: report.not_interested ?? report.negative ?? 0,
         }));
         setReports(mappedReports);
@@ -485,92 +584,122 @@ export default function ReportPage() {
   };
 
 
-  // Export to Excel with all data
+  // Export to Excel with drill-down data or report data
   const exportToExcel = async () => {
     setExportLoading(true);
     try {
       const authConfig = getAuthConfig();
       if (!authConfig) return;
 
-      // Fetch all data for export
-      const params = new URLSearchParams({
-        page: "1",
-        limit: "1000", // Large limit to get all data
-      });
+      let excelData: any[] = [];
+      let fileName = '';
+      let sheetName = '';
 
-      if (branch) params.append("branch_name", branch);
-      if (counselor) params.append("telecaller_name", counselor);
-      if (search) params.append("search", search);
-
-      const response = await axiosInstance.get(
-        `${API_URLS.REPORTS.GET_REPORTS}?${params.toString()}`,
-        authConfig
-      );
-
-      if (response.data?.code === 200) {
-        const allReports = (response.data.data || []).map((report: any) => ({
-          ...report,
-          qualified: report.qualified ?? report.positive ?? 0,
-          not_interested: report.not_interested ?? report.negative ?? 0,
+      // If we're in drill-down mode, export the drill-down data
+      if (isDrillDown && drillDownData.length > 0) {
+        excelData = drillDownData.map((item: any) => ({
+          'Name': item.enquiry_details?.candidate_name || 'N/A',
+          'Phone': item.enquiry_details?.phone || 'N/A',
+          'Email': item.enquiry_details?.email || 'N/A',
+          'Status': item.enquiry_details?.enquiry_status || 'N/A',
+          'Branch': item.branch_name || 'N/A',
+          'Created Date': item.created_at ? new Date(item.created_at).toLocaleDateString() : 'N/A',
         }));
 
-        if (allReports.length === 0) {
-          showToast("No data to export", "error");
-          return;
-        }
-
-        // Prepare data for Excel export
-        const excelData = allReports.map((report: Report) => ({
-          'Counselor': report.telecaller_name || "",
-          'Branch': report.branch_name || "",
-          'Total Calls': report.total_calls || 0,
-          'Contacted': report.contacted || 0,
-          'Not Contacted': report.not_contacted || 0,
-          'Answered': report.answered || 0,
-          'Not Answered': report.not_answered || 0,
-          'Qualified': report.qualified || 0,
-          'Not Interested': report.not_interested || 0,
-          'Walk-in List': report.walk_in_list || 0,
-          'Follow-ups': report.total_follow_ups || 0,
-        }));
-
-        // Create Excel workbook
-        const worksheet = XLSX.utils.json_to_sheet(excelData);
-        const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, "Counselor Reports");
-
-        // Auto-size columns
-        const columnWidths = Object.keys(excelData[0] || {}).map(key => ({
-          wch: Math.max(
-            key.length,
-            ...excelData.map(row => String(row[key as keyof typeof row]).length)
-          ) + 2
-        }));
-        worksheet['!cols'] = columnWidths;
-
-        // Generate Excel file
-        const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
-        const blob = new Blob([excelBuffer], {
-          type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        fileName = `${currentFilter.telecaller_name}_${currentFilter.report_type.replace('_', '_')}_details_${new Date().toISOString().split("T")[0]}.xlsx`;
+        sheetName = `${currentFilter.report_type.replace('_', ' ')} Details`;
+      } else {
+        // Export main report data
+        const params = new URLSearchParams({
+          page: "1",
+          limit: "1000", // Large limit to get all data
         });
 
-        const link = document.createElement("a");
-        const url = URL.createObjectURL(blob);
-        link.setAttribute("href", url);
-        link.setAttribute("download", `counselor_reports_${new Date().toISOString().split("T")[0]}.xlsx`);
-        link.style.visibility = "hidden";
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
+        if (branch) params.append("branch_name", branch);
+        if (counselor) params.append("telecaller_name", counselor);
+        if (search) params.append("search", search);
 
-        showToast("Report exported successfully", "success");
-      } else {
-        showToast("Failed to export report", "error");
+        const response = await axiosInstance.get(
+          `${API_URLS.REPORTS.GET_REPORTS}?${params.toString()}`,
+          authConfig
+        );
+
+        if (response.data?.code === 200) {
+          const allReports = (response.data.data || []).map((report: any) => ({
+            ...report,
+            won: report.won ?? report.qualified ?? report.positive ?? 0,
+            not_interested: report.not_interested ?? report.negative ?? 0,
+          }));
+
+          if (allReports.length === 0) {
+            showToast("No data to export", "error");
+            return;
+          }
+
+          excelData = allReports.map((report: Report) => ({
+            'Counselor': report.telecaller_name || "",
+            'Branch': report.branch_name || "",
+            'Total Calls': report.total_calls || 0,
+            'Contacted': report.contacted || 0,
+            'Not Contacted': report.not_contacted || 0,
+            'Answered': report.answered || 0,
+            'Not Answered': report.not_answered || 0,
+            'Won': report.won || 0,
+            'Not Interested': report.not_interested || 0,
+            'Walk-in List': report.walk_in_list || 0,
+            'Follow-ups': report.total_follow_ups || 0,
+          }));
+
+          fileName = `counselor_reports_${new Date().toISOString().split("T")[0]}.xlsx`;
+          sheetName = "Counselor Reports";
+        } else {
+          showToast("Failed to fetch report data", "error");
+          return;
+        }
       }
+
+      if (excelData.length === 0) {
+        showToast("No data to export", "error");
+        return;
+      }
+
+      // Create Excel workbook
+      const worksheet = XLSX.utils.json_to_sheet(excelData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
+
+      // Auto-size columns
+      const columnWidths = Object.keys(excelData[0] || {}).map(key => ({
+        wch: Math.max(
+          key.length,
+          ...excelData.map(row => String(row[key as keyof typeof row]).length)
+        ) + 2
+      }));
+      worksheet['!cols'] = columnWidths;
+
+      // Generate Excel file
+      const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+      const blob = new Blob([excelBuffer], {
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+      });
+
+      const link = document.createElement("a");
+      const url = URL.createObjectURL(blob);
+      link.setAttribute("href", url);
+      link.setAttribute("download", fileName);
+      link.style.visibility = "hidden";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      const exportMessage = isDrillDown 
+        ? `${currentFilter.report_type.replace('_', ' ')} details exported successfully`
+        : "Report exported successfully";
+      showToast(exportMessage, "success");
     } catch (err: any) {
-      console.error("Error exporting report:", err);
-      showToast("Failed to export report", "error");
+      console.error("Error exporting data:", err);
+      showToast("Failed to export data", "error");
     } finally {
       setExportLoading(false);
     }
@@ -690,6 +819,50 @@ export default function ReportPage() {
     return <FullScreenLoader message="Loading reports..." />;
   }
 
+  const drillDownColumns = [
+    'Name', 'Phone', 'Email', 'Status', 'Branch', 'Created Date'
+  ];
+
+  // Allowed clickable columns (from user image)
+  const clickableColumns = [
+    'contacted',
+    'not_contacted',
+    'answered',
+    'not_answered',
+    'follow_up',
+    'walk_in_list',
+  ];
+
+  const renderClickableCell = (value: number, report: Report, columnType: string) => {
+    const colorClass = getColorClass(value);
+
+    // Only allow click for allowed columns
+    if (!clickableColumns.includes(columnType)) {
+      return (
+        <span className={`w-8 h-8 rounded-full text-sm font-medium ${colorClass} flex items-center justify-center`}>
+          {value}
+        </span>
+      );
+    }
+
+    if (value === 0) {
+      return (
+        <span className={`w-8 h-8 rounded-full text-sm font-medium ${colorClass} flex items-center justify-center`}>
+          0
+        </span>
+      );
+    }
+
+    return (
+      <button
+        className={`w-8 h-8 rounded-full text-sm font-medium hover:opacity-80 transition-opacity ${colorClass} hover:underline flex items-center justify-center`}
+        onClick={() => handleCellClick(report, columnType)}
+      >
+        {value}
+      </button>
+    );
+  };
+
   return (
     <div>
       <DashboardHeader />
@@ -761,7 +934,7 @@ export default function ReportPage() {
                     Exporting...
                   </>
                 ) : (
-                  "Export to Excel"
+                  isDrillDown ? "Export Details" : "Export to Excel"
                 )}
               </button>
               <button
@@ -807,6 +980,14 @@ export default function ReportPage() {
               )}
             </div>
 
+            {/* {loading ? (
+              <div className="flex justify-center items-center py-8">
+                <div className="flex items-center gap-2 text-gray-500">
+                  <LoadingSpinner size="w-6 h-6" />
+                  Loading reports...
+                </div>
+              </div>
+            ) : ( */}
             {loading ? (
               <div className="flex justify-center items-center py-8">
                 <div className="flex items-center gap-2 text-gray-500">
@@ -814,7 +995,8 @@ export default function ReportPage() {
                   Loading reports...
                 </div>
               </div>
-            ) : (
+            ) : !isDrillDown ? (
+              // Main Report Table
               <div className="overflow-x-auto">
                 <table className="min-w-full border rounded-xl overflow-hidden">
                   <thead>
@@ -843,49 +1025,31 @@ export default function ReportPage() {
                             {report.branch_name || ""}
                           </td>
                           <td className="px-4 py-2">
-                            <span className="inline-block w-8 h-8 bg-blue-100 text-blue-600 rounded-full text-center text-sm font-bold leading-8">
-                              {report.total_calls || 0}
-                            </span>
+                            {renderClickableCell(report.total_calls, report, 'total_calls')}
                           </td>
                           <td className="px-4 py-2">
-                            <span className="inline-block w-8 h-8 bg-green-100 text-green-600 rounded-full text-center text-sm font-bold leading-8">
-                              {report.contacted || 0}
-                            </span>
+                            {renderClickableCell(report.contacted, report, 'contacted')}
                           </td>
                           <td className="px-4 py-2">
-                            <span className="inline-block w-8 h-8 bg-red-100 text-red-600 rounded-full text-center text-sm font-bold leading-8">
-                              {report.not_contacted || 0}
-                            </span>
+                            {renderClickableCell(report.not_contacted, report, 'not_contacted')}
                           </td>
                           <td className="px-4 py-2">
-                            <span className="inline-block w-8 h-8 bg-green-100 text-green-600 rounded-full text-center text-sm font-bold leading-8">
-                              {report.answered || 0}
-                            </span>
+                            {renderClickableCell(report.answered, report, 'answered')}
                           </td>
                           <td className="px-4 py-2">
-                            <span className="inline-block w-8 h-8 bg-red-100 text-red-600 rounded-full text-center text-sm font-bold leading-8">
-                              {report.not_answered || 0}
-                            </span>
+                            {renderClickableCell(report.not_answered, report, 'not_answered')}
                           </td>
                           <td className="px-4 py-2">
-                            <span className="inline-block w-8 h-8 bg-green-100 text-green-600 rounded-full text-center text-sm font-bold leading-8">
-                              {report.qualified || 0}
-                            </span>
+                            {renderClickableCell(report.won, report, 'won')}
                           </td>
                           <td className="px-4 py-2">
-                            <span className="inline-block w-8 h-8 bg-red-100 text-red-600 rounded-full text-center text-sm font-bold leading-8">
-                              {report.not_interested || 0}
-                            </span>
+                            {renderClickableCell(report.not_interested, report, 'not_interested')}
                           </td>
                           <td className="px-4 py-2">
-                            <span className="inline-block w-8 h-8 bg-blue-100 text-blue-600 rounded-full text-center text-sm font-bold leading-8">
-                              {report.walk_in_list || 0}
-                            </span>
+                            {renderClickableCell(report.walk_in_list, report, 'walk_in_list')}
                           </td>
                           <td className="px-4 py-2">
-                            <span className="inline-block w-8 h-8 bg-purple-100 text-purple-600 rounded-full text-center text-sm font-bold leading-8">
-                              {report.total_follow_ups || 0}
-                            </span>
+                            {renderClickableCell(report.total_follow_ups, report, 'total_follow_ups')}
                           </td>
                         </tr>
                       ))
@@ -902,7 +1066,82 @@ export default function ReportPage() {
                   </tbody>
                 </table>
               </div>
+            ) : (
+              // Drill-down Table
+              <div>
+                <div className="mb-4 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={handleBackToReport}
+                      className="flex items-center gap-2 px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded text-sm font-medium"
+                    >
+                      ← Back to Report
+                    </button>
+                    <span className="text-sm text-gray-600">
+                      Showing {currentFilter.report_type.replace('_', ' ')} details for {currentFilter.telecaller_name}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="overflow-x-auto">
+                  <table className="min-w-full border rounded-xl overflow-hidden">
+                    <thead>
+                      <tr className="bg-gray-100">
+                        {drillDownColumns.map((col, idx) => (
+                          <th
+                            key={idx}
+                            className="px-4 py-2 text-left text-xs font-semibold text-gray-600 whitespace-nowrap"
+                          >
+                            {col}
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {drillDownData.length > 0 ? (
+                        drillDownData.map((item, i) => (
+                          <tr key={i} className="border-t">
+                            <td className="px-4 py-2 font-medium text-gray-700">
+                              {item.enquiry_details?.candidate_name || 'N/A'}
+                            </td>
+                            <td className="px-4 py-2 text-gray-700">
+                              {item.enquiry_details?.phone || 'N/A'}
+                            </td>
+                            <td className="px-4 py-2 text-gray-700">
+                              {item.enquiry_details?.email || 'N/A'}
+                            </td>
+                            <td className="px-4 py-2">
+                              <span className={`px-2 py-1 rounded text-xs font-medium ${item.enquiry_details?.enquiry_status === 'Active'
+                                ? 'bg-green-100 text-green-800'
+                                : 'bg-gray-100 text-gray-800'
+                                }`}>
+                                {item.enquiry_details?.enquiry_status || 'N/A'}
+                              </span>
+                            </td>
+                            <td className="px-4 py-2 text-gray-700">
+                              {item.branch_name || 'N/A'}
+                            </td>
+                            <td className="px-4 py-2 text-gray-700">
+                              {item.created_at ? new Date(item.created_at).toLocaleDateString() : 'N/A'}
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td
+                            colSpan={drillDownColumns.length}
+                            className="px-4 py-8 text-center text-gray-500"
+                          >
+                            No detailed data found
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             )}
+            {/* )} */}
 
             {/* Pagination */}
             {pagination.totalPages > 1 && (

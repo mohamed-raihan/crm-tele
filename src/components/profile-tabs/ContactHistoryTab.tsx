@@ -19,6 +19,7 @@ interface history {
     call_start_time: string;
     call_duration: string;
     feedback: string;
+    follow_up_date: string;
   }
 
 interface id {
@@ -57,6 +58,7 @@ export function ContactHistoryTab(id:id) {
               {/* <TableHead>Call Start Time</TableHead>
               <TableHead>Call Duration</TableHead> */}
               <TableHead>Feedback</TableHead>
+              <TableHead>Follow Up Date</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -69,6 +71,7 @@ export function ContactHistoryTab(id:id) {
                 {/* <TableCell>{contact.call_start_time ? contact.call_start_time : '-'}</TableCell>
                 <TableCell>{contact.call_duration ? contact.call_duration : '-'}</TableCell> */}
                 <TableCell>{contact.feedback}</TableCell>
+                <TableCell>{contact.follow_up_date ? contact.follow_up_date : '-'}</TableCell>
               </TableRow>
             ))}
           </TableBody>
