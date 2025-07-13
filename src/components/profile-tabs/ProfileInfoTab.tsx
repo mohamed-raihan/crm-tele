@@ -250,6 +250,8 @@ export function ProfileInfoTab(id:id) {
       toast({ title: "Please fix the validation errors", variant: "destructive" });
       return;
     }
+    console.log(formData);
+    
 
     try {
       const response = await axiosInstance.patch(API_URLS.ENQUIRY.PATCH_ENQUIRY(id.id), formData);

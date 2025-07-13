@@ -103,7 +103,7 @@ export default function ServicePage() {
             label: "ID",
             sortable: false,
             width: "w-24",
-            render: (_value, _row, index) => index + 1
+            render: (value, _row, _index) => value
           },
         { key: "name", label: "Name" },
     ];
@@ -167,7 +167,7 @@ export default function ServicePage() {
                 </CardHeader>
                 <CardContent>
                     <DynamicTable
-                        data={ads}
+                        data={ads.slice().sort((a, b) => parseInt(a.id as string, 10) - parseInt(b.id as string, 10))}
                         columns={columns}
                         actions={actions}
                         searchPlaceholder="Search ads..."

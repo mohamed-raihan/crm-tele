@@ -15,7 +15,7 @@ interface Report {
   not_contacted: number;
   answered: number;
   not_answered: number;
-  qualified: number; // changed from positive
+  won: number; // changed from qualified
   not_interested: number; // changed from negative
   walk_in_list: number;
   total_follow_ups: number;
@@ -55,7 +55,7 @@ const columns = [
   "Not Contacted",
   "Answered",
   "Not Answered",
-  "Qualified",
+  "Won",
   "Not Interested",
   "Walk-in List",
   "Follow-ups",
@@ -388,7 +388,7 @@ export default function ReportPage() {
       'not_contacted': 'not_contacted',
       'answered': 'answered',
       'not_answered': 'not_answered',
-      'qualified': 'contacted', // For qualified, we need to filter contacted calls
+      'won': 'contacted', // For won, we need to filter contacted calls
       'not_interested': 'contacted', // For not_interested, we need to filter contacted calls
       'walk_in_list': 'walk_in_list',
       'total_follow_ups': 'follow_up'
@@ -397,10 +397,10 @@ export default function ReportPage() {
     const reportType = reportTypeMap[columnType];
     if (!reportType) return;
 
-    // For qualified and not_interested, we need additional filtering
+    // For won and not_interested, we need additional filtering
     let additionalFilter = '';
-    if (columnType === 'qualified') {
-      additionalFilter = '&status=qualified'; // or whatever the API expects for qualified filter
+    if (columnType === 'won') {
+      additionalFilter = '&status=won'; // or whatever the API expects for won filter
     } else if (columnType === 'not_interested') {
       additionalFilter = '&status=not_interested'; // or whatever the API expects for not_interested filter
     }
@@ -445,10 +445,10 @@ export default function ReportPage() {
       );
 
       if (response.data?.code === 200) {
-        // Map positive/negative to qualified/not_interested for frontend
+        // Map positive/negative to won/not_interested for frontend
         const mappedReports = (response.data.data || []).map((report: any) => ({
           ...report,
-          qualified: report.qualified ?? report.positive ?? 0,
+          won: report.won ?? report.qualified ?? report.positive ?? 0,
           not_interested: report.not_interested ?? report.negative ?? 0,
         }));
         setReports(mappedReports);
@@ -627,7 +627,7 @@ export default function ReportPage() {
         if (response.data?.code === 200) {
           const allReports = (response.data.data || []).map((report: any) => ({
             ...report,
-            qualified: report.qualified ?? report.positive ?? 0,
+            won: report.won ?? report.qualified ?? report.positive ?? 0,
             not_interested: report.not_interested ?? report.negative ?? 0,
           }));
 
@@ -644,7 +644,7 @@ export default function ReportPage() {
             'Not Contacted': report.not_contacted || 0,
             'Answered': report.answered || 0,
             'Not Answered': report.not_answered || 0,
-            'Qualified': report.qualified || 0,
+            'Won': report.won || 0,
             'Not Interested': report.not_interested || 0,
             'Walk-in List': report.walk_in_list || 0,
             'Follow-ups': report.total_follow_ups || 0,
@@ -1040,7 +1040,7 @@ export default function ReportPage() {
                             {renderClickableCell(report.not_answered, report, 'not_answered')}
                           </td>
                           <td className="px-4 py-2">
-                            {renderClickableCell(report.qualified, report, 'qualified')}
+                            {renderClickableCell(report.won, report, 'won')}
                           </td>
                           <td className="px-4 py-2">
                             {renderClickableCell(report.not_interested, report, 'not_interested')}
