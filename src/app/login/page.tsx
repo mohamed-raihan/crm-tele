@@ -142,8 +142,8 @@ const LoginPage = () => {
           <div className="bg-white rounded-3xl shadow-2xl border border-gray-100 p-8 max-w-sm w-full mx-4 transform transition-all duration-300 scale-100">
             {/* Header with animated icon */}
             <div className="text-center mb-6">
-              <div className="relative inline-flex items-center justify-center w-20 h-20 bg-gradient-to-r from-violet-600 to-blue-600 rounded-full mb-4 shadow-lg">
-                <CheckCircle className="w-10 h-10 text-white animate-pulse" />
+              <div className="relative inline-flex items-center justify-center w-20 h-20 mb-4">
+                <img src="/telecrmicon.png" alt="TeleCRM Icon" className="w-16 h-16 object-contain animate-pulse" />
                 {/* Ripple effect */}
                 <div className="absolute inset-0 rounded-full bg-gradient-to-r from-violet-600 to-blue-600 animate-ping opacity-20"></div>
                 <div className="absolute inset-2 rounded-full bg-gradient-to-r from-violet-600 to-blue-600 animate-ping opacity-30 animation-delay-75"></div>
@@ -202,8 +202,8 @@ const LoginPage = () => {
       <div className="relative w-full max-w-md z-10">
         {/* Logo/Brand Section */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-violet-600 to-blue-600 rounded-2xl mb-4 shadow-lg">
-            <Phone className="w-8 h-8 text-white" />
+          <div className="inline-flex items-center justify-center w-24 h-24 mb-4">
+            <img src="/telecrmicon.png" alt="TeleCRM Icon" className="w-20 h-20 object-contain" />
           </div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">TeleCRM</h1>
           <p className="text-gray-600">
