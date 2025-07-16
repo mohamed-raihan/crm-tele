@@ -62,7 +62,6 @@ const FollowUpsPage = () => {
     call_status: string;
     follow_up_date: string;
     telecaller_name: string;
-    search: string;
   };
   const defaultFilters: FiltersType = {
     candidate_name: "",
@@ -71,7 +70,6 @@ const FollowUpsPage = () => {
     call_status: "",
     follow_up_date: "",
     telecaller_name: "",
-    search: "",
   };
   const [filterInputs, setFilterInputs] = useState<FiltersType>(defaultFilters);
   const [appliedFilters, setAppliedFilters] = useState<FiltersType>(defaultFilters);
@@ -91,7 +89,6 @@ const FollowUpsPage = () => {
     if (filters.call_status && filters.call_status !== "all") params.append("call_status", filters.call_status);
     if (filters.follow_up_date) params.append("follow_up_date", filters.follow_up_date);
     if (filters.telecaller_name) params.append("telecaller_name", filters.telecaller_name);
-    if (filters.search) params.append("search", filters.search);
     params.append("page", String(page));
     params.append("limit", String(limit));
     return params.toString();
@@ -347,15 +344,6 @@ const FollowUpsPage = () => {
                   value={filterInputs.telecaller_name}
                   onChange={(e) => handleFilterChange("telecaller_name", e.target.value)}
                   placeholder="Enter telecaller name"
-                />
-              </div>
-              <div>
-                <Label htmlFor="search">Search All Fields</Label>
-                <Input
-                  id="search"
-                  value={filterInputs.search}
-                  onChange={(e) => handleFilterChange("search", e.target.value)}
-                  placeholder="Search candidate, phone, email..."
                 />
               </div>
             </div>

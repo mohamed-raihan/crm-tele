@@ -61,7 +61,6 @@ const NotAnsweredPage = () => {
     email: string;
     call_status: string;
     telecaller_name: string;
-    search: string;
   };
   const defaultFilters: FiltersType = {
     candidate_name: "",
@@ -69,7 +68,6 @@ const NotAnsweredPage = () => {
     email: "",
     call_status: "",
     telecaller_name: "",
-    search: "",
   };
   
   const [filterInputs, setFilterInputs] = useState<FiltersType>(defaultFilters);
@@ -89,7 +87,6 @@ const NotAnsweredPage = () => {
     if (filters.email) params.append("email", filters.email);
     if (filters.call_status && filters.call_status !== "all") params.append("call_status", filters.call_status);
     if (filters.telecaller_name) params.append("telecaller_name", filters.telecaller_name);
-    if (filters.search) params.append("search", filters.search);
     params.append("page", String(page));
     params.append("limit", String(limit));
     return params.toString();
@@ -334,15 +331,6 @@ const NotAnsweredPage = () => {
                   value={filterInputs.telecaller_name}
                   onChange={(e) => handleFilterChange("telecaller_name", e.target.value)}
                   placeholder="Enter telecaller name"
-                />
-              </div>
-              <div>
-                <Label htmlFor="search">Search All Fields</Label>
-                <Input
-                  id="search"
-                  value={filterInputs.search}
-                  onChange={(e) => handleFilterChange("search", e.target.value)}
-                  placeholder="Search candidate, phone, email..."
                 />
               </div>
             </div>
