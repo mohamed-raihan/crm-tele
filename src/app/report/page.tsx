@@ -4,6 +4,8 @@ import React, { useEffect, useState, useRef, useCallback } from "react";
 import * as XLSX from "xlsx";
 import { RefreshCw, Search, ChevronDown, X, Loader2 } from "lucide-react";
 import { DashboardHeader } from "@/components/DashboardHeader";
+import DateFilter from './Datefilter';
+
 
 // TypeScript interfaces
 interface Report {
@@ -46,6 +48,15 @@ interface DropdownPagination {
   hasMore: boolean;
   limit: number;
 }
+
+
+interface DateFilterProps {
+  startDate: string;
+  endDate: string;
+  onDateChange: (startDate: string, endDate: string) => void;
+}
+
+
 
 const columns = [
   "Counselor",
@@ -287,6 +298,8 @@ export default function ReportPage() {
     additional_filter?: string;
   }>({ telecaller_id: '', report_type: '', telecaller_name: '', additional_filter: '' });
 
+  const [startDate, setStartDate] = useState<string>("");
+  const [endDate, setEndDate] = useState<string>("");
 
   const [pagination, setPagination] = useState<Pagination>({
     currentPage: 1,
@@ -383,7 +396,7 @@ export default function ReportPage() {
 
   const handleCellClick = (report: Report, columnType: string) => {
     const reportTypeMap: { [key: string]: string } = {
-      'total_calls': 'total_calls',
+      'totalcalls': 'totalcalls',
       'contacted': 'contacted',
       'not_contacted': 'not_contacted',
       'answered': 'answered',
@@ -391,7 +404,8 @@ export default function ReportPage() {
       'won': 'contacted', // For won, we need to filter contacted calls
       'not_interested': 'contacted', // For not_interested, we need to filter contacted calls
       'walk_in_list': 'walk_in_list',
-      'total_follow_ups': 'follow_up'
+      'total_follow_ups': 'followup', // Changed from 'follow_ups' to 'followup'
+      'followup': 'followup',
     };
 
     const reportType = reportTypeMap[columnType];
@@ -438,6 +452,9 @@ export default function ReportPage() {
       if (branch) params.append("branch_name", branch);
       if (counselor) params.append("telecaller_name", counselor);
       if (search) params.append("search", search);
+      // Add date filters
+      if (startDate) params.append("start_date", startDate);
+      if (endDate) params.append("end_date", endDate);
 
       const response = await axiosInstance.get(
         `${API_URLS.REPORTS.GET_REPORTS}?${params.toString()}`,
@@ -693,7 +710,7 @@ export default function ReportPage() {
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
 
-      const exportMessage = isDrillDown 
+      const exportMessage = isDrillDown
         ? `${currentFilter.report_type.replace('_', ' ')} details exported successfully`
         : "Report exported successfully";
       showToast(exportMessage, "success");
@@ -775,13 +792,11 @@ export default function ReportPage() {
     const debounceTimer = setTimeout(() => {
       setPagination((prev) => ({ ...prev, currentPage: 1 }));
       fetchAllReports(1, 10);
-
-      // Refetch telecallers when branch changes
       fetchTelecaller(1, 1000, telecallerSearchTerm);
     }, 500);
 
     return () => clearTimeout(debounceTimer);
-  }, [branch, counselor]);
+  }, [branch, counselor, startDate, endDate]);
 
   // Initial data fetch
   useEffect(() => {
@@ -825,11 +840,12 @@ export default function ReportPage() {
 
   // Allowed clickable columns (from user image)
   const clickableColumns = [
+    'totalcalls',
     'contacted',
     'not_contacted',
     'answered',
     'not_answered',
-    'follow_up',
+    'followup',
     'walk_in_list',
   ];
 
@@ -892,7 +908,7 @@ export default function ReportPage() {
               <div className="flex-1">
                 <label className="block text-gray-700 mb-1">Counselor</label>
                 <SearchableDropdown
-                  options={telecallers}  // Change from filteredTelecallers to telecallers
+                  options={telecallers}
                   value={counselor}
                   onChange={setCounselor}
                   placeholder="All Counsellors"
@@ -904,6 +920,17 @@ export default function ReportPage() {
                   onLoadMore={() => { }}
                 />
               </div>
+
+              <DateFilter
+                startDate={startDate}
+                endDate={endDate}
+                onDateChange={(start, end) => {
+                  setStartDate(start);
+                  setEndDate(end);
+                }}
+              />
+
+
             </div>
           </div>
         </div>
@@ -915,8 +942,8 @@ export default function ReportPage() {
                 <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
                 <input
                   type="text"
-                  placeholder="Search by name and branch..."
-                  className="border rounded px-10 py-2 w-full md:w-64 bg-gray-100 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Search by name"
+                  className="border rounded px-10 py-2 w-full md:w-80 bg-gray-100 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   value={search}
                   onChange={handleSearchChange}
                 />
@@ -943,15 +970,15 @@ export default function ReportPage() {
                   setBranch("");
                   setCounselor("");
                   setSearch("");
+                  setStartDate(""); // Clear start date
+                  setEndDate("");   // Clear end date
                   setPagination((prev) => ({ ...prev, currentPage: 1 }));
                   fetchAllReports(1, 10);
                 }}
                 disabled={loading}
                 title="Refresh Report"
               >
-                <RefreshCw
-                  className={`w-4 h-4 ${loading ? "animate-spin" : ""}`}
-                />
+                <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
               </button>
             </div>
           </div>
@@ -1025,7 +1052,7 @@ export default function ReportPage() {
                             {report.branch_name || ""}
                           </td>
                           <td className="px-4 py-2">
-                            {renderClickableCell(report.total_calls, report, 'total_calls')}
+                            {renderClickableCell(report.total_calls, report, 'totalcalls')}
                           </td>
                           <td className="px-4 py-2">
                             {renderClickableCell(report.contacted, report, 'contacted')}
@@ -1039,6 +1066,7 @@ export default function ReportPage() {
                           <td className="px-4 py-2">
                             {renderClickableCell(report.not_answered, report, 'not_answered')}
                           </td>
+
                           <td className="px-4 py-2">
                             {renderClickableCell(report.won, report, 'won')}
                           </td>
@@ -1049,7 +1077,7 @@ export default function ReportPage() {
                             {renderClickableCell(report.walk_in_list, report, 'walk_in_list')}
                           </td>
                           <td className="px-4 py-2">
-                            {renderClickableCell(report.total_follow_ups, report, 'total_follow_ups')}
+                            {renderClickableCell(report.total_follow_ups, report, 'followup')}
                           </td>
                         </tr>
                       ))

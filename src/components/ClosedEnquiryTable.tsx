@@ -174,16 +174,16 @@ export function ClosedEnquiryTable() {
       return;
     }
     // Prepare data for export (flatten objects, remove unwanted fields)
-    const exportData = Enquiries.map(({ id, candidate_name, phone, required_service, preferred_course, created_by_name, branch_name, mettad_name, assigned_by_name }) => ({
-      ID: id,
-      Name: candidate_name,
-      Phone: phone,
-      Service: required_service,
-      'Preferred Course': preferred_course,
-      'Created by': created_by_name,
-      Branch: branch_name,
-      Source: mettad_name,
-      'Assigned to': assigned_by_name
+    const exportData = Enquiries.map((row, index) => ({
+      "S.No": (page - 1) * pageSize + index + 1,
+      Name: row.candidate_name,
+      Phone: row.phone,
+      Service: row.required_service_name,
+      "Preferred Course": row.preferred_course_name,
+      "Created by": row.created_by_name,
+      Branch: row.branch_name,
+      Source: row.mettad_name,
+      "Assigned to": row.assigned_by_name
     }));
     const worksheet = XLSX.utils.json_to_sheet(exportData);
     const workbook = XLSX.utils.book_new();
