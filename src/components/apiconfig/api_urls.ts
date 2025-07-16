@@ -90,4 +90,10 @@ export const API_URLS = {
   NOTIFICATIONS: {
     GET_NOTIFICATIONS: "/api/reminders/",
   },
+  CHECKLISTS: {
+    POST_CHECKLIST: "/api/checklists/",
+    GET_CHECKLIST: "/api/checklists/",
+    PATCH_CHECKLIST: (id) => `/api/checklists/${id}/`,
+    DELETE_CHECKLIST: (id) => `/api/checklists/${id}/`,
+  },
 };

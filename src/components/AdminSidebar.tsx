@@ -168,6 +168,11 @@ const dataManagement = [
         url: "/admin/ads",
         icon: PieChart
       },
+      {
+        title: "Checklist",
+        url: "/admin/checklist",
+        icon: CheckCircle
+      },
     ]
   },
 ]
