@@ -62,7 +62,6 @@ const FollowUpsPage = () => {
     call_status: string;
     follow_up_date: string;
     telecaller_name: string;
-    search: string;
   };
   const defaultFilters: FiltersType = {
     candidate_name: "",
@@ -71,7 +70,6 @@ const FollowUpsPage = () => {
     call_status: "",
     follow_up_date: "",
     telecaller_name: "",
-    search: "",
   };
   const [filterInputs, setFilterInputs] = useState<FiltersType>(defaultFilters);
   const [appliedFilters, setAppliedFilters] = useState<FiltersType>(defaultFilters);
@@ -91,7 +89,6 @@ const FollowUpsPage = () => {
     if (filters.call_status && filters.call_status !== "all") params.append("call_status", filters.call_status);
     if (filters.follow_up_date) params.append("follow_up_date", filters.follow_up_date);
     if (filters.telecaller_name) params.append("telecaller_name", filters.telecaller_name);
-    if (filters.search) params.append("search", filters.search);
     params.append("page", String(page));
     params.append("limit", String(limit));
     return params.toString();
@@ -173,6 +170,13 @@ const FollowUpsPage = () => {
     setPagination((prev) => ({ ...prev, currentPage: newPage }));
   };
 
+  // Helper to safely wrap CSV fields
+  function csvSafe(val: any) {
+    if (val === null || val === undefined) return '""';
+    const str = String(val).replace(/"/g, '""');
+    return `"${str}"`;
+  }
+
   // Export filtered data from API (all records)
   const exportToExcel = async () => {
     setLoading(true);
@@ -202,17 +206,18 @@ const FollowUpsPage = () => {
       ];
       const csvContent = [
         headers.join(","),
-        ...data.map((item: FollowUpData) => [
-          item.id,
-          `"${item.enquiry_details?.candidate_name || ""}"`,
-          item.enquiry_details?.phone || "",
-          `"${item.enquiry_details?.email || ""}"`,
-          item.call_status,
-          item.call_outcome,
-          item.follow_up_date,
-          item.telecaller_name,
-          item.branch_name,
-          item.created_at,
+        ...data.map((item: FollowUpData, index: number) => [
+          csvSafe(index + 1),
+          csvSafe(item.enquiry_details?.candidate_name),
+          // Fix: Prepend tab to phone number to force Excel to treat as text
+          csvSafe(item.enquiry_details?.phone ? `\t${item.enquiry_details.phone}` : ""),
+          csvSafe(item.enquiry_details?.email),
+          csvSafe(item.call_status),
+          csvSafe(item.call_outcome),
+          csvSafe(formatDate(item.follow_up_date)),
+          csvSafe(item.telecaller_name),
+          csvSafe(item.branch_name),
+          csvSafe(formatDate(item.created_at)),
         ].join(",")),
       ].join("\n");
       const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
@@ -339,15 +344,6 @@ const FollowUpsPage = () => {
                   value={filterInputs.telecaller_name}
                   onChange={(e) => handleFilterChange("telecaller_name", e.target.value)}
                   placeholder="Enter telecaller name"
-                />
-              </div>
-              <div>
-                <Label htmlFor="search">Search All Fields</Label>
-                <Input
-                  id="search"
-                  value={filterInputs.search}
-                  onChange={(e) => handleFilterChange("search", e.target.value)}
-                  placeholder="Search candidate, phone, email..."
                 />
               </div>
             </div>

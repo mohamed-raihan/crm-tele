@@ -30,12 +30,115 @@ interface Profile {
   required_service: string;
 }
 
+interface ValidationErrors {
+  candidate_name?: string;
+  phone?: string;
+  phone2?: string;
+  email?: string;
+}
+
 export function ProfileInfoTab(id:id) {
   const [profile, setProfile] = useState<Profile>()
   const [formData, setFormData] = useState<Partial<Profile>>({})
   const [source, setSource] = useState<{ value: string, label: string }[]>([])
   const [service, setService] = useState<{ value: string, label: string }[]>([])
   const [course, setCourse] = useState<{ value: string, label: string }[]>([])
+  const [errors, setErrors] = useState<ValidationErrors>({})
+
+  // Validation functions
+  const validateEmail = (email: string): boolean => {
+    // More comprehensive email validation regex
+    const emailRegex = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
+    
+    // Additional checks for common email issues
+    if (!emailRegex.test(email)) {
+      return false;
+    }
+    
+    // Check for valid domain structure
+    const parts = email.split('@');
+    if (parts.length !== 2) {
+      return false;
+    }
+    
+    const [localPart, domain] = parts;
+    
+    // Local part validation
+    if (localPart.length === 0 || localPart.length > 64) {
+      return false;
+    }
+    
+    // Domain validation
+    if (domain.length === 0 || domain.length > 253) {
+      return false;
+    }
+    
+    // Check for valid TLD (top-level domain)
+    const domainParts = domain.split('.');
+    if (domainParts.length < 2) {
+      return false;
+    }
+    
+    const tld = domainParts[domainParts.length - 1];
+    if (tld.length < 2 || tld.length > 6) {
+      return false;
+    }
+    
+    // Check for consecutive dots
+    if (email.includes('..')) {
+      return false;
+    }
+    
+    // Check for dots at start or end of local part
+    if (localPart.startsWith('.') || localPart.endsWith('.')) {
+      return false;
+    }
+    
+    // Check for dots at start or end of domain
+    if (domain.startsWith('.') || domain.endsWith('.')) {
+      return false;
+    }
+    
+    return true;
+  };
+
+  const validatePhone = (phone: string): boolean => {
+    const phoneRegex = /^\d{10}$/;
+    return phoneRegex.test(phone);
+  };
+
+  const validateForm = (): boolean => {
+    const newErrors: ValidationErrors = {};
+
+    // Validate candidate name
+    if (!formData.candidate_name?.trim()) {
+      newErrors.candidate_name = 'Candidate name is required';
+    } else if (formData.candidate_name.trim().length < 2) {
+      newErrors.candidate_name = 'Candidate name must be at least 2 characters';
+    }
+
+    // Validate phone
+    if (!formData.phone?.trim()) {
+      newErrors.phone = 'Phone number is required';
+    } else if (!validatePhone(formData.phone)) {
+      newErrors.phone = 'Please enter a valid 10-digit phone number';
+    }
+
+    // Validate phone2 (optional but if provided, must be valid)
+    if (formData.phone2?.trim() && !validatePhone(formData.phone2)) {
+      newErrors.phone2 = 'Please enter a valid 10-digit phone number';
+    }
+
+    // Validate email
+    if (!formData.email?.trim()) {
+      newErrors.email = 'Email is required';
+    } else if (!validateEmail(formData.email)) {
+      newErrors.email = 'Please enter a valid email address';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const fetchEnquiry = async () => {
     try {
@@ -117,6 +220,23 @@ export function ProfileInfoTab(id:id) {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+    
+    // Clear error when user starts typing
+    if (errors[name as keyof ValidationErrors]) {
+      setErrors(prev => ({ ...prev, [name]: undefined }));
+    }
+  }
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    // Only allow numbers
+    const numericValue = value.replace(/\D/g, '');
+    setFormData(prev => ({ ...prev, [name]: numericValue }));
+    
+    // Clear error when user starts typing
+    if (errors[name as keyof ValidationErrors]) {
+      setErrors(prev => ({ ...prev, [name]: undefined }));
+    }
   }
 
   const handleSelectChange = (name: string, value: string) => {
@@ -125,6 +245,14 @@ export function ProfileInfoTab(id:id) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!validateForm()) {
+      toast({ title: "Please fix the validation errors", variant: "destructive" });
+      return;
+    }
+    console.log(formData);
+    
+
     try {
       const response = await axiosInstance.patch(API_URLS.ENQUIRY.PATCH_ENQUIRY(id.id), formData);
       // Optionally, show a toast or update UI
@@ -146,20 +274,63 @@ export function ProfileInfoTab(id:id) {
         <form onSubmit={handleSubmit}>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div className="space-y-2">
-              <Label htmlFor="candidate_name">Candidate Name</Label>
-              <Input id="candidate_name" name="candidate_name" value={formData.candidate_name || ''} onChange={handleInputChange} />
+              <Label htmlFor="candidate_name">Candidate Name *</Label>
+              <Input 
+                id="candidate_name" 
+                name="candidate_name" 
+                value={formData.candidate_name || ''} 
+                onChange={handleInputChange}
+                className={errors.candidate_name ? 'border-red-500' : ''}
+              />
+              {errors.candidate_name && (
+                <p className="text-red-500 text-sm">{errors.candidate_name}</p>
+              )}
             </div>
             <div className="space-y-2">
-              <Label htmlFor="phone">Phone</Label>
-              <Input id="phone" name="phone" value={formData.phone || ''} onChange={handleInputChange} />
+              <Label htmlFor="phone">Phone *</Label>
+              <Input 
+                id="phone" 
+                name="phone" 
+                type="tel"
+                value={formData.phone || ''} 
+                onChange={handlePhoneChange}
+                placeholder="Enter 10-digit number"
+                maxLength={10}
+                className={errors.phone ? 'border-red-500' : ''}
+              />
+              {errors.phone && (
+                <p className="text-red-500 text-sm">{errors.phone}</p>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="phone2">Phone 2</Label>
-              <Input id="phone2" name="phone2" value={formData.phone2 || ''} onChange={handleInputChange} />
+              <Input 
+                id="phone2" 
+                name="phone2" 
+                type="tel"
+                value={formData.phone2 || ''} 
+                onChange={handlePhoneChange}
+                placeholder="Enter 10-digit number (optional)"
+                maxLength={10}
+                className={errors.phone2 ? 'border-red-500' : ''}
+              />
+              {errors.phone2 && (
+                <p className="text-red-500 text-sm">{errors.phone2}</p>
+              )}
             </div>
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input id="email" name="email" value={formData.email || ''} onChange={handleInputChange} />
+              <Label htmlFor="email">Email *</Label>
+              <Input 
+                id="email" 
+                name="email" 
+                type="email"
+                value={formData.email || ''} 
+                onChange={handleInputChange}
+                className={errors.email ? 'border-red-500' : ''}
+              />
+              {errors.email && (
+                <p className="text-red-500 text-sm">{errors.email}</p>
+              )}
             </div>
             {/* <div className="space-y-2">
               <Label htmlFor="mettad_name">Enquiry Source</Label>

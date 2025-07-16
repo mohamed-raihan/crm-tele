@@ -30,6 +30,7 @@ import { ClosedEnquiryTable } from "@/components/ClosedEnquiryTable";
 import AdminJobPage from "./admin/my-jobs/completedjob";
 import ServicePage from "./admin/services/page";
 import CoursePage from "./admin/course/page";
+import ChecklistPage from "./admin/checklist/page";
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -150,6 +151,14 @@ export function AppRouter() {
         element={
           <AdminRoute>
             <CoursePage />
+          </AdminRoute>
+        }
+      />
+      <Route
+        path="/admin/checklist"
+        element={
+          <AdminRoute>
+            <ChecklistPage />
           </AdminRoute>
         }
       />

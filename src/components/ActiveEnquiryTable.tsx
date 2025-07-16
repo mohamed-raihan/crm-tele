@@ -462,7 +462,7 @@ export function ActiveEnquiryTable() {
                 selectedRows={selectedRows}
                 rowIdKey="id"
                 showBulkActions={true}
-                exportActions={exportActions}
+                // exportActions={exportActions}
               />
             </div>
           </div>

@@ -17,6 +17,7 @@ interface Ad {
   name: string;
 }
 
+
 export default function AdsPage() {
   const [ads, setAds] = useState<Ad[]>([]);
   const [loading, setLoading] = useState(false);
@@ -25,6 +26,7 @@ export default function AdsPage() {
     id:"",
     name:""
   });
+
   const [adding, setAdding] = useState(false);
   const { toast } = useToast();
 
@@ -92,6 +94,7 @@ export default function AdsPage() {
     }
   };
 
+  
   // Table columns
   const columns: TableColumn[] = [
     {
@@ -99,7 +102,13 @@ export default function AdsPage() {
       label: "ID",
       sortable: false,
       width: "w-24",
-      render: (_value, _row, index) => index + 1
+      render: (_value, row, index) => {
+        // Option 1: Display sequential numbers based on sorted position
+        return index + 1;
+        
+        // Option 2: Display actual ID from database (uncomment below and comment above)
+        // return row.id;
+      }
     },
     { key: "name", label: "Name" },
   ];
@@ -119,6 +128,18 @@ export default function AdsPage() {
       variant: "destructive",
     },
   ];
+
+  // Sort data properly for consistent display
+  const sortedAds = [...ads].sort((a, b) => {
+    // If IDs are numeric, sort numerically
+    const numA = parseInt(a.id);
+    const numB = parseInt(b.id);
+    if (!isNaN(numA) && !isNaN(numB)) {
+      return numA - numB;
+    }
+    // Otherwise, sort as strings
+    return String(a.id).localeCompare(String(b.id));
+  });
 
   return (
     <div>
@@ -163,7 +184,7 @@ export default function AdsPage() {
         </CardHeader>
         <CardContent>
           <DynamicTable
-            data={ads}
+            data={sortedAds}
             columns={columns}
             actions={actions}
             searchPlaceholder="Search ads..."
@@ -175,4 +196,4 @@ export default function AdsPage() {
     </div>
     </div>
   );
-}
+} 

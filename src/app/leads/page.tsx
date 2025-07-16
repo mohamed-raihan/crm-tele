@@ -21,7 +21,7 @@ export default function LeadsPage() {
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="new-enquiry">New Enquiry</TabsTrigger>
             <TabsTrigger value="active-enquiry">Active Enquiry</TabsTrigger>
-            <TabsTrigger value="closed-enquiry">Cold Enquiry</TabsTrigger>
+            <TabsTrigger value="closed-enquiry">Not interested </TabsTrigger>
           </TabsList>
           
           <TabsContent value="new-enquiry" className="space-y-4">

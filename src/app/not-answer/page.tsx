@@ -60,19 +60,16 @@ const NotAnsweredPage = () => {
     phone: string;
     email: string;
     call_status: string;
-    call_start_time: string;
     telecaller_name: string;
-    search: string;
   };
   const defaultFilters: FiltersType = {
     candidate_name: "",
     phone: "",
     email: "",
     call_status: "",
-    call_start_time: "",
     telecaller_name: "",
-    search: "",
   };
+  
   const [filterInputs, setFilterInputs] = useState<FiltersType>(defaultFilters);
   const [appliedFilters, setAppliedFilters] = useState<FiltersType>(defaultFilters);
   const [pagination, setPagination] = useState<Pagination>({
@@ -89,9 +86,7 @@ const NotAnsweredPage = () => {
     if (filters.phone) params.append("phone", filters.phone);
     if (filters.email) params.append("email", filters.email);
     if (filters.call_status && filters.call_status !== "all") params.append("call_status", filters.call_status);
-    if (filters.call_start_time) params.append("call_start_time", filters.call_start_time);
     if (filters.telecaller_name) params.append("telecaller_name", filters.telecaller_name);
-    if (filters.search) params.append("search", filters.search);
     params.append("page", String(page));
     params.append("limit", String(limit));
     return params.toString();
@@ -173,6 +168,13 @@ const NotAnsweredPage = () => {
     setPagination((prev) => ({ ...prev, currentPage: newPage }));
   };
 
+  // Helper to safely wrap CSV fields
+  function csvSafe(val: any) {
+    if (val === null || val === undefined) return '""';
+    const str = String(val).replace(/"/g, '""');
+    return `"${str}"`;
+  }
+
   // Export filtered data from API (all records)
   const exportToExcel = async () => {
     setLoading(true);
@@ -202,17 +204,18 @@ const NotAnsweredPage = () => {
       ];
       const csvContent = [
         headers.join(","),
-        ...data.map((item: NotAnsweredData) => [
-          item.id,
-          `"${item.enquiry_details?.candidate_name || ""}"`,
-          item.enquiry_details?.phone || "",
-          `"${item.enquiry_details?.email || ""}"`,
-          item.call_status,
-          item.call_outcome,
-          item.call_start_time,
-          item.telecaller_name,
-          item.branch_name,
-          item.created_at,
+        ...data.map((item: NotAnsweredData, index: number) => [
+          csvSafe(index + 1),
+          csvSafe(item.enquiry_details?.candidate_name),
+          // Fix: Prepend tab to phone number to force Excel to treat as text
+          csvSafe(item.enquiry_details?.phone ? `\t${item.enquiry_details.phone}` : ""),
+          csvSafe(item.enquiry_details?.email),
+          csvSafe(item.call_status),
+          csvSafe(item.call_outcome),
+          csvSafe(item.call_start_time),
+          csvSafe(item.telecaller_name),
+          csvSafe(item.branch_name),
+          csvSafe(formatDate(item.created_at)),
         ].join(",")),
       ].join("\n");
       const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
@@ -322,30 +325,12 @@ const NotAnsweredPage = () => {
                 </Select>
               </div>
               <div>
-                <Label htmlFor="call_start_time">Call Start Time</Label>
-                <Input
-                  id="call_start_time"
-                  type="date"
-                  value={filterInputs.call_start_time}
-                  onChange={(e) => handleFilterChange("call_start_time", e.target.value)}
-                />
-              </div>
-              <div>
                 <Label htmlFor="telecaller_name">Telecaller Name</Label>
                 <Input
                   id="telecaller_name"
                   value={filterInputs.telecaller_name}
                   onChange={(e) => handleFilterChange("telecaller_name", e.target.value)}
                   placeholder="Enter telecaller name"
-                />
-              </div>
-              <div>
-                <Label htmlFor="search">Search All Fields</Label>
-                <Input
-                  id="search"
-                  value={filterInputs.search}
-                  onChange={(e) => handleFilterChange("search", e.target.value)}
-                  placeholder="Search candidate, phone, email..."
                 />
               </div>
             </div>

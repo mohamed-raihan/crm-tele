@@ -136,9 +136,11 @@ export function AppSidebar() {
       <SidebarHeader className="p-6">
         <div className="flex items-center gap-2">
           <Link to="/" className="flex items-center gap-2 hover:bg-gray-100 rounded-lg p-1">
-            <div className="h-8 w-8 rounded-lg bg-green-600 flex items-center justify-center">
-              <Headphones className="h-4 w-4 text-white" />
-            </div>
+            <img 
+              src="/telecrmicon.png" 
+              alt="TeleCRM Logo" 
+              className="h-12 w-12 rounded-lg object-cover"
+            />
             <div className="flex items-center gap-1">
               <h1 className="text-lg font-semibold text-gray-900">TeleCRM</h1>
             </div>

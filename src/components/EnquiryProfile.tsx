@@ -97,16 +97,33 @@ export function EnquiryProfile(id: id) {
     if (!formData.follow_up_date) errors.follow_up_date = 'Follow up date is required';
     if (!formData.next_action) errors.next_action = 'Next action is required';
     if (!formData.note) errors.note = 'Note is required';
+    
+    // Validate follow-up date is in the future
+    if (formData.follow_up_date) {
+      const selectedDate = new Date(formData.follow_up_date);
+      const currentDate = new Date();
+      if (selectedDate <= currentDate) {
+        errors.follow_up_date = 'Follow up date must be in the future';
+      }
+    }
+    
     setFormErrors(errors);
     if (Object.keys(errors).length > 0) return;
+    
     try {
-      // Add your API call here to submit the form data
-      console.log('Form data:', formData)
-      const reponse = await axiosInstance.post(API_URLS.CALLS.POST_CALLS, formData)
+      // Format the data for API submission
+      const submitData = {
+        ...formData,
+        // Convert datetime-local to YYYY-MM-DD format
+        follow_up_date: formData.follow_up_date ? formData.follow_up_date.split('T')[0] : ''
+      };
+      
+      console.log('Form data:', submitData)
+      const reponse = await axiosInstance.post(API_URLS.CALLS.POST_CALLS, submitData)
       console.log(reponse);
       toast({ title: "Updated successfully", variant: "success" });
       setFormData({
-        enquiry_id: "",
+        enquiry_id: id.id,
         call_type: '',
         call_status: '',
         call_outcome: '',
@@ -306,9 +323,9 @@ export function EnquiryProfile(id: id) {
 
                 {/* Follow Up Date */}
                 <div className="space-y-2">
-                  <Label htmlFor="follow_up_date">Follow Up Date</Label>
+                  <Label htmlFor="follow_up_date">Follow Up Date & Time</Label>
                   <Input
-                    type="date"
+                    type="datetime-local"
                     id="follow_up_date"
                     value={formData.follow_up_date}
                     onChange={(e) => handleInputChange('follow_up_date', e.target.value)}
