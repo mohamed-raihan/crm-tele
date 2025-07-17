@@ -62,6 +62,8 @@ const FollowUpsPage = () => {
     call_status: string;
     follow_up_date: string;
     telecaller_name: string;
+    start_date: string; // YYYY-MM-DD
+    end_date: string;   // YYYY-MM-DD
   };
   const defaultFilters: FiltersType = {
     candidate_name: "",
@@ -70,6 +72,8 @@ const FollowUpsPage = () => {
     call_status: "",
     follow_up_date: "",
     telecaller_name: "",
+    start_date: "",
+    end_date: "",
   };
   const [filterInputs, setFilterInputs] = useState<FiltersType>(defaultFilters);
   const [appliedFilters, setAppliedFilters] = useState<FiltersType>(defaultFilters);
@@ -89,12 +93,13 @@ const FollowUpsPage = () => {
     if (filters.call_status && filters.call_status !== "all") params.append("call_status", filters.call_status);
     if (filters.follow_up_date) params.append("follow_up_date", filters.follow_up_date);
     if (filters.telecaller_name) params.append("telecaller_name", filters.telecaller_name);
+    if (filters.start_date) params.append("start_date", filters.start_date);
+    if (filters.end_date) params.append("end_date", filters.end_date);
     params.append("page", String(page));
     params.append("limit", String(limit));
     return params.toString();
   };
 
-  
   // Fetch follow-ups from API with filters and pagination
   const fetchFollowUps = async (filters: FiltersType, page: number, limit: number, isInitial = false) => {
     setLoading(true);
@@ -104,6 +109,7 @@ const FollowUpsPage = () => {
       const token = localStorage.getItem("access_token");
       if (!token) return;
       const query = buildQueryParams(filters, page, limit);
+      console.log(`${API_URLS.CALLS.GET_FOLLOW_UPS}?${query}`);
       const response = await axiosInstance.get(`${API_URLS.CALLS.GET_FOLLOW_UPS}?${query}`, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -210,7 +216,8 @@ const FollowUpsPage = () => {
         ...data.map((item: FollowUpData, index: number) => [
           csvSafe(index + 1),
           csvSafe(item.enquiry_details?.candidate_name),
-          csvSafe(item.enquiry_details?.phone),
+          // Fix: Prepend tab to phone number to force Excel to treat as text
+          csvSafe(item.enquiry_details?.phone ? `\t${item.enquiry_details.phone}` : ""),
           csvSafe(item.enquiry_details?.email),
           csvSafe(item.call_status),
           csvSafe(item.call_outcome),
@@ -337,6 +344,28 @@ const FollowUpsPage = () => {
                   onChange={(e) => handleFilterChange("follow_up_date", e.target.value)}
                 />
               </div>
+              <div className="flex gap-3 w-full">
+                <div className="w-1/2">
+                  <Label htmlFor="start_date">Start Date</Label>
+                  <Input
+                    id="start_date"
+                    type="date"
+                    value={filterInputs.start_date}
+                    onChange={(e) => handleFilterChange("start_date", e.target.value)}
+                    placeholder="Start date"
+                  />
+                </div>
+                <div className="w-1/2">
+                  <Label htmlFor="end_date">End Date</Label>
+                  <Input
+                    id="end_date"
+                    type="date"
+                    value={filterInputs.end_date}
+                    onChange={(e) => handleFilterChange("end_date", e.target.value)}
+                    placeholder="End date"
+                  />
+                </div>
+              </div>
               <div>
                 <Label htmlFor="telecaller_name">Telecaller Name</Label>
                 <Input
@@ -348,7 +377,7 @@ const FollowUpsPage = () => {
               </div>
             </div>
             <div className="flex gap-2 mt-4">
-              <Button onClick={handleSearch} disabled={loading} className="bg-green-500 hover:bg-green-600 text-white">
+              <Button onClick={handleSearch} disabled={loading} className="bg-blue-500 hover:bg-blue-600 text-white">
                 {delayedLoading ? (
                   <>
                     <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
@@ -365,10 +394,10 @@ const FollowUpsPage = () => {
                 <RefreshCw className="w-4 h-4 mr-2" />
                 Reset
               </Button>
-              {/* <Button variant="outline" className="bg-green-600 hover:bg-green-700 text-white" onClick={exportToExcel} disabled={loading || followUps.length === 0}>
+              <Button variant="outline" className="bg-green-600 hover:bg-green-700 text-white" onClick={exportToExcel} disabled={loading || followUps.length === 0}>
                 <FileDown className="w-4 h-4 mr-2" />
                 Export Excel
-              </Button> */}
+              </Button>
             </div>
           </CardContent>
         </Card>
@@ -376,7 +405,7 @@ const FollowUpsPage = () => {
         {/* Results Table */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Follow-ups </CardTitle>
+            <CardTitle className="text-lg">Follow-ups</CardTitle>
           </CardHeader>
           <CardContent>
             {loading ? (

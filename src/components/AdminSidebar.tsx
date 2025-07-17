@@ -88,6 +88,12 @@ const navigationItems = [
     type: "single"
   },
   {
+    title: "Interested",
+    url: "/admin/interested",
+    icon: Phone,
+    type: "single"
+  },
+  {
     title: "Call",
     url: "/admin/calls",
     icon: Phone,
