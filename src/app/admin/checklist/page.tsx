@@ -120,15 +120,41 @@ export default function ChecklistPage() {
     ];
 
     // Pagination logic
-    // Sort so oldest first, latest last
+    // Sort by creation order (assuming newer items have higher IDs)
     const sortedChecklists = [...checklists];
     sortedChecklists.sort((a, b) => {
-        // If your API returns a createdAt or similar, use that instead
-        // For now, fallback to id as string comparison
+        const numA = parseInt(a.id, 10);
+        const numB = parseInt(b.id, 10);
+        
+        // If both are valid numbers, sort numerically (ascending order)
+        if (!isNaN(numA) && !isNaN(numB)) {
+            return numA - numB;
+        }
+        
+        // Fallback to string comparison if not numeric
         return String(a.id).localeCompare(String(b.id));
     });
+    
     const totalPages = Math.ceil(sortedChecklists.length / pageSize);
     const paginatedData = sortedChecklists.slice((page - 1) * pageSize, page * pageSize);
+
+    // Helper for pagination numbers (like notanswered)
+    const generatePaginationNumbers = () => {
+        if (totalPages <= 7) {
+            return Array.from({ length: totalPages }, (_, i) => i + 1);
+        }
+        const pages: (number | string)[] = [1];
+        if (page > 3) pages.push('...');
+        const start = Math.max(2, page - 1);
+        const end = Math.min(totalPages - 1, page + 1);
+        for (let i = start; i <= end; i++) {
+            if (i !== 1 && i !== totalPages) pages.push(i);
+        }
+        if (page < totalPages - 2) pages.push('...');
+        if (totalPages > 1) pages.push(totalPages);
+        return pages;
+    };
+    const paginationNumbers = generatePaginationNumbers();
 
     return (
         <div>
@@ -179,30 +205,50 @@ export default function ChecklistPage() {
                             searchPlaceholder="Search checklists..."
                         />
                         {/* Pagination Controls */}
-                        <div className="flex justify-end items-center mt-4 gap-2">
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                disabled={page === 1}
-                                onClick={() => setPage(page - 1)}
-                            >
-                                Previous
-                            </Button>
-                            <span className="text-sm">
-                                Page {page} of {totalPages}
-                            </span>
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                disabled={page === totalPages || totalPages === 0}
-                                onClick={() => setPage(page + 1)}
-                            >
-                                Next
-                            </Button>
-                        </div>
+                        {checklists.length > pageSize && (
+                            <div className="mt-6 flex flex-col md:flex-row justify-between items-center gap-2">
+                                <div className="text-sm text-gray-600">
+                                    Showing {(page - 1) * pageSize + 1} to {Math.min(page * pageSize, checklists.length)} of {checklists.length} entries
+                                </div>
+                                <div className="flex gap-2 flex-wrap items-center">
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        disabled={page === 1}
+                                        onClick={() => setPage(page - 1)}
+                                    >
+                                        Prev
+                                    </Button>
+                                    {paginationNumbers.map((pageNum, index) => (
+                                        <React.Fragment key={index}>
+                                            {typeof pageNum === 'string' ? (
+                                                <span className="px-2 py-1 text-gray-500">...</span>
+                                            ) : (
+                                                <Button
+                                                    variant={page === pageNum ? "default" : "outline"}
+                                                    size="sm"
+                                                    onClick={() => setPage(pageNum)}
+                                                    className={page === pageNum ? "bg-green-500 hover:bg-green-600" : ""}
+                                                >
+                                                    {pageNum}
+                                                </Button>
+                                            )}
+                                        </React.Fragment>
+                                    ))}
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        disabled={page === totalPages}
+                                        onClick={() => setPage(page + 1)}
+                                    >
+                                        Next
+                                    </Button>
+                                </div>
+                            </div>
+                        )}
                     </CardContent>
                 </Card>
             </div>
         </div>
     );
-} 
+}

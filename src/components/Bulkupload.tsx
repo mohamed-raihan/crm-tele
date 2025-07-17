@@ -14,6 +14,23 @@ export function BulkUploadSection() {
   const [selectedFileName, setSelectedFileName] = useState('');
   const [isUploading, setIsUploading] = useState(false);
 
+  // Get user role and set button color
+  let userRole = "";
+  try {
+    const userData = typeof window !== 'undefined' ? localStorage.getItem("user_data") : null;
+    if (userData) {
+      const user = JSON.parse(userData);
+      userRole = user.role;
+    }
+  } catch (e) {
+    userRole = "";
+  }
+  const buttonColorClass = userRole === "Telecaller"
+    ? "bg-green-600 hover:bg-green-700"
+    : userRole === "Admin"
+      ? "bg-blue-600 hover:bg-blue-700"
+      : "bg-gray-500 hover:bg-gray-600";
+
   const handleDownloadTemplate = () => {
     try {
       downloadCSVTemplate();
@@ -96,8 +113,8 @@ export function BulkUploadSection() {
               * Please Download Demo File and Upload the data in Same Format
             </p>
             <Button 
-              variant="default" 
-              className="bg-blue-600 hover:bg-blue-700"
+              variant="default"
+              className={buttonColorClass}
               onClick={handleDownloadTemplate}
             >
               Download Template
@@ -120,18 +137,18 @@ export function BulkUploadSection() {
                 id="csv-upload"
               />
               <Button 
-                variant="default" 
-                className="bg-blue-600 hover:bg-blue-700"
+                variant="default"
+                className={buttonColorClass}
                 onClick={() => document.getElementById('csv-upload')?.click()}
               >
                 Select File
               </Button>
             </div>
             {selectedFileName && (
-              <Button 
+              <Button
                 onClick={handleUpload}
                 disabled={isUploading}
-                className="w-full mt-4"
+                className={`w-full mt-4 ${buttonColorClass}`}
               >
                 <Upload className="w-4 h-4 mr-2" />
                 {isUploading ? 'Uploading...' : 'Upload CSV'}

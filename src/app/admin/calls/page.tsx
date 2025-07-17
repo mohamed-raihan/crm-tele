@@ -18,6 +18,23 @@ export default function CallsPage() {
   const [callsSearchInput, setCallsSearchInput] = useState("");
   const callsDebounceRef = useRef<NodeJS.Timeout | undefined>();
 
+  // Get user role and set button color
+  let userRole = "";
+  try {
+    const userData = typeof window !== 'undefined' ? localStorage.getItem("user_data") : null;
+    if (userData) {
+      const user = JSON.parse(userData);
+      userRole = user.role;
+    }
+  } catch (e) {
+    userRole = "";
+  }
+  const buttonColorClass = userRole === "Telecaller"
+    ? "bg-green-600 hover:bg-green-700"
+    : userRole === "Admin"
+      ? "bg-blue-600 hover:bg-blue-700"
+      : "bg-gray-500 hover:bg-gray-600";
+
   // Fetch calls data
   useEffect(() => {
     const fetchCalls = async () => {
@@ -91,9 +108,19 @@ export default function CallsPage() {
           />
           <Button
             onClick={() => setCallsSearch(callsSearchInput)}
-            className="bg-green-600 text-white hover:bg-green-700"
+            className={buttonColorClass + " text-white"}
           >
             Search
+          </Button>
+          <Button
+            onClick={() => {
+              setCallsSearchInput("");
+              setCallsSearch("");
+              setCallsPage(1);
+            }}
+            variant="outline"
+          >
+            Reset
           </Button>
         </div>
         {/* Table Card */}

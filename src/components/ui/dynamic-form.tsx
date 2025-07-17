@@ -50,6 +50,7 @@ export interface DynamicFormProps {
   errors?: Record<string, string>; // Added errors prop
   validationSchema?: z.ZodSchema<any>; // Added validationSchema for completeness
   submitButtonProps?: { disabled?: boolean };
+  submitButtonClassName?: string;
 }
 
 export function DynamicForm({
@@ -62,7 +63,8 @@ export function DynamicForm({
   onCancel,
   className,
   errors,
-  submitButtonProps
+  submitButtonProps,
+  submitButtonClassName
 }: DynamicFormProps) {
   // Create dynamic schema from fields
   // In DynamicForm component, update the createSchema function:
@@ -270,7 +272,7 @@ export function DynamicForm({
                   Cancel
                 </Button>
               )}
-              <Button type="submit" className='bg-violet-500' disabled={form.formState.isSubmitting || submitButtonProps?.disabled}>
+              <Button type="submit" className={submitButtonClassName ? submitButtonClassName : 'bg-violet-500'} disabled={form.formState.isSubmitting || submitButtonProps?.disabled}>
                 {form.formState.isSubmitting ? "Submitting..." : submitLabel}
               </Button>
             </div>

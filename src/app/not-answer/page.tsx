@@ -376,6 +376,7 @@ const NotAnsweredPage = () => {
                   </>
                 )}
               </Button>
+              
               <Button variant="outline" onClick={handleReset} disabled={loading} className="bg-gray-100 hover:bg-gray-200 text-gray-700">
                 <RefreshCw className="w-4 h-4 mr-2" />
                 Reset

@@ -33,6 +33,7 @@ import CoursePage from "./admin/course/page";
 import ChecklistPage from "./admin/checklist/page";
 import InterestedPage from "./interested/page";
 
+
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   if (loading) return null; // or a spinner
