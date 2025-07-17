@@ -169,34 +169,23 @@ export function ProfileInfoTab({ id }: ProfileInfoTabProps) {
 
   // Helper function to parse existing checklist data
   const parseExistingChecklists = (data: any): number[] => {
+    // If API returns a checklist array, use it directly
+    if (Array.isArray(data.checklist) && data.checklist.length > 0) {
+      return data.checklist.map((item: any) => Number(item.id));
+    }
+
+    // Fallback to old logic for checklist_ids1, checklist_ids2, ...
     const existingChecklistIds: number[] = [];
-    
-    // Check for checklist_ids1, checklist_ids2, etc.
     for (let i = 1; i <= 10; i++) {
       const fieldName = `checklist_ids${i}`;
       const value = data[fieldName];
-      
       if (value !== null && value !== undefined && value !== '') {
-        // First try to find by name (since API likely stores names)
-        const matchingChecklist = checklists.find(checklist => {
-          const valueStr = String(value).trim();
-          return checklist.name === valueStr;
-        });
-        
-        // If not found by name, try by ID
-        if (!matchingChecklist) {
-          const matchingById = checklists.find(checklist => 
-            String(checklist.id) === String(value).trim()
-          );
-          if (matchingById) {
-            existingChecklistIds.push(matchingById.id);
-          }
-        } else {
-          existingChecklistIds.push(matchingChecklist.id);
+        const matchingById = checklists.find(checklist => String(checklist.id) === String(value).trim());
+        if (matchingById) {
+          existingChecklistIds.push(matchingById.id);
         }
       }
     }
-    
     return existingChecklistIds;
   };
 
@@ -341,9 +330,6 @@ export function ProfileInfoTab({ id }: ProfileInfoTabProps) {
       follow_up_on: formData.follow_up_on || null,
     };
 
-    console.log('Base form data:', submitData);
-    console.log('Selected checklist IDs:', selectedChecklistIds);
-
     // Clear all checklist fields first
     for (let i = 1; i <= 10; i++) {
       submitData[`checklist_ids${i}`] = null;
@@ -355,40 +341,53 @@ export function ProfileInfoTab({ id }: ProfileInfoTabProps) {
         const checklist = checklists.find(item => item.id === checklistId);
         if (checklist && index < 10) {
           const fieldName = `checklist_ids${index + 1}`;
-          // Send the checklist name instead of ID
           submitData[fieldName] = checklist.name;
-          console.log(`Setting ${fieldName} to:`, checklist.name);
         }
       });
     }
 
-    console.log('Final submit data:', submitData);
+    console.log(submitData);
+    
+
+    // Convert submitData to FormData
+    const formDataBody = new FormData();
+    Object.entries(submitData).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        formDataBody.append(key, value);
+      }
+    });
+
+    // Add selected checklist IDs to FormData (overwrite checklist_ids1-10 with IDs)
+    for (let i = 0; i < 10; i++) {
+      const fieldName = `checklist_ids${i + 1}`;
+      if (selectedChecklistIds[i] !== undefined) {
+        formDataBody.set(fieldName, String(selectedChecklistIds[i]));
+      } else {
+        formDataBody.set(fieldName, '');
+      }
+    }
 
     try {
       const response = await axiosInstance.patch(
         API_URLS.ENQUIRY.PATCH_ENQUIRY(id),
-        submitData
+        formDataBody,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        }
       );
-      
-      console.log('PATCH response:', response.data);
-      
+
       if (response.data.success || response.status === 200) {
         toast({ title: "Updated successfully", variant: "success" });
-        
-        // Refresh the data
         setTimeout(() => {
           fetchEnquiry();
         }, 500);
       } else {
         throw new Error(response.data.message || 'Update failed');
       }
-      
     } catch (error: any) {
-      console.error('PATCH error:', error);
-      console.error('Error response:', error.response?.data);
-      
       let errorMessage = "Failed to update";
-      
       if (error.response?.data) {
         if (typeof error.response.data === 'string') {
           errorMessage = error.response.data;
@@ -402,7 +401,6 @@ export function ProfileInfoTab({ id }: ProfileInfoTabProps) {
       } else if (error.message) {
         errorMessage = error.message;
       }
-      
       toast({ title: errorMessage, variant: "destructive" });
     }
   };
@@ -410,6 +408,9 @@ export function ProfileInfoTab({ id }: ProfileInfoTabProps) {
   if (!profile) {
     return <div>Loading...</div>;
   }
+
+  console.log(formData);
+  
 
   return (
     <Card>
