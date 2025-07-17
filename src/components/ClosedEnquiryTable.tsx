@@ -47,6 +47,12 @@ export function ClosedEnquiryTable() {
   const userData = localStorage.getItem("user_data");
   const user = userData ? JSON.parse(userData) : null;
   const userRole = user?.role || "";
+  // Set button color class based on role
+  const buttonColorClass = userRole === "Telecaller"
+    ? "bg-green-600 hover:bg-green-700"
+    : userRole === "Admin"
+      ? "bg-blue-600 hover:bg-blue-700"
+      : "bg-gray-500 hover:bg-gray-600";
 
   const removeFilter = (key: string) => {
     setFilters(filters.filter(f => f.key !== key));
@@ -253,8 +259,21 @@ export function ClosedEnquiryTable() {
   return (
     <>
       <div className="px-2 md:px-6 w-full">
-        {/* Add Reset Button */}
-        <div className="mb-4 flex justify-end">
+        {/* Search input and button */}
+        <div className="mb-4 flex flex-col md:flex-row md:items-center gap-2 justify-between">
+          <div className="flex gap-2 w-full md:w-auto">
+            <input
+              type="text"
+              className="border rounded px-3 py-2 w-full md:w-64"
+              placeholder="Search by candidate name"
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+              onKeyDown={e => { if (e.key === 'Enter') handleSearch(searchTerm); }}
+            />
+            <Button className={buttonColorClass} onClick={() => handleSearch(searchTerm)}>
+              Search
+            </Button>
+          </div>
           <Button
             onClick={() => {
               setSearchTerm("");

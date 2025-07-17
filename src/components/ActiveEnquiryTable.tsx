@@ -26,10 +26,30 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
+import { addDays } from "date-fns";
 
 export function ActiveEnquiryTable() {
   const navigate = useNavigate();
   const token = localStorage.getItem("access_token")
+
+  // Get user role from localStorage
+  let userRole = "";
+  try {
+    const userData = localStorage.getItem("user_data");
+    if (userData) {
+      const user = JSON.parse(userData);
+      userRole = user.role;
+    }
+  } catch (e) {
+    userRole = "";
+  }
+
+  // Set button color class based on role
+  const buttonColorClass = userRole === "Telecaller"
+    ? "bg-green-600 hover:bg-green-700"
+    : userRole === "Admin"
+      ? "bg-blue-600 hover:bg-blue-700"
+      : "bg-green-600 hover:bg-green-700";
 
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
   const [Enquiries, setEnquiry] = useState([]);
@@ -59,6 +79,10 @@ export function ActiveEnquiryTable() {
     telecaller_name: '',
     mettad_name: ''
   });
+  const [dateRange, setDateRange] = useState<{ from: string | undefined; to?: string | undefined }>({
+    from: undefined,
+    to: undefined
+  });
 
   const removeFilter = (key: string) => {
     setFilters(filters.filter(f => f.key !== key));
@@ -69,12 +93,24 @@ export function ActiveEnquiryTable() {
     try {
       let url = `${API_URLS.ENQUIRY.GET_ACTIVE_ENQUIRY}?page=${pageNum}`;
       const params = [];
+
+      // Handle search parameters
       Object.entries(searchParams).forEach(([key, value]) => {
         if (value) params.push(`${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`);
       });
+
+      // Add date range params if set
+      if (dateRange.from) {
+        params.push(`start_date=${dateRange.from}`);
+      }
+      if (dateRange.to) {
+        params.push(`end_date=${dateRange.to}`);
+      }
+
       if (params.length > 0) {
         url += `&${params.join('&')}`;
       }
+
       console.log(url);
       const response = await axiosInstance.get(url, {
         headers: {
@@ -82,7 +118,8 @@ export function ActiveEnquiryTable() {
         }
       });
       console.log(searchParams);
-      
+
+      // Reset search fields when no search params
       if (Object.keys(searchParams).length === 0) {
         setSearchFields({
           candidate_name: '',
@@ -92,7 +129,9 @@ export function ActiveEnquiryTable() {
           telecaller_name: '',
           mettad_name: ''
         });
+        setDateRange({ from: undefined, to: undefined });
       }
+
       setEnquiry(response.data.data);
       if (response.data.pagination && response.data.pagination.totalPages) {
         setTotalPages(response.data.pagination.totalPages);
@@ -153,7 +192,7 @@ export function ActiveEnquiryTable() {
     { key: 'created_by_name', label: 'Created by' },
     { key: 'branch_name', label: 'Branch' },
     { key: 'mettad_name', label: 'Source' },
-    { key: 'assigned_by_name', label: 'Assigned to' }
+    { key: 'assigned_by_name', label: 'Telecaller' }
   ];
 
   const actions: TableAction[] = [
@@ -290,12 +329,6 @@ export function ActiveEnquiryTable() {
                   />
                   <input
                     className="border rounded px-3 py-2"
-                    placeholder="Email"
-                    value={searchFields.email}
-                    onChange={e => setSearchFields(f => ({ ...f, email: e.target.value }))}
-                  />
-                  <input
-                    className="border rounded px-3 py-2"
                     placeholder="Phone"
                     value={searchFields.phone}
                     onChange={e => setSearchFields(f => ({ ...f, phone: e.target.value }))}
@@ -318,12 +351,65 @@ export function ActiveEnquiryTable() {
                     value={searchFields.mettad_name}
                     onChange={e => setSearchFields(f => ({ ...f, mettad_name: e.target.value }))}
                   />
+                  {/* Date Range Filter - now as a dropdown/popover */}
+                  <div className="col-span-1 md:col-span-1">
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className="w-full justify-start text-left font-normal"
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {dateRange.from || dateRange.to
+                            ? `${dateRange.from || '...'} to ${dateRange.to || '...'}`
+                            : 'Select Date Range'}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <div className="bg-white rounded-lg shadow p-4 border w-full max-w-xs">
+                          <div className="font-medium text-gray-700 mb-2">Select Date Range</div>
+                          <div className="flex flex-col gap-2">
+                            <div>
+                              <label className="block text-sm font-medium text-gray-600 mb-1">From</label>
+                              <div className="relative">
+                                <input
+                                  type="date"
+                                  className="border rounded px-3 py-2 w-full pr-10"
+                                  placeholder="dd-mm-yyyy"
+                                  value={dateRange.from || ''}
+                                  onChange={e => setDateRange(dr => ({ ...dr, from: e.target.value }))}
+                                />
+                                <span className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                                  <CalendarIcon className="h-5 w-5 text-gray-400" />
+                                </span>
+                              </div>
+                            </div>
+                            <div>
+                              <label className="block text-sm font-medium text-gray-600 mb-1">To</label>
+                              <div className="relative">
+                                <input
+                                  type="date"
+                                  className="border rounded px-3 py-2 w-full pr-10"
+                                  placeholder="dd-mm-yyyy"
+                                  value={dateRange.to || ''}
+                                  onChange={e => setDateRange(dr => ({ ...dr, to: e.target.value }))}
+                                />
+                                <span className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                                  <CalendarIcon className="h-5 w-5 text-gray-400" />
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </PopoverContent>
+                    </Popover>
+                  </div>
                 </div>
                 <div className="flex justify-end gap-3">
-                  <Button className="bg-blue-600 hover:bg-blue-700" onClick={() => fetchEnquiry()}>
+                  <Button className={buttonColorClass} onClick={() => fetchEnquiry()}>
                     Refresh
                   </Button>
-                  <Button className="bg-blue-600 hover:bg-blue-700" onClick={handleSearch}>
+                  <Button className={buttonColorClass} onClick={handleSearch}>
                     Search
                   </Button>
                 </div>
@@ -462,7 +548,7 @@ export function ActiveEnquiryTable() {
                 selectedRows={selectedRows}
                 rowIdKey="id"
                 showBulkActions={true}
-                // exportActions={exportActions}
+              // exportActions={exportActions}
               />
             </div>
           </div>
