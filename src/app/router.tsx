@@ -31,6 +31,7 @@ import AdminJobPage from "./admin/my-jobs/completedjob";
 import ServicePage from "./admin/services/page";
 import CoursePage from "./admin/course/page";
 import ChecklistPage from "./admin/checklist/page";
+import InterestedPage from "./interested/page";
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -197,6 +198,14 @@ export function AppRouter() {
         }
       />
       <Route
+        path="/admin/interested"
+        element={
+          <AdminRoute>
+            <InterestedPage />
+          </AdminRoute>
+        }
+      />
+      <Route
         path="/admin/not-answer"
         element={
           <AdminRoute>
@@ -275,6 +284,14 @@ export function AppRouter() {
         element={
           <TelecallerRoute>
             <FollowUps />
+          </TelecallerRoute>
+        }
+      />
+      <Route
+        path="/interested"
+        element={
+          <TelecallerRoute>
+            <InterestedPage />
           </TelecallerRoute>
         }
       />

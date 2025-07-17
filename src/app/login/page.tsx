@@ -353,10 +353,10 @@ const LoginPage = () => {
           <p className="text-sm text-gray-600">
             Need help? Contact support at{" "}
             <a
-              href="mailto:support@telecrm.com"
+              href="mailto:support@pixelboho.com"
               className="text-violet-600 hover:text-violet-800 font-medium"
             >
-              support@telecrm.com
+              support@pixelboho.com
             </a>
           </p>
         </div>
