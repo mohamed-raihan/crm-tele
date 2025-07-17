@@ -62,6 +62,8 @@ const FollowUpsPage = () => {
     call_status: string;
     follow_up_date: string;
     telecaller_name: string;
+    start_date: string; // YYYY-MM-DD
+    end_date: string;   // YYYY-MM-DD
   };
   const defaultFilters: FiltersType = {
     candidate_name: "",
@@ -70,6 +72,8 @@ const FollowUpsPage = () => {
     call_status: "",
     follow_up_date: "",
     telecaller_name: "",
+    start_date: "",
+    end_date: "",
   };
   const [filterInputs, setFilterInputs] = useState<FiltersType>(defaultFilters);
   const [appliedFilters, setAppliedFilters] = useState<FiltersType>(defaultFilters);
@@ -89,6 +93,8 @@ const FollowUpsPage = () => {
     if (filters.call_status && filters.call_status !== "all") params.append("call_status", filters.call_status);
     if (filters.follow_up_date) params.append("follow_up_date", filters.follow_up_date);
     if (filters.telecaller_name) params.append("telecaller_name", filters.telecaller_name);
+    if (filters.start_date) params.append("start_date", filters.start_date);
+    if (filters.end_date) params.append("end_date", filters.end_date);
     params.append("page", String(page));
     params.append("limit", String(limit));
     return params.toString();
@@ -103,6 +109,7 @@ const FollowUpsPage = () => {
       const token = localStorage.getItem("access_token");
       if (!token) return;
       const query = buildQueryParams(filters, page, limit);
+      console.log(`${API_URLS.CALLS.GET_FOLLOW_UPS}?${query}`);
       const response = await axiosInstance.get(`${API_URLS.CALLS.GET_FOLLOW_UPS}?${query}`, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -336,6 +343,28 @@ const FollowUpsPage = () => {
                   value={filterInputs.follow_up_date}
                   onChange={(e) => handleFilterChange("follow_up_date", e.target.value)}
                 />
+              </div>
+              <div className="flex gap-3 w-full">
+                <div className="w-1/2">
+                  <Label htmlFor="start_date">Start Date</Label>
+                  <Input
+                    id="start_date"
+                    type="date"
+                    value={filterInputs.start_date}
+                    onChange={(e) => handleFilterChange("start_date", e.target.value)}
+                    placeholder="Start date"
+                  />
+                </div>
+                <div className="w-1/2">
+                  <Label htmlFor="end_date">End Date</Label>
+                  <Input
+                    id="end_date"
+                    type="date"
+                    value={filterInputs.end_date}
+                    onChange={(e) => handleFilterChange("end_date", e.target.value)}
+                    placeholder="End date"
+                  />
+                </div>
               </div>
               <div>
                 <Label htmlFor="telecaller_name">Telecaller Name</Label>

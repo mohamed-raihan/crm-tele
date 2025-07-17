@@ -5,9 +5,6 @@ const API_BASE_URL = "https://backend.telecrm.pixelsoft.online/";
 
 const axiosInstance = axios.create({
   baseURL: API_BASE_URL,
-  headers: {
-    "Content-Type": "application/json",
-  },
 });
 
 //https://backend.telecrm.pixelsoft.online/

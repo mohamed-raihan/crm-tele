@@ -50,7 +50,7 @@ function formatDate(dateStr: string | null | undefined) {
   return d.toLocaleString();
 }
 
-const NotAnsweredPage = () => {
+const InterestedPage = () => {
   const [notAnswered, setNotAnswered] = useState<NotAnsweredData[]>([]);
   const [loading, setLoading] = useState(false);
   const [showNoDataMsg, setShowNoDataMsg] = useState(false);
@@ -107,7 +107,7 @@ const NotAnsweredPage = () => {
       const token = localStorage.getItem("access_token");
       if (!token) return;
       const query = buildQueryParams(filters, page, limit);
-      const response = await axiosInstance.get(`${API_URLS.CALLS.GET_NOT_ANSWERED}?${query}`, {
+      const response = await axiosInstance.get(`${API_URLS.CALLS.GET_INTERESTED}?${query}`, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
@@ -189,7 +189,7 @@ const NotAnsweredPage = () => {
       if (!token) return;
       // Use a large limit to get all filtered records
       const query = buildQueryParams(appliedFilters, 1, 10000);
-      const response = await axiosInstance.get(`${API_URLS.CALLS.GET_NOT_ANSWERED}?${query}`, {
+      const response = await axiosInstance.get(`${API_URLS.CALLS.GET_INTERESTED}?${query}`, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
@@ -340,26 +340,26 @@ const NotAnsweredPage = () => {
                 />
               </div>
               <div className="flex gap-3 w-full">
-                <div className="w-1/2">
-                  <Label htmlFor="start_date">Start Date</Label>
-                  <Input
-                    id="start_date"
-                    type="date"
-                    value={filterInputs.start_date}
-                    onChange={(e) => handleFilterChange("start_date", e.target.value)}
-                    placeholder="Start date"
-                  />
-                </div>
-                <div className="w-1/2">
-                  <Label htmlFor="end_date">End Date</Label>
-                  <Input
-                    id="end_date"
-                    type="date"
-                    value={filterInputs.end_date}
-                    onChange={(e) => handleFilterChange("end_date", e.target.value)}
-                    placeholder="End date"
-                  />
-                </div>
+              <div className="w-1/2">
+                <Label htmlFor="start_date">Start Date</Label>
+                <Input
+                  id="start_date"
+                  type="date"
+                  value={filterInputs.start_date}
+                  onChange={(e) => handleFilterChange("start_date", e.target.value)}
+                  placeholder="Start date"
+                />
+              </div>
+              <div className="w-1/2">
+                <Label htmlFor="end_date">End Date</Label>
+                <Input
+                  id="end_date"
+                  type="date"
+                  value={filterInputs.end_date}
+                  onChange={(e) => handleFilterChange("end_date", e.target.value)}
+                  placeholder="End date"
+                />
+              </div>
               </div>
             </div>
             <div className="flex gap-2 mt-4">
@@ -504,4 +504,4 @@ const NotAnsweredPage = () => {
   );
 };
 
-export default NotAnsweredPage; 
+export default InterestedPage; 
