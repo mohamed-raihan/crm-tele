@@ -22,11 +22,34 @@ export default function CoursePage() {
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
   const [ad, setAd] = useState({
-    id:"",
-    name:""
+    id: "",
+    name: ""
   });
   const [adding, setAdding] = useState(false);
   const { toast } = useToast();
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 10;
+  const totalPages = Math.ceil(ads.length / pageSize);
+
+  // Helper for pagination numbers (like notanswered)
+  const generatePaginationNumbers = () => {
+    if (totalPages <= 7) {
+      return Array.from({ length: totalPages }, (_, i) => i + 1);
+    }
+    const pages: (number | string)[] = [1];
+    if (currentPage > 3) pages.push('...');
+    const start = Math.max(2, currentPage - 1);
+    const end = Math.min(totalPages - 1, currentPage + 1);
+    for (let i = start; i <= end; i++) {
+      if (i !== 1 && i !== totalPages) pages.push(i);
+    }
+    if (currentPage < totalPages - 2) pages.push('...');
+    if (totalPages > 1) pages.push(totalPages);
+    return pages;
+  };
+  const paginationNumbers = generatePaginationNumbers();
 
   // Fetch ads
   const fetchAds = async () => {
@@ -34,16 +57,16 @@ export default function CoursePage() {
     try {
       const res = await axiosInstance.get(API_URLS.COURSES.GET_COURSES);
       console.log(res);
-      
+
       setAds(res.data.data || []);
     } catch (err) {
-        console.log(err);
+      console.log(err);
       toast({ title: "Failed to fetch course", description: "Please try again later.", variant: "destructive" });
     } finally {
       setLoading(false);
     }
   };
-  
+
   useEffect(() => {
     fetchAds();
   }, []);
@@ -57,10 +80,10 @@ export default function CoursePage() {
     }
     setAdding(true);
     try {
-      if(ad.id){
+      if (ad.id) {
         await axiosInstance.patch(API_URLS.COURSES.PATCH_COURSES(ad.id), { name: ad.name });
         toast({ title: "Course Updated successfully", variant: "success" });
-      }else{
+      } else {
         await axiosInstance.post(API_URLS.COURSES.POST_COURSES, { name: ad.name });
         toast({ title: "Course added successfully", variant: "success" });
       }
@@ -86,11 +109,11 @@ export default function CoursePage() {
     if (!window.confirm(`Delete ad '${ad.name}'?`)) return;
     try {
       await axiosInstance.delete(API_URLS.COURSES.DELETE_COURSES(ad.id));
-      toast({ title: "Course deleted successfully", variant:"success" });
+      toast({ title: "Course deleted successfully", variant: "success" });
       fetchAds();
     } catch (err) {
       console.log(err);
-      
+
       toast({ title: err.response.data.message, description: "Please try again.", variant: "destructive" });
     }
   };
@@ -123,59 +146,110 @@ export default function CoursePage() {
     },
   ];
 
+  // Sort and paginate data
+  const sortedAds = ads.slice().sort((a, b) => {
+    const numA = parseInt(a.id, 10);
+    const numB = parseInt(b.id, 10);
+    if (isNaN(numA) && isNaN(numB)) return 0;
+    if (isNaN(numA)) return 1;
+    if (isNaN(numB)) return -1;
+    return numA - numB;
+  });
+  const paginatedAds = sortedAds.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
   return (
     <div>
-        <DashboardHeader/>
-        <div className=" mx-8 py-8">
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-2xl font-bold">COURSES</CardTitle>
-          <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-              <Button variant="default" className="gap-2 bg-violet-500" size="sm">
-                <Plus className="h-4 w-4" />Add Course
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>{ad.id ? "Edit course" : "Add Course"}</DialogTitle>
-              </DialogHeader>
-              <form onSubmit={handleAddAd} className="space-y-4">
-                <div>
-                  <label htmlFor="ad-name" className="block text-sm font-medium mb-1">Name</label>
-                  <Input
-                    id="ad-name"
-                    name="name"
-                    value={ad.name}
-                    onChange={e => setAd({...ad, name: e.target.value})}
-                    placeholder="Enter course name"
-                    required
-                  />
+      <DashboardHeader />
+      <div className=" mx-8 py-8">
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-2">
+            <CardTitle className="text-2xl font-bold">COURSES</CardTitle>
+            <Dialog open={open} onOpenChange={setOpen}>
+              <DialogTrigger asChild>
+                <Button variant="default" className="gap-2 bg-violet-500" size="sm">
+                  <Plus className="h-4 w-4" />Add Course
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>{ad.id ? "Edit course" : "Add Course"}</DialogTitle>
+                </DialogHeader>
+                <form onSubmit={handleAddAd} className="space-y-4">
+                  <div>
+                    <label htmlFor="ad-name" className="block text-sm font-medium mb-1">Name</label>
+                    <Input
+                      id="ad-name"
+                      name="name"
+                      value={ad.name}
+                      onChange={e => setAd({ ...ad, name: e.target.value })}
+                      placeholder="Enter course name"
+                      required
+                    />
+                  </div>
+                  <DialogFooter>
+                    <Button type="submit" className="bg-violet-500" disabled={adding}>
+                      {adding ? (ad.id ? "Updating..." : "Adding...") : (ad.id ? "Update" : "Add")}
+                    </Button>
+                    <DialogClose asChild>
+                      <Button type="button" variant="outline">Cancel</Button>
+                    </DialogClose>
+                  </DialogFooter>
+                </form>
+              </DialogContent>
+            </Dialog>
+          </CardHeader>
+          <CardContent>
+            <DynamicTable
+              data={paginatedAds}
+              columns={columns}
+              actions={actions}
+              searchPlaceholder="Search course..."
+            />
+            {/* Pagination Controls */}
+            {ads.length > pageSize && (
+              <div className="mt-6 flex flex-col md:flex-row justify-between items-center gap-2">
+                <div className="text-sm text-gray-600">
+                  Showing {(currentPage - 1) * pageSize + 1} to {Math.min(currentPage * pageSize, ads.length)} of {ads.length} entries
                 </div>
-                <DialogFooter>
-                  <Button type="submit" className="bg-violet-500" disabled={adding}>
-                    {adding ? (ad.id ? "Updating..." : "Adding...") : (ad.id ? "Update" : "Add")}
+                <div className="flex gap-2 flex-wrap items-center">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={currentPage === 1}
+                    onClick={() => setCurrentPage(currentPage - 1)}
+                  >
+                    Prev
                   </Button>
-                  <DialogClose asChild>
-                    <Button type="button" variant="outline">Cancel</Button>
-                  </DialogClose>
-                </DialogFooter>
-              </form>
-            </DialogContent>
-          </Dialog>
-        </CardHeader>
-        <CardContent>
-          <DynamicTable
-            data={ads.slice().sort((a, b) => parseInt(a.id as string, 10) - parseInt(b.id as string, 10))}
-            columns={columns}
-            actions={actions}
-            searchPlaceholder="Search course..."
-            // Optionally implement search, selection, etc.
-            // onSearch={...}
-          />
-        </CardContent>
-      </Card>
-    </div>
+                  {paginationNumbers.map((pageNum, index) => (
+                    <React.Fragment key={index}>
+                      {typeof pageNum === 'string' ? (
+                        <span className="px-2 py-1 text-gray-500">...</span>
+                      ) : (
+                        <Button
+                          variant={currentPage === pageNum ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => setCurrentPage(pageNum)}
+                          className={currentPage === pageNum ? "bg-green-500 hover:bg-green-600" : ""}
+                        >
+                          {pageNum}
+                        </Button>
+                      )}
+                    </React.Fragment>
+                  ))}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={currentPage === totalPages}
+                    onClick={() => setCurrentPage(currentPage + 1)}
+                  >
+                    Next
+                  </Button>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

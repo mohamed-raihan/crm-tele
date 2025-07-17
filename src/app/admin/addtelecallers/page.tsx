@@ -1075,8 +1075,8 @@ export default function TelecallersManagementPage() {
   return (
     <div>
       <DashboardHeader />
-      <div className="min-h-screen bg-gray-50 p-4 md:p-8">
-        <div className="max-w-7xl mx-auto">
+      <main className="flex-1 p-6">
+        <div className="max-w-7xl mx-auto w-full">
           {/* Breadcrumb */}
           <div className="text-xs text-gray-400 mb-1">
             Telecallers Management {">"} All Telecallers
@@ -1117,7 +1117,7 @@ export default function TelecallersManagementPage() {
           </div>
 
           {/* Table */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-x-auto w-full">
             <DynamicTable
               data={sortedTelecallers.map((row, idx) => ({
                 ...row,
@@ -1226,7 +1226,7 @@ export default function TelecallersManagementPage() {
             </div>
           )}
         </div>
-      </div>
+      </main>
     </div>
     // </div>
   );

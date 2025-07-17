@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Edit, Trash2 } from "lucide-react";
+import { Edit, Trash2, ChevronDown } from "lucide-react";
 import { ProfileInfoTab } from "@/components/profile-tabs/ProfileInfoTab";
 import { ActivitiesTab } from "@/components/profile-tabs/ActivitiesTab";
 import { RespondsTab } from "@/components/profile-tabs/RespondsTab";
@@ -16,6 +16,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from '@/hooks/use-toast';
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuCheckboxItem } from "@/components/ui/dropdown-menu";
 
 // Mock data for the profile
 const profileData = {
@@ -48,6 +49,11 @@ interface Enquiry {
   required_service_name: string;
 }
 
+interface ChecklistItem {
+  id: number;
+  name: string;
+}
+
 interface id {
   id: string;
 }
@@ -74,6 +80,9 @@ export function EnquiryProfile(id: id) {
     next_action: '',
     note: ''
   });
+  const [checklists, setChecklists] = useState<ChecklistItem[]>([]);
+  const [selectedChecklistIds, setSelectedChecklistIds] = useState<number[]>([]);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
   // Check if user is a Telecaller
   const userData = localStorage.getItem("user_data");
@@ -86,6 +95,26 @@ export function EnquiryProfile(id: id) {
       [field]: value
     }))
   }
+
+  const handleChecklistToggle = (checklistId: number) => {
+    setSelectedChecklistIds((prev) =>
+      prev.includes(checklistId) 
+        ? prev.filter((id) => id !== checklistId) 
+        : [...prev, checklistId]
+    );
+  };
+
+  // Get selected checklist names for display
+  const getSelectedChecklistNames = () => {
+    if (selectedChecklistIds.length === 0) return "Select checklist(s)";
+    
+    const selectedNames = checklists
+      .filter(checklist => selectedChecklistIds.includes(checklist.id))
+      .map(checklist => checklist.name)
+      .join(", ");
+    
+    return selectedNames.length > 50 ? selectedNames.substring(0, 50) + "..." : selectedNames;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -115,13 +144,18 @@ export function EnquiryProfile(id: id) {
       const submitData = {
         ...formData,
         // Convert datetime-local to YYYY-MM-DD format
-        follow_up_date: formData.follow_up_date ? formData.follow_up_date.split('T')[0] : ''
+        follow_up_date: formData.follow_up_date ? formData.follow_up_date.split('T')[0] : '',
+        // Send selected checklist IDs as name field (as per your requirement)
+        name: selectedChecklistIds, // This will be an array of IDs
+        checklist_ids: selectedChecklistIds, // Keep this as well if needed
       };
       
       console.log('Form data:', submitData)
-      const reponse = await axiosInstance.post(API_URLS.CALLS.POST_CALLS, submitData)
-      console.log(reponse);
+      const response = await axiosInstance.post(API_URLS.CALLS.POST_CALLS, submitData)
+      console.log(response);
       toast({ title: "Updated successfully", variant: "success" });
+      
+      // Reset form
       setFormData({
         enquiry_id: id.id,
         call_type: '',
@@ -133,9 +167,10 @@ export function EnquiryProfile(id: id) {
         follow_up_date: '',
         next_action: ''
       })
+      setSelectedChecklistIds([]);
     } catch (error) {
       console.error('Error submitting form:', error)
-      toast({ title: "failed to update", variant: "destructive" });
+      toast({ title: "Failed to update", variant: "destructive" });
     }
   }
 
@@ -149,15 +184,30 @@ export function EnquiryProfile(id: id) {
     }
   }
 
-  console.log(enquiry);
+  const fetchChecklists = async () => {
+    try {
+      const res = await axiosInstance.get(API_URLS.CHECKLISTS.GET_CHECKLIST);
+      console.log('Checklists response:', res.data);
+      setChecklists(res.data.data || []);
+    } catch (err) {
+      console.error('Error fetching checklists:', err);
+      toast({ title: "Failed to load checklists", variant: "destructive" });
+    }
+  };
 
+  console.log('Current enquiry:', enquiry);
+  console.log('Available checklists:', checklists);
+  console.log('Selected checklist IDs:', selectedChecklistIds);
 
   useEffect(() => {
     fetchEnquiry();
+    fetchChecklists();
   }, [])
 
   if (!enquiry) {
-    return <div>Loading...</div>;
+    return <div className="flex justify-center items-center h-64">
+      <div className="text-gray-500">Loading...</div>
+    </div>;
   }
 
   return (
@@ -185,7 +235,7 @@ export function EnquiryProfile(id: id) {
             <div className="flex items-start gap-4">
               <Avatar className="h-16 w-16 bg-gray-700">
                 <AvatarFallback className="text-white text-xl font-semibold">
-                  R
+                  {enquiry.candidate_name.charAt(0).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
               <div>
@@ -214,8 +264,6 @@ export function EnquiryProfile(id: id) {
             </div>
           </div>
 
-
-
           <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mt-6 pt-6 border-t">
             {/* Enquiry Status */}
             <div>
@@ -224,7 +272,7 @@ export function EnquiryProfile(id: id) {
             </div>
 
             <div>
-              <h3 className="font-medium text-gray-900 mb-2">Prefered Course</h3>
+              <h3 className="font-medium text-gray-900 mb-2">Preferred Course</h3>
               <p className="text-gray-600">{enquiry.preferred_course_name}</p>
             </div>
 
@@ -240,7 +288,7 @@ export function EnquiryProfile(id: id) {
 
             {/* Interested */}
             <div>
-              <h3 className="font-medium text-gray-900 mb-2">enquiry_status</h3>
+              <h3 className="font-medium text-gray-900 mb-2">Enquiry Status</h3>
               <div className="flex items-center gap-2">
                 <Badge className="bg-green-100 text-green-800 hover:bg-green-100">
                   {enquiry.enquiry_status}
@@ -309,13 +357,15 @@ export function EnquiryProfile(id: id) {
                     <SelectContent>
                       <SelectItem value="Interested">Interested</SelectItem>
                       <SelectItem value="Not Interested">Not Interested</SelectItem>
+                      <SelectItem value="Won">Won</SelectItem>
+                      <SelectItem value="Answered">Answered</SelectItem>
                       <SelectItem value="Callback Requested">Callback Requested</SelectItem>
                       <SelectItem value="Information Provided">Information Provided</SelectItem>
                       <SelectItem value="Follow Up">Follow Up</SelectItem>
                       <SelectItem value="Converted">Converted</SelectItem>
                       <SelectItem value="Do Not Call">Do Not Call</SelectItem>
                       <SelectItem value="walk_in_list">Walk In</SelectItem>
-                      <SelectItem value="closed">closed</SelectItem>
+                      <SelectItem value="closed">Closed</SelectItem>
                     </SelectContent>
                   </Select>
                   {formErrors.call_outcome && <span className="text-red-500 text-xs">{formErrors.call_outcome}</span>}
@@ -332,46 +382,29 @@ export function EnquiryProfile(id: id) {
                   />
                   {formErrors.follow_up_date && <span className="text-red-500 text-xs">{formErrors.follow_up_date}</span>}
                 </div>
-
-                {/* Call Start Time */}
-                {/* <div className="space-y-2">
-                  <Label htmlFor="call_start_time">Call Start Time</Label>
-                  <Input
-                    type="datetime-local"
-                    id="call_start_time"
-                    value={formData.call_start_time}
-                    onChange={(e) => handleInputChange('call_start_time', e.target.value)}
-                  />
-                </div> */}
-
-                {/* Call End Time */}
-                {/* <div className="space-y-2">
-                  <Label htmlFor="call_end_time">Call End Time</Label>
-                  <Input
-                    type="datetime-local"
-                    id="call_end_time"
-                    value={formData.call_end_time}
-                    onChange={(e) => handleInputChange('call_end_time', e.target.value)}
-                  />
-                </div> */}
               </div>
 
-              {/* Next Action */}
-              <div className="space-y-2">
-                <Label htmlFor="next_action">Next Action</Label>
-                <Select value={formData.next_action} onValueChange={(value) => handleInputChange('next_action', value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select next action" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="call_back">Call Back</SelectItem>
-                    <SelectItem value="send_email">Send Email</SelectItem>
-                    <SelectItem value="send_sms">Send SMS</SelectItem>
-                    <SelectItem value="meeting">Schedule Meeting</SelectItem>
-                    <SelectItem value="no_action">No Action Required</SelectItem>
-                  </SelectContent>
-                </Select>
-                {formErrors.next_action && <span className="text-red-500 text-xs">{formErrors.next_action}</span>}
+              {/* Next Action and Checklist in a row */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Next Action */}
+                <div className="space-y-2">
+                  <Label htmlFor="next_action">Next Action</Label>
+                  <Select value={formData.next_action} onValueChange={(value) => handleInputChange('next_action', value)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select next action" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="call_back">Call Back</SelectItem>
+                      <SelectItem value="send_email">Send Email</SelectItem>
+                      <SelectItem value="send_sms">Send SMS</SelectItem>
+                      <SelectItem value="meeting">Schedule Meeting</SelectItem>
+                      <SelectItem value="no_action">No Action Required</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {formErrors.next_action && <span className="text-red-500 text-xs">{formErrors.next_action}</span>}
+                </div>
+
+             
               </div>
 
               {/* Note */}

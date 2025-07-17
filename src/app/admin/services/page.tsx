@@ -28,6 +28,29 @@ export default function ServicePage() {
     const [adding, setAdding] = useState(false);
     const { toast } = useToast();
 
+    // Pagination state
+    const [currentPage, setCurrentPage] = useState(1);
+    const pageSize = 10;
+    const totalPages = Math.ceil(ads.length / pageSize);
+
+    // Helper for pagination numbers (like notanswered)
+    const generatePaginationNumbers = () => {
+        if (totalPages <= 7) {
+            return Array.from({ length: totalPages }, (_, i) => i + 1);
+        }
+        const pages: (number | string)[] = [1];
+        if (currentPage > 3) pages.push('...');
+        const start = Math.max(2, currentPage - 1);
+        const end = Math.min(totalPages - 1, currentPage + 1);
+        for (let i = start; i <= end; i++) {
+            if (i !== 1 && i !== totalPages) pages.push(i);
+        }
+        if (currentPage < totalPages - 2) pages.push('...');
+        if (totalPages > 1) pages.push(totalPages);
+        return pages;
+    };
+    const paginationNumbers = generatePaginationNumbers();
+
     // Fetch ads
     const fetchAds = async () => {
         setLoading(true);
@@ -91,7 +114,7 @@ export default function ServicePage() {
             fetchAds();
         } catch (err) {
             console.log(err);
-            
+
             toast({ title: err.response.data.message, description: "Please try again.", variant: "destructive" });
         }
     };
@@ -103,8 +126,12 @@ export default function ServicePage() {
             label: "ID",
             sortable: false,
             width: "w-24",
-            render: (value, _row, _index) => value
-          },
+            render: (value, _row, index) => {
+                // Calculate the actual index considering pagination
+                const actualIndex = (currentPage - 1) * pageSize + index + 1;
+                return actualIndex;
+            }
+        },
         { key: "name", label: "Name" },
     ];
 
@@ -124,59 +151,110 @@ export default function ServicePage() {
         },
     ];
 
+    // Sort and paginate data
+    const sortedAds = ads.slice().sort((a, b) => {
+        const numA = parseInt(a.id, 10);
+        const numB = parseInt(b.id, 10);
+        if (isNaN(numA) && isNaN(numB)) return 0;
+        if (isNaN(numA)) return 1;
+        if (isNaN(numB)) return -1;
+        return numA - numB;
+    });
+    const paginatedAds = sortedAds.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
     return (
         <div>
-            <DashboardHeader/>
+            <DashboardHeader />
             <div className=" mx-8 py-8">
-            <Card>
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                    <CardTitle className="text-2xl font-bold">SERVICE</CardTitle>
-                    <Dialog open={open} onOpenChange={setOpen}>
-                        <DialogTrigger asChild>
-                            <Button variant="default" className="gap-2 bg-violet-500" size="sm">
-                                <Plus className="h-4 w-4" />Add Service
-                            </Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                            <DialogHeader>
-                                <DialogTitle>{ad.id ? "Edit Service" : "Add New Service"}</DialogTitle>
-                            </DialogHeader>
-                            <form onSubmit={handleAddAd} className="space-y-4">
-                                <div>
-                                    <label htmlFor="ad-name" className="block text-sm font-medium mb-1">Name</label>
-                                    <Input
-                                        id="ad-name"
-                                        name="name"
-                                        value={ad.name}
-                                        onChange={e => setAd({ ...ad, name: e.target.value })}
-                                        placeholder="Enter service name"
-                                        required
-                                    />
+                <Card>
+                    <CardHeader className="flex flex-row items-center justify-between pb-2">
+                        <CardTitle className="text-2xl font-bold">SERVICE</CardTitle>
+                        <Dialog open={open} onOpenChange={setOpen}>
+                            <DialogTrigger asChild>
+                                <Button variant="default" className="gap-2 bg-violet-500" size="sm">
+                                    <Plus className="h-4 w-4" />Add Service
+                                </Button>
+                            </DialogTrigger>
+                            <DialogContent>
+                                <DialogHeader>
+                                    <DialogTitle>{ad.id ? "Edit Service" : "Add New Service"}</DialogTitle>
+                                </DialogHeader>
+                                <form onSubmit={handleAddAd} className="space-y-4">
+                                    <div>
+                                        <label htmlFor="ad-name" className="block text-sm font-medium mb-1">Name</label>
+                                        <Input
+                                            id="ad-name"
+                                            name="name"
+                                            value={ad.name}
+                                            onChange={e => setAd({ ...ad, name: e.target.value })}
+                                            placeholder="Enter service name"
+                                            required
+                                        />
+                                    </div>
+                                    <DialogFooter>
+                                        <Button type="submit" className="bg-violet-500" disabled={adding}>
+                                            {adding ? (ad.id ? "Updating..." : "Adding...") : (ad.id ? "Update" : "Add")}
+                                        </Button>
+                                        <DialogClose asChild>
+                                            <Button type="button" variant="outline">Cancel</Button>
+                                        </DialogClose>
+                                    </DialogFooter>
+                                </form>
+                            </DialogContent>
+                        </Dialog>
+                    </CardHeader>
+                    <CardContent>
+                        <DynamicTable
+                            data={paginatedAds}
+                            columns={columns}
+                            actions={actions}
+                            searchPlaceholder="Search ads..."
+                        />
+                        {/* Pagination Controls */}
+                        {ads.length > pageSize && (
+                            <div className="mt-6 flex flex-col md:flex-row justify-between items-center gap-2">
+                                <div className="text-sm text-gray-600">
+                                    Showing {(currentPage - 1) * pageSize + 1} to {Math.min(currentPage * pageSize, ads.length)} of {ads.length} entries
                                 </div>
-                                <DialogFooter>
-                                    <Button type="submit" className="bg-violet-500" disabled={adding}>
-                                        {adding ? (ad.id ? "Updating..." : "Adding...") : (ad.id ? "Update" : "Add")}
+                                <div className="flex gap-2 flex-wrap items-center">
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        disabled={currentPage === 1}
+                                        onClick={() => setCurrentPage(currentPage - 1)}
+                                    >
+                                        Prev
                                     </Button>
-                                    <DialogClose asChild>
-                                        <Button type="button" variant="outline">Cancel</Button>
-                                    </DialogClose>
-                                </DialogFooter>
-                            </form>
-                        </DialogContent>
-                    </Dialog>
-                </CardHeader>
-                <CardContent>
-                    <DynamicTable
-                        data={ads.slice().sort((a, b) => parseInt(a.id as string, 10) - parseInt(b.id as string, 10))}
-                        columns={columns}
-                        actions={actions}
-                        searchPlaceholder="Search ads..."
-                    // Optionally implement search, selection, etc.
-                    // onSearch={...}
-                    />
-                </CardContent>
-            </Card>
-        </div>
+                                    {paginationNumbers.map((pageNum, index) => (
+                                        <React.Fragment key={index}>
+                                            {typeof pageNum === 'string' ? (
+                                                <span className="px-2 py-1 text-gray-500">...</span>
+                                            ) : (
+                                                <Button
+                                                    variant={currentPage === pageNum ? "default" : "outline"}
+                                                    size="sm"
+                                                    onClick={() => setCurrentPage(pageNum)}
+                                                    className={currentPage === pageNum ? "bg-green-500 hover:bg-green-600" : ""}
+                                                >
+                                                    {pageNum}
+                                                </Button>
+                                            )}
+                                        </React.Fragment>
+                                    ))}
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        disabled={currentPage === totalPages}
+                                        onClick={() => setCurrentPage(currentPage + 1)}
+                                    >
+                                        Next
+                                    </Button>
+                                </div>
+                            </div>
+                        )}
+                    </CardContent>
+                </Card>
+            </div>
         </div>
     );
 }
