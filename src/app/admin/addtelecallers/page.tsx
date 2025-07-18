@@ -464,7 +464,6 @@ export default function TelecallersManagementPage() {
     }
   };
 
-
   // Helper function to get role ID from name
   const getRoleIdFromName = (roleName: string): number => {
     const roleMap: { [key: string]: number } = {
@@ -500,7 +499,11 @@ export default function TelecallersManagementPage() {
     }
   }, [branches]);
   // Fetch telecallers with pagination
-  const fetchTelecallers = async (page: number = 1, limit: number = 10, search?: string) => {
+  const fetchTelecallers = async (
+    page: number = 1,
+    limit: number = 10,
+    search?: string
+  ) => {
     setLoading(true);
     try {
       const authConfig = getAuthConfig();
@@ -515,7 +518,6 @@ export default function TelecallersManagementPage() {
       const response = await axiosInstance.get(url, authConfig);
 
       console.log(response);
-      
 
       if (response.data?.code === 200) {
         setTelecallers(response.data.data || []);
@@ -848,12 +850,17 @@ export default function TelecallersManagementPage() {
 
       if (response.data?.code === 200) {
         setTelecallers(response.data.data || []);
-        setPagination(response.data.pagination || {
-          ...pagination,
-          page: searchPage
-        });
+        setPagination(
+          response.data.pagination || {
+            ...pagination,
+            page: searchPage,
+          }
+        );
       } else {
-        toast({ title: "Failed to search telecallers", variant: "destructive" });
+        toast({
+          title: "Failed to search telecallers",
+          variant: "destructive",
+        });
       }
     } catch (err: any) {
       console.error("Error during search:", err);
@@ -1079,7 +1086,7 @@ export default function TelecallersManagementPage() {
     <div>
       <DashboardHeader />
       <main className="flex-1 p-6">
-        <div className="max-w-7xl mx-auto w-full">
+        <div className="w-full">
           {/* Breadcrumb */}
           <div className="text-xs text-gray-400 mb-1">
             Telecallers Management {">"} All Telecallers
@@ -1159,7 +1166,9 @@ export default function TelecallersManagementPage() {
               <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto scrollbar-hide">
                 <div className="flex items-center justify-between p-6 border-b border-gray-200">
                   <h2 className="text-lg font-semibold text-gray-900">
-                    {editingTelecaller ? "Edit Telecaller" : "Add New Telecaller"}
+                    {editingTelecaller
+                      ? "Edit Telecaller"
+                      : "Add New Telecaller"}
                   </h2>
                   <Button
                     variant="ghost"
@@ -1178,34 +1187,39 @@ export default function TelecallersManagementPage() {
                       sections={formSections as ImportedFormSection[]}
                       onSubmit={handleFormSubmit}
                       submitLabel={
-                        editingTelecaller ? "Update Telecaller" : "Add Telecaller"
+                        editingTelecaller
+                          ? "Update Telecaller"
+                          : "Add Telecaller"
                       }
                       showCancel={true}
                       onCancel={closeModal}
                       defaultValues={
                         editingTelecaller
                           ? {
-                            name: editingTelecaller.name || "",
-                            email: editingTelecaller.email || "",
-                            contact: editingTelecaller.contact || "",
-                            address: editingTelecaller.address || "",
-                            role: editingTelecaller.role.toString(),
-                            branch: editingTelecaller.branch.toString(),
-                            password: editingTelecaller.password_display || "••••••",
-                          }
+                              name: editingTelecaller.name || "",
+                              email: editingTelecaller.email || "",
+                              contact: editingTelecaller.contact || "",
+                              address: editingTelecaller.address || "",
+                              role: editingTelecaller.role.toString(),
+                              branch: editingTelecaller.branch.toString(),
+                              password:
+                                editingTelecaller.password_display || "••••••",
+                            }
                           : {
-                            name: "",
-                            email: "",
-                            contact: "",
-                            address: "",
-                            role: "2",
-                            branch: "",
-                            password: "",
-                          }
+                              name: "",
+                              email: "",
+                              contact: "",
+                              address: "",
+                              role: "2",
+                              branch: "",
+                              password: "",
+                            }
                       }
                       errors={formErrors}
                       validationSchema={
-                        editingTelecaller ? telecallerEditSchema : telecallerCreateSchema
+                        editingTelecaller
+                          ? telecallerEditSchema
+                          : telecallerCreateSchema
                       }
                       submitButtonProps={{ disabled: isSubmitting }}
                     />
@@ -1221,7 +1235,9 @@ export default function TelecallersManagementPage() {
                   {/* Show general error message if exists */}
                   {formErrors.general && (
                     <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md">
-                      <p className="text-sm text-red-600">{formErrors.general}</p>
+                      <p className="text-sm text-red-600">
+                        {formErrors.general}
+                      </p>
                     </div>
                   )}
                 </div>

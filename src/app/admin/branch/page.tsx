@@ -106,10 +106,7 @@ const branchEditSchema = z.object({
       message: "City is required",
     })
     .optional(),
-  email: z
-    .string()
-    .email("Please enter a valid email address")
-    .optional(),
+  email: z.string().email("Please enter a valid email address").optional(),
   contact: z
     .string()
     .regex(/^[0-9]{10}$/, "Contact must be exactly 10 digits")
@@ -639,126 +636,129 @@ export default function BranchManagementPage() {
 
   return (
     <div>
-      <DashboardHeader/>
+      <DashboardHeader />
       <main className="flex-1 p-6">
-      <div className="max-w-7xl mx-auto w-full">
-        {/* Breadcrumb */}
-        <div className="text-xs text-gray-400 mb-1">
-          Branch Management {">"} All Branches
-        </div>
+        <div className="w-full">
+          {/* Breadcrumb */}
+          <div className="text-xs text-gray-400 mb-1">
+            Branch Management {">"} All Branches
+          </div>
 
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4 sm:mb-0">
-            Branch Management
-          </h1>
-          <Button
-            onClick={openAddModal}
-            className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto"
-            disabled={loading}
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            Add New Branch
-          </Button>
-        </div>
+          {/* Header */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4 sm:mb-0">
+              Branch Management
+            </h1>
+            <Button
+              onClick={openAddModal}
+              className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto"
+              disabled={loading}
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              Add New Branch
+            </Button>
+          </div>
 
-        {/* Search Bar */}
-        <div className="mb-6">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-            <input
-              type="text"
-              placeholder="Search branches by name, city, email, contact, ..."
-              value={searchTerm}
-              onChange={(e) => handleSearch(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          {/* Search Bar */}
+          <div className="mb-6">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+              <input
+                type="text"
+                placeholder="Search branches by name, city, email, contact, ..."
+                value={searchTerm}
+                onChange={(e) => handleSearch(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+            {isSearching && (
+              <p className="text-sm text-gray-500 mt-2">
+                Showing {branches.length} results for "{searchTerm}"
+              </p>
+            )}
+          </div>
+
+          {/* Table */}
+          <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-x-auto w-full">
+            <DynamicTable
+              data={sortedBranches.map((row, idx) => ({
+                ...row,
+                serial: idx + 1,
+              }))}
+              columns={columns}
+              rowIdKey="id"
+              actions={[
+                {
+                  label: "Edit",
+                  icon: <Pencil className="mr-2 h-4 w-4 text-gray-500" />,
+                  onClick: handleEdit,
+                  variant: "outline",
+                },
+                {
+                  label: "Delete",
+                  icon: <Trash2 className="mr-2 h-4 w-4 text-red-500" />,
+                  onClick: handleDelete,
+                  variant: "destructive",
+                },
+              ]}
             />
-          </div>
-          {isSearching && (
-            <p className="text-sm text-gray-500 mt-2">
-              Showing {branches.length} results for "{searchTerm}"
-            </p>
-          )}
-        </div>
 
-        {/* Table */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-x-auto w-full">
-          <DynamicTable
-            data={sortedBranches.map((row, idx) => ({ ...row, serial: idx + 1 }))}
-            columns={columns}
-            rowIdKey="id"
-            actions={[
-              {
-                label: "Edit",
-                icon: <Pencil className="mr-2 h-4 w-4 text-gray-500" />,
-                onClick: handleEdit,
-                variant: "outline",
-              },
-              {
-                label: "Delete",
-                icon: <Trash2 className="mr-2 h-4 w-4 text-red-500" />,
-                onClick: handleDelete,
-                variant: "destructive",
-              },
-            ]}
-          />
-
-          {/* Pagination Info */}
-          {!isSearching && (
-            <div className="px-6 py-3 border-t border-gray-200 text-sm text-gray-500">
-              Showing {branches.length} of {pagination.total} branches (Page{" "}
-              {pagination.page} of {pagination.totalPages})
-            </div>
-          )}
-        </div>
-
-        {/* Add/Edit Modal */}
-        {isModalOpen && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto scrollbar-hide">
-              <div className="flex items-center justify-between p-6 border-b border-gray-200">
-                <h2 className="text-lg font-semibold text-gray-900">
-                  {editingBranch ? "Edit Branch" : "Add New Branch"}
-                </h2>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={closeModal}
-                  className="p-1"
-                >
-                  <X className="h-4 w-4" />
-                </Button>
+            {/* Pagination Info */}
+            {!isSearching && (
+              <div className="px-6 py-3 border-t border-gray-200 text-sm text-gray-500">
+                Showing {branches.length} of {pagination.total} branches (Page{" "}
+                {pagination.page} of {pagination.totalPages})
               </div>
+            )}
+          </div>
 
-              <div className="p-6">
-                <DynamicForm
-                  sections={formSections}
-                  onSubmit={handleFormSubmit}
-                  submitLabel={editingBranch ? "Update Branch" : "Add Branch"}
-                  showCancel={true}
-                  onCancel={closeModal}
-                  defaultValues={
-                    editingBranch
-                      ? {
-                          branch_name: editingBranch.branch_name || "",
-                          address: editingBranch.address || "",
-                          city: editingBranch.city || "",
-                          email: editingBranch.email || "",
-                          contact: editingBranch.contact || "",
-                        }
-                      : {}
-                  }
-                  errors={formErrors}
-                  validationSchema={
-                    editingBranch ? branchEditSchema : branchCreateSchema
-                  }
-                />
+          {/* Add/Edit Modal */}
+          {isModalOpen && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+              <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto scrollbar-hide">
+                <div className="flex items-center justify-between p-6 border-b border-gray-200">
+                  <h2 className="text-lg font-semibold text-gray-900">
+                    {editingBranch ? "Edit Branch" : "Add New Branch"}
+                  </h2>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={closeModal}
+                    className="p-1"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+
+                <div className="p-6">
+                  <DynamicForm
+                    sections={formSections}
+                    onSubmit={handleFormSubmit}
+                    submitLabel={editingBranch ? "Update Branch" : "Add Branch"}
+                    showCancel={true}
+                    onCancel={closeModal}
+                    defaultValues={
+                      editingBranch
+                        ? {
+                            branch_name: editingBranch.branch_name || "",
+                            address: editingBranch.address || "",
+                            city: editingBranch.city || "",
+                            email: editingBranch.email || "",
+                            contact: editingBranch.contact || "",
+                          }
+                        : {}
+                    }
+                    errors={formErrors}
+                    validationSchema={
+                      editingBranch ? branchEditSchema : branchCreateSchema
+                    }
+                  />
+                </div>
               </div>
             </div>
-          </div>
-        )}
-      </div>
-    </main>
+          )}
+        </div>
+      </main>
     </div>
   );
 }
