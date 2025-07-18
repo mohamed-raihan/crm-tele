@@ -353,7 +353,7 @@ export function ProfileInfoTab({ id }: ProfileInfoTabProps) {
     const formDataBody = new FormData();
     Object.entries(submitData).forEach(([key, value]) => {
       if (value !== undefined && value !== null) {
-        formDataBody.append(key, value);
+        formDataBody.append(key, String(value));
       }
     });
 

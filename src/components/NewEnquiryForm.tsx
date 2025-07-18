@@ -297,7 +297,11 @@ export function NewEnquiryForm() {
         return;
       }
 
-      const response = await axiosInstance.post(API_URLS.ENQUIRY.POST_ENQUIRY, cleanedData);
+      const response = await axiosInstance.post(API_URLS.ENQUIRY.POST_ENQUIRY, cleanedData,{
+        headers:{
+          "Content-Type": "multipart/form-data"
+        }
+      });
       console.log('API Response:', response);
       
       toast({ title: "Enquiry created successfully", variant: "success" });
