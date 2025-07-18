@@ -65,6 +65,19 @@ export function ProfileInfoTab({ id }: ProfileInfoTabProps) {
   const [checklists, setChecklists] = useState<ChecklistItem[]>([]);
   const [selectedChecklistIds, setSelectedChecklistIds] = useState<number[]>([]);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [userRole, setUserRole] = useState<string | null>(null);
+
+  useEffect(() => {
+    try {
+      const userDataString = localStorage.getItem('user_data');
+      if (userDataString) {
+        const userData = JSON.parse(userDataString);
+        setUserRole(userData.role || null);
+      }
+    } catch (e) {
+      setUserRole(null);
+    }
+  }, []);
 
   // Validation functions
   const validateEmail = (email: string): boolean => {
@@ -330,20 +343,22 @@ export function ProfileInfoTab({ id }: ProfileInfoTabProps) {
       follow_up_on: formData.follow_up_on || null,
     };
 
-    // Clear all checklist fields first
-    for (let i = 1; i <= 10; i++) {
-      submitData[`checklist_ids${i}`] = null;
-    }
+    if (userRole !== "Admin") {
+      // Clear all checklist fields first
+      for (let i = 1; i <= 10; i++) {
+        submitData[`checklist_ids${i}`] = null;
+      }
 
-    // Add selected checklists - send the checklist NAME, not ID
-    if (selectedChecklistIds.length > 0) {
-      selectedChecklistIds.forEach((checklistId, index) => {
-        const checklist = checklists.find(item => item.id === checklistId);
-        if (checklist && index < 10) {
-          const fieldName = `checklist_ids${index + 1}`;
-          submitData[fieldName] = checklist.name;
-        }
-      });
+      // Add selected checklists - send the checklist NAME, not ID
+      if (selectedChecklistIds.length > 0) {
+        selectedChecklistIds.forEach((checklistId, index) => {
+          const checklist = checklists.find(item => item.id === checklistId);
+          if (checklist && index < 10) {
+            const fieldName = `checklist_ids${index + 1}`;
+            submitData[fieldName] = checklist.name;
+          }
+        });
+      }
     }
 
     console.log(submitData);
@@ -357,13 +372,15 @@ export function ProfileInfoTab({ id }: ProfileInfoTabProps) {
       }
     });
 
-    // Add selected checklist IDs to FormData (overwrite checklist_ids1-10 with IDs)
-    for (let i = 0; i < 10; i++) {
-      const fieldName = `checklist_ids${i + 1}`;
-      if (selectedChecklistIds[i] !== undefined) {
-        formDataBody.set(fieldName, String(selectedChecklistIds[i]));
-      } else {
-        formDataBody.set(fieldName, '');
+    if (userRole !== "Admin") {
+      // Add selected checklist IDs to FormData (overwrite checklist_ids1-10 with IDs)
+      for (let i = 0; i < 10; i++) {
+        const fieldName = `checklist_ids${i + 1}`;
+        if (selectedChecklistIds[i] !== undefined) {
+          formDataBody.set(fieldName, String(selectedChecklistIds[i]));
+        } else {
+          formDataBody.set(fieldName, '');
+        }
       }
     }
 
@@ -372,9 +389,9 @@ export function ProfileInfoTab({ id }: ProfileInfoTabProps) {
         API_URLS.ENQUIRY.PATCH_ENQUIRY(id),
         formDataBody,
         {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
+          headers:{
+            "Content-Type": "multipart/form-data"
+          }
         }
       );
 
@@ -481,42 +498,45 @@ export function ProfileInfoTab({ id }: ProfileInfoTabProps) {
               )}
             </div>
             
-            <div className="space-y-2">
-              <Label>Checklist</Label>
-              <DropdownMenu open={isDropdownOpen} onOpenChange={setIsDropdownOpen}>
-                <DropdownMenuTrigger asChild>
-                  <button
-                    type="button"
-                    className="w-full h-10 px-3 py-2 text-left border border-gray-300 rounded-md bg-white hover:bg-gray-50 flex items-center justify-between"
-                  >
-                    <span className="truncate">{getSelectedChecklistNames()}</span>
-                    <ChevronDown className="h-4 w-4 opacity-50" />
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-full min-w-[300px]">
-                  {checklists.length > 0 ? (
-                    checklists.map((item) => (
-                      <DropdownMenuCheckboxItem
-                        key={item.id}
-                        checked={selectedChecklistIds.includes(item.id)}
-                        onCheckedChange={() => handleChecklistToggle(item.id)}
-                      >                        
-                        {item.name}
-                      </DropdownMenuCheckboxItem>
-                    ))
-                  ) : (
-                    <div className="px-3 py-2 text-sm text-gray-500">
-                      No checklists available
-                    </div>
-                  )}
-                </DropdownMenuContent>
-              </DropdownMenu>
-              {selectedChecklistIds.length > 0 && (
-                <div className="text-xs text-gray-500">
-                  {selectedChecklistIds.length} item(s) selected
-                </div>
-              )}
-            </div>
+            {/* Checklist Dropdown - only for non-Admin */}
+            {userRole !== "Admin" && (
+              <div className="space-y-2">
+                <Label>Checklist</Label>
+                <DropdownMenu open={isDropdownOpen} onOpenChange={setIsDropdownOpen}>
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      type="button"
+                      className="w-full h-10 px-3 py-2 text-left border border-gray-300 rounded-md bg-white hover:bg-gray-50 flex items-center justify-between"
+                    >
+                      <span className="truncate">{getSelectedChecklistNames()}</span>
+                      <ChevronDown className="h-4 w-4 opacity-50" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-full min-w-[300px]">
+                    {checklists.length > 0 ? (
+                      checklists.map((item) => (
+                        <DropdownMenuCheckboxItem
+                          key={item.id}
+                          checked={selectedChecklistIds.includes(item.id)}
+                          onCheckedChange={() => handleChecklistToggle(item.id)}
+                        >                        
+                          {item.name}
+                        </DropdownMenuCheckboxItem>
+                      ))
+                    ) : (
+                      <div className="px-3 py-2 text-sm text-gray-500">
+                        No checklists available
+                      </div>
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                {selectedChecklistIds.length > 0 && (
+                  <div className="text-xs text-gray-500">
+                    {selectedChecklistIds.length} item(s) selected
+                  </div>
+                )}
+              </div>
+            )}
           </div>
           
           <div className="flex justify-end mt-6">

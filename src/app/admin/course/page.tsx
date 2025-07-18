@@ -4,8 +4,20 @@ import React, { useEffect, useState } from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { DynamicTable, TableColumn, TableAction } from "@/components/ui/dynamic-table";
-import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "@/components/ui/dialog";
+import {
+  DynamicTable,
+  TableColumn,
+  TableAction,
+} from "@/components/ui/dynamic-table";
+import {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogClose,
+} from "@/components/ui/dialog";
 import { Plus, Edit, Trash2 } from "lucide-react";
 import axiosInstance from "@/components/apiconfig/axios.ts";
 import { useToast } from "@/components/ui/use-toast";
@@ -23,7 +35,7 @@ export default function CoursePage() {
   const [open, setOpen] = useState(false);
   const [ad, setAd] = useState({
     id: "",
-    name: ""
+    name: "",
   });
   const [adding, setAdding] = useState(false);
   const { toast } = useToast();
@@ -39,13 +51,13 @@ export default function CoursePage() {
       return Array.from({ length: totalPages }, (_, i) => i + 1);
     }
     const pages: (number | string)[] = [1];
-    if (currentPage > 3) pages.push('...');
+    if (currentPage > 3) pages.push("...");
     const start = Math.max(2, currentPage - 1);
     const end = Math.min(totalPages - 1, currentPage + 1);
     for (let i = start; i <= end; i++) {
       if (i !== 1 && i !== totalPages) pages.push(i);
     }
-    if (currentPage < totalPages - 2) pages.push('...');
+    if (currentPage < totalPages - 2) pages.push("...");
     if (totalPages > 1) pages.push(totalPages);
     return pages;
   };
@@ -61,7 +73,11 @@ export default function CoursePage() {
       setAds(res.data.data || []);
     } catch (err) {
       console.log(err);
-      toast({ title: "Failed to fetch course", description: "Please try again later.", variant: "destructive" });
+      toast({
+        title: "Failed to fetch course",
+        description: "Please try again later.",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
@@ -81,17 +97,25 @@ export default function CoursePage() {
     setAdding(true);
     try {
       if (ad.id) {
-        await axiosInstance.patch(API_URLS.COURSES.PATCH_COURSES(ad.id), { name: ad.name });
+        await axiosInstance.patch(API_URLS.COURSES.PATCH_COURSES(ad.id), {
+          name: ad.name,
+        });
         toast({ title: "Course Updated successfully", variant: "success" });
       } else {
-        await axiosInstance.post(API_URLS.COURSES.POST_COURSES, { name: ad.name });
+        await axiosInstance.post(API_URLS.COURSES.POST_COURSES, {
+          name: ad.name,
+        });
         toast({ title: "Course added successfully", variant: "success" });
       }
       setAd({ id: "", name: "" });
       setOpen(false);
       fetchAds();
     } catch (err) {
-      toast({ title: "Failed to add course", description: "Please try again.", variant: "destructive" });
+      toast({
+        title: "Failed to add course",
+        description: "Please try again.",
+        variant: "destructive",
+      });
     } finally {
       setAdding(false);
     }
@@ -100,8 +124,8 @@ export default function CoursePage() {
   // Edit ad (open modal with name, not implemented in UI for brevity)
   const handleEditAd = (ad: Ad) => {
     // You can implement edit modal logic here
-    setOpen(true)
-    setAd(ad)
+    setOpen(true);
+    setAd(ad);
   };
 
   // Delete ad
@@ -114,7 +138,11 @@ export default function CoursePage() {
     } catch (err) {
       console.log(err);
 
-      toast({ title: err.response.data.message, description: "Please try again.", variant: "destructive" });
+      toast({
+        title: err.response.data.message,
+        description: "Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -125,7 +153,7 @@ export default function CoursePage() {
       label: "ID",
       sortable: false,
       width: "w-24",
-      render: (value, _row, _index) => value
+      render: (value, _row, index) => (currentPage - 1) * pageSize + index + 1,
     },
     { key: "name", label: "Name" },
   ];
@@ -155,7 +183,10 @@ export default function CoursePage() {
     if (isNaN(numB)) return -1;
     return numA - numB;
   });
-  const paginatedAds = sortedAds.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+  const paginatedAds = sortedAds.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  );
 
   return (
     <div>
@@ -166,32 +197,56 @@ export default function CoursePage() {
             <CardTitle className="text-2xl font-bold">COURSES</CardTitle>
             <Dialog open={open} onOpenChange={setOpen}>
               <DialogTrigger asChild>
-                <Button variant="default" className="gap-2 bg-violet-500" size="sm">
-                  <Plus className="h-4 w-4" />Add Course
+                <Button
+                  variant="default"
+                  className="gap-2 bg-violet-500"
+                  size="sm"
+                >
+                  <Plus className="h-4 w-4" />
+                  Add Course
                 </Button>
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
-                  <DialogTitle>{ad.id ? "Edit course" : "Add Course"}</DialogTitle>
+                  <DialogTitle>
+                    {ad.id ? "Edit course" : "Add Course"}
+                  </DialogTitle>
                 </DialogHeader>
                 <form onSubmit={handleAddAd} className="space-y-4">
                   <div>
-                    <label htmlFor="ad-name" className="block text-sm font-medium mb-1">Name</label>
+                    <label
+                      htmlFor="ad-name"
+                      className="block text-sm font-medium mb-1"
+                    >
+                      Name
+                    </label>
                     <Input
                       id="ad-name"
                       name="name"
                       value={ad.name}
-                      onChange={e => setAd({ ...ad, name: e.target.value })}
+                      onChange={(e) => setAd({ ...ad, name: e.target.value })}
                       placeholder="Enter course name"
                       required
                     />
                   </div>
                   <DialogFooter>
-                    <Button type="submit" className="bg-violet-500" disabled={adding}>
-                      {adding ? (ad.id ? "Updating..." : "Adding...") : (ad.id ? "Update" : "Add")}
+                    <Button
+                      type="submit"
+                      className="bg-violet-500"
+                      disabled={adding}
+                    >
+                      {adding
+                        ? ad.id
+                          ? "Updating..."
+                          : "Adding..."
+                        : ad.id
+                        ? "Update"
+                        : "Add"}
                     </Button>
                     <DialogClose asChild>
-                      <Button type="button" variant="outline">Cancel</Button>
+                      <Button type="button" variant="outline">
+                        Cancel
+                      </Button>
                     </DialogClose>
                   </DialogFooter>
                 </form>
@@ -209,7 +264,9 @@ export default function CoursePage() {
             {ads.length > pageSize && (
               <div className="mt-6 flex flex-col md:flex-row justify-between items-center gap-2">
                 <div className="text-sm text-gray-600">
-                  Showing {(currentPage - 1) * pageSize + 1} to {Math.min(currentPage * pageSize, ads.length)} of {ads.length} entries
+                  Showing {(currentPage - 1) * pageSize + 1} to{" "}
+                  {Math.min(currentPage * pageSize, ads.length)} of {ads.length}{" "}
+                  entries
                 </div>
                 <div className="flex gap-2 flex-wrap items-center">
                   <Button
@@ -222,14 +279,20 @@ export default function CoursePage() {
                   </Button>
                   {paginationNumbers.map((pageNum, index) => (
                     <React.Fragment key={index}>
-                      {typeof pageNum === 'string' ? (
+                      {typeof pageNum === "string" ? (
                         <span className="px-2 py-1 text-gray-500">...</span>
                       ) : (
                         <Button
-                          variant={currentPage === pageNum ? "default" : "outline"}
+                          variant={
+                            currentPage === pageNum ? "default" : "outline"
+                          }
                           size="sm"
                           onClick={() => setCurrentPage(pageNum)}
-                          className={currentPage === pageNum ? "bg-green-500 hover:bg-green-600" : ""}
+                          className={
+                            currentPage === pageNum
+                              ? "bg-green-500 hover:bg-green-600"
+                              : ""
+                          }
                         >
                           {pageNum}
                         </Button>
