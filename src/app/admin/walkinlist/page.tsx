@@ -389,7 +389,7 @@ const WalkInListPage = () => {
               </div> */}
             </div>
             <div className="flex gap-2 mt-4">
-              <Button onClick={handleSearch} disabled={loading} className="bg-green-500 hover:bg-green-600 text-white">
+              <Button onClick={handleSearch} disabled={loading} className="bg-blue-500 hover:bg-blue-600 text-white">
                 {delayedLoading ? (
                   <>
                     <RefreshCw className="w-4 h-4 mr-2 animate-spin" />

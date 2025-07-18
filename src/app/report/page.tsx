@@ -121,6 +121,7 @@ const SearchableDropdown: React.FC<{
     const dropdownRef = useRef<HTMLDivElement>(null);
     const listRef = useRef<HTMLDivElement>(null);
     const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  
 
     useEffect(() => {
       const handleClickOutside = (event: MouseEvent) => {
@@ -298,6 +299,16 @@ export default function ReportPage() {
     additional_filter?: string;
   }>({ telecaller_id: '', report_type: '', telecaller_name: '', additional_filter: '' });
 
+
+  const [drillDownPagination, setDrillDownPagination] = useState<Pagination>({
+    currentPage: 1,
+    totalPages: 1,
+    totalRecords: 0,
+    limit: 10,
+    hasNext: false,
+    hasPrevious: false,
+  });
+
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
 
@@ -347,42 +358,60 @@ export default function ReportPage() {
   };
 
 
-  const fetchDrillDownData = async (telecaller_id: string, report_type: string, additionalFilter: string = '') => {
-    setLoading(true);
-    try {
-      const authConfig = getAuthConfig();
-      if (!authConfig) return;
+ const fetchDrillDownData = async (
+  telecaller_id: string, 
+  report_type: string, 
+  additionalFilter: string = '',
+  page: number = 1,
+  limit: number = 10
+) => {
+  setLoading(true);
+  try {
+    const authConfig = getAuthConfig();
+    if (!authConfig) return;
 
-      const params = new URLSearchParams({
-        report: report_type,
-        telecaller_id: telecaller_id,
+    const params = new URLSearchParams({
+      report: report_type,
+      telecaller_id: telecaller_id,
+      page: page.toString(),
+      limit: limit.toString(),
+    });
+
+    // Add additional filters if needed
+    if (additionalFilter) {
+      const additionalParams = new URLSearchParams(additionalFilter.replace('&', ''));
+      additionalParams.forEach((value, key) => {
+        params.append(key, value);
       });
-
-      // Add additional filters if needed
-      if (additionalFilter) {
-        const additionalParams = new URLSearchParams(additionalFilter.replace('&', ''));
-        additionalParams.forEach((value, key) => {
-          params.append(key, value);
-        });
-      }
-
-      const response = await axiosInstance.get(
-        `${API_URLS.REPORTS.GET_REPORTS}?${params.toString()}`,
-        authConfig
-      );
-
-      if (response.data?.code === 200) {
-        setDrillDownData(response.data.data || []);
-      } else {
-        showToast("Failed to fetch detailed data", "error");
-      }
-    } catch (err: any) {
-      console.error("Error fetching drill-down data:", err);
-      showToast("Failed to fetch detailed data", "error");
-    } finally {
-      setLoading(false);
     }
-  };
+
+    const response = await axiosInstance.get(
+      `${API_URLS.REPORTS.GET_REPORTS}?${params.toString()}`,
+      authConfig
+    );
+
+    if (response.data?.code === 200) {
+      setDrillDownData(response.data.data || []);
+      setDrillDownPagination({
+        currentPage: response.data.pagination?.page || page,
+        totalPages: response.data.pagination?.totalPages || 1,
+        totalRecords: response.data.pagination?.total || 0,
+        limit: response.data.pagination?.limit || limit,
+        hasNext: response.data.pagination?.hasNext || false,
+        hasPrevious: response.data.pagination?.hasPrevious || false,
+      });
+    } else {
+      showToast("Failed to fetch detailed data", "error");
+    }
+  } catch (err: any) {
+    console.error("Error fetching drill-down data:", err);
+    showToast("Failed to fetch detailed data", "error");
+  } finally {
+    setLoading(false);
+  }
+};
+
+
 
   const getColorClass = (value: number) => {
     if (value === 0) return 'bg-gray-100 text-gray-500';
@@ -401,42 +430,69 @@ export default function ReportPage() {
       'not_contacted': 'not_contacted',
       'answered': 'answered',
       'not_answered': 'not_answered',
-      'won': 'won', // <-- Pass 'won' as report_type param
-      'not_interested': 'contacted', // For not_interested, we need to filter contacted calls
+      'won': 'won',
+      'not_interested': 'contacted',
       'walk_in_list': 'walk_in_list',
-      'total_follow_ups': 'followup', // Changed from 'follow_ups' to 'followup'
+      'total_follow_ups': 'followup',
       'followup': 'followup',
     };
-
+  
     const reportType = reportTypeMap[columnType];
     if (!reportType) return;
-
-    // For won and not_interested, we need additional filtering
+  
     let additionalFilter = '';
     if (columnType === 'won') {
-      // No additional filter for won, just use report_type 'won'
       additionalFilter = '';
     } else if (columnType === 'not_interested') {
-      additionalFilter = '&status=not_interested'; // or whatever the API expects for not_interested filter
+      additionalFilter = '&status=not_interested';
     }
-
+  
     setCurrentFilter({
       telecaller_id: report.telecaller_id.toString(),
       report_type: reportType,
       telecaller_name: report.telecaller_name || '',
       additional_filter: additionalFilter
     });
-
+  
+    // Reset pagination when switching to drill-down
+    setDrillDownPagination({
+      currentPage: 1,
+      totalPages: 1,
+      totalRecords: 0,
+      limit: 10,
+      hasNext: false,
+      hasPrevious: false,
+    });
+  
     setIsDrillDown(true);
-    fetchDrillDownData(report.telecaller_id.toString(), reportType, additionalFilter);
+    fetchDrillDownData(report.telecaller_id.toString(), reportType, additionalFilter, 1, 10);
   };
+  
 
   const handleBackToReport = () => {
     setIsDrillDown(false);
     setDrillDownData([]);
     setCurrentFilter({ telecaller_id: '', report_type: '', telecaller_name: '' });
+    setDrillDownPagination({
+      currentPage: 1,
+      totalPages: 1,
+      totalRecords: 0,
+      limit: 10,
+      hasNext: false,
+      hasPrevious: false,
+    });
   };
 
+  const handleDrillDownPageChange = (newPage: number) => {
+    setDrillDownPagination((prev) => ({ ...prev, currentPage: newPage }));
+    fetchDrillDownData(
+      currentFilter.telecaller_id,
+      currentFilter.report_type,
+      currentFilter.additional_filter || '',
+      newPage,
+      drillDownPagination.limit
+    );
+  };
 
   // Fetch reports with optimized pagination
   const fetchAllReports = async (page: number = 1, limit: number = 10) => {
@@ -1103,7 +1159,7 @@ export default function ReportPage() {
                   <div className="flex items-center gap-2">
                     <button
                       onClick={handleBackToReport}
-                      className="flex items-center gap-2 px-3 py-1 bg-gray-100 hover:bg-gray-200 rounded text-sm font-medium"
+                      className="flex items-center gap-2 px-3 py-1 bg-blue-600 hover:bg-blue-700 rounded text-sm font-medium text-white"
                     >
                       ← Back to Report
                     </button>
@@ -1111,8 +1167,9 @@ export default function ReportPage() {
                       Showing {currentFilter.report_type.replace('_', ' ')} details for {currentFilter.telecaller_name}
                     </span>
                   </div>
+                 
                 </div>
-
+            
                 <div className="overflow-x-auto">
                   <table className="min-w-full border rounded-xl overflow-hidden">
                     <thead>
@@ -1141,10 +1198,11 @@ export default function ReportPage() {
                               {item.enquiry_details?.email || 'N/A'}
                             </td>
                             <td className="px-4 py-2">
-                              <span className={`px-2 py-1 rounded text-xs font-medium ${item.enquiry_details?.enquiry_status === 'Active'
-                                ? 'bg-green-100 text-green-800'
-                                : 'bg-gray-100 text-gray-800'
-                                }`}>
+                              <span className={`px-2 py-1 rounded text-xs font-medium ${
+                                item.enquiry_details?.enquiry_status === 'Active'
+                                  ? 'bg-green-100 text-green-800'
+                                  : 'bg-gray-100 text-gray-800'
+                              }`}>
                                 {item.enquiry_details?.enquiry_status || 'N/A'}
                               </span>
                             </td>
@@ -1169,6 +1227,55 @@ export default function ReportPage() {
                     </tbody>
                   </table>
                 </div>
+            
+                {/* Drill-down Pagination */}
+                {drillDownPagination.totalPages > 1 && (
+                  <div className="mt-6 flex justify-between items-center">
+                    <div className="text-sm text-gray-600">
+                      Showing {(drillDownPagination.currentPage - 1) * drillDownPagination.limit + 1}{" "}
+                      to{" "}
+                      {Math.min(
+                        drillDownPagination.currentPage * drillDownPagination.limit,
+                        drillDownPagination.totalRecords
+                      )}{" "}
+                      of {drillDownPagination.totalRecords} entries
+                    </div>
+            
+                    <div className="flex gap-2">
+                      <button
+                        className="px-3 py-1 border rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                        disabled={drillDownPagination.currentPage === 1 || loading}
+                        onClick={() => handleDrillDownPageChange(drillDownPagination.currentPage - 1)}
+                      >
+                        Previous
+                      </button>
+                      {[...Array(drillDownPagination.totalPages)].map((_, index) => (
+                        <button
+                          key={index}
+                          className={`px-3 py-1 border rounded disabled:opacity-50 disabled:cursor-not-allowed ${
+                            drillDownPagination.currentPage === index + 1
+                              ? "bg-violet-100 text-violet-700 border-violet-300"
+                              : "hover:bg-gray-50"
+                          }`}
+                          disabled={loading}
+                          onClick={() => handleDrillDownPageChange(index + 1)}
+                        >
+                          {index + 1}
+                        </button>
+                      ))}
+                      <button
+                        className="px-3 py-1 border rounded disabled:opacity-50 disabled:cursor-not-allowed"
+                        disabled={
+                          drillDownPagination.currentPage === drillDownPagination.totalPages ||
+                          loading
+                        }
+                        onClick={() => handleDrillDownPageChange(drillDownPagination.currentPage + 1)}
+                      >
+                        Next
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
             {/* )} */}

@@ -1223,6 +1223,18 @@ export default function TelecallersManagementPage() {
                       }
                       submitButtonProps={{ disabled: isSubmitting }}
                     />
+                  ) : branches.length === 0 ? (
+                    <div className="flex items-center justify-center py-8">
+                      <div className="text-center bg-red-50 border border-red-200 rounded-md p-6">
+                        <p className="text-lg font-semibold text-red-600 mb-2">Branch is not created</p>
+                        <a
+                          href="/admin/branches"
+                          className="text-blue-600 underline hover:text-blue-800"
+                        >
+                          Go to Branches Page
+                        </a>
+                      </div>
+                    </div>
                   ) : (
                     <div className="flex items-center justify-center py-8">
                       <div className="text-center">

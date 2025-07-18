@@ -304,8 +304,8 @@ export function ClosedEnquiryTable() {
               columns={columns}
               actions={actions}
               // filters={filters}
-              searchPlaceholder="Search"
-              onSearch={handleSearch}
+              // searchPlaceholder="Search"
+              // onSearch={handleSearch}
               onSelectAll={handleSelectAll}
               onSelectRow={handleSelectRow}
               selectedRows={selectedRows}

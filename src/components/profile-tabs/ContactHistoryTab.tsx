@@ -18,7 +18,7 @@ interface history {
     call_outcome: string;
     call_start_time: string;
     call_duration: string;
-    feedback: string;
+    notes: string;
     follow_up_date: string;
   }
 
@@ -41,6 +41,9 @@ export function ContactHistoryTab(id:id) {
     }
   }
 
+
+  console.log(history)
+  
   useEffect(()=>{
     fetchHistory();
   },[])
@@ -57,7 +60,7 @@ export function ContactHistoryTab(id:id) {
               <TableHead>Call Outcome</TableHead>
               {/* <TableHead>Call Start Time</TableHead>
               <TableHead>Call Duration</TableHead> */}
-              <TableHead>Feedback</TableHead>
+              <TableHead>Notes</TableHead>
               <TableHead>Follow Up Date</TableHead>
             </TableRow>
           </TableHeader>
@@ -70,7 +73,7 @@ export function ContactHistoryTab(id:id) {
                 <TableCell>{contact.call_outcome}</TableCell>
                 {/* <TableCell>{contact.call_start_time ? contact.call_start_time : '-'}</TableCell>
                 <TableCell>{contact.call_duration ? contact.call_duration : '-'}</TableCell> */}
-                <TableCell>{contact.feedback}</TableCell>
+                <TableCell>{contact.notes}</TableCell>
                 <TableCell>{contact.follow_up_date ? contact.follow_up_date : '-'}</TableCell>
               </TableRow>
             ))}
