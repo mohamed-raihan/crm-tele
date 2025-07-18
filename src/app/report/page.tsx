@@ -401,7 +401,7 @@ export default function ReportPage() {
       'not_contacted': 'not_contacted',
       'answered': 'answered',
       'not_answered': 'not_answered',
-      'won': 'contacted', // For won, we need to filter contacted calls
+      'won': 'won', // <-- Pass 'won' as report_type param
       'not_interested': 'contacted', // For not_interested, we need to filter contacted calls
       'walk_in_list': 'walk_in_list',
       'total_follow_ups': 'followup', // Changed from 'follow_ups' to 'followup'
@@ -414,7 +414,8 @@ export default function ReportPage() {
     // For won and not_interested, we need additional filtering
     let additionalFilter = '';
     if (columnType === 'won') {
-      additionalFilter = '&status=won'; // or whatever the API expects for won filter
+      // No additional filter for won, just use report_type 'won'
+      additionalFilter = '';
     } else if (columnType === 'not_interested') {
       additionalFilter = '&status=not_interested'; // or whatever the API expects for not_interested filter
     }
@@ -847,6 +848,7 @@ export default function ReportPage() {
     'not_answered',
     'followup',
     'walk_in_list',
+    'won', // <-- Make 'won' column clickable
   ];
 
   const renderClickableCell = (value: number, report: Report, columnType: string) => {

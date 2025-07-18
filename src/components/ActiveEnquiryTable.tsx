@@ -151,6 +151,8 @@ export function ActiveEnquiryTable() {
     fetchEnquiry(page);
   }, [page]);
 
+  console.log(Enquiries);
+  
   // Delete handler
   const handleDelete = async (row: any) => {
     if (!window.confirm('Are you sure you want to delete this enquiry?')) return;
@@ -190,6 +192,19 @@ export function ActiveEnquiryTable() {
       // )
     },
     { key: 'created_by_name', label: 'Created by' },
+    {
+      key: 'created_at',
+      label: 'Created Date',
+      render: (value) => {
+        if (!value) return '';
+        try {
+          const date = new Date(value);
+          return isNaN(date.getTime()) ? '' : `${date.getDate().toString().padStart(2, '0')}-${(date.getMonth()+1).toString().padStart(2, '0')}-${date.getFullYear()}`;
+        } catch {
+          return '';
+        }
+      }
+    },
     { key: 'branch_name', label: 'Branch' },
     { key: 'mettad_name', label: 'Source' },
     { key: 'assigned_by_name', label: 'Telecaller' }
