@@ -192,14 +192,7 @@ export function NewEnquiryForm() {
     {
       columns: 3,
       fields: [
-        {
-          name: 'follow_up_on',
-          label: 'Follow Up On',
-          type: 'date',
-          required: true,
-          placeholder: 'Select date',
-          validation: z.date({ required_error: 'Follow up date is required' })
-        },
+        // Removed follow_up_on field as per request
         {
           name: 'enquiry_status',
           label: 'Enquiry Status',
@@ -261,16 +254,7 @@ export function NewEnquiryForm() {
         phone2: data.phone2?.trim() || null,
       };
 
-      // Format follow_up_on to YYYY-MM-DD if present
-      if (data.follow_up_on) {
-        const dateObj = new Date(data.follow_up_on);
-        if (!isNaN(dateObj.getTime())) {
-          const yyyy = dateObj.getFullYear();
-          const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
-          const dd = String(dateObj.getDate()).padStart(2, '0');
-          cleanedData.follow_up_on = `${yyyy}-${mm}-${dd}`;
-        }
-      }
+      // Removed follow_up_on formatting logic
 
       // Remove empty optional fields
       if (!cleanedData.phone2) {
@@ -283,7 +267,7 @@ export function NewEnquiryForm() {
       const requiredFields = [
         'candidate_name', 'phone', 'email', 'assigned_by_id', 
         'preferred_course_id', 'required_service_id', 'enquiry_status', 
-        'mettad_id', 'feedback', 'follow_up_on'
+        'mettad_id', 'feedback' // Removed 'follow_up_on'
       ];
 
       const missingFields = requiredFields.filter(field => !cleanedData[field]);
