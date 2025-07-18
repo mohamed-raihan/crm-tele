@@ -514,6 +514,9 @@ export default function TelecallersManagementPage() {
 
       const response = await axiosInstance.get(url, authConfig);
 
+      console.log(response);
+      
+
       if (response.data?.code === 200) {
         setTelecallers(response.data.data || []);
         setPagination(response.data.pagination || pagination);
