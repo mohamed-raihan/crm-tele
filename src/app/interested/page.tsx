@@ -274,13 +274,31 @@ const InterestedPage = () => {
   };
   const paginationNumbers = generatePaginationNumbers();
 
+  // Get user role from localStorage
+  let userRole = "";
+  try {
+    const userData = typeof window !== 'undefined' ? localStorage.getItem("user_data") : null;
+    if (userData) {
+      const user = JSON.parse(userData);
+      userRole = user.role;
+    }
+  } catch (e) {
+    userRole = "";
+  }
+  // Set button color class based on role
+  const searchButtonColorClass = userRole === "Telecaller"
+    ? "bg-green-600 hover:bg-green-700"
+    : userRole === "Admin"
+      ? "bg-blue-500 hover:bg-blue-600"
+      : "bg-blue-500 hover:bg-blue-600";
+
   return (
     <div className="flex-1 flex flex-col">
       <DashboardHeader />
       <main className="flex-1 p-6">
         <div className="mb-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Not Answered Calls</h2>
-          <p className="text-gray-600">Track and manage calls that were not answered</p>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Interested</h2>
+          <p className="text-gray-600">Track and manage interested calls</p>
         </div>
 
         {/* Filters Card */}
@@ -363,7 +381,7 @@ const InterestedPage = () => {
               </div>
             </div>
             <div className="flex gap-2 mt-4">
-              <Button onClick={handleSearch} disabled={loading} className="bg-blue-500 hover:bg-blue-600 text-white">
+              <Button onClick={handleSearch} disabled={loading} className={`${searchButtonColorClass} text-white`}>
                 {delayedLoading ? (
                   <>
                     <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
@@ -380,10 +398,10 @@ const InterestedPage = () => {
                 <RefreshCw className="w-4 h-4 mr-2" />
                 Reset
               </Button>
-              <Button variant="outline" className="bg-green-600 hover:bg-green-700 text-white" onClick={exportToExcel} disabled={loading || notAnswered.length === 0}>
+              {/* <Button variant="outline" className="bg-green-600 hover:bg-green-700 text-white" onClick={exportToExcel} disabled={loading || notAnswered.length === 0}>
                 <FileDown className="w-4 h-4 mr-2" />
                 Export Excel
-              </Button>
+              </Button> */}
             </div>
           </CardContent>
         </Card>
@@ -391,7 +409,7 @@ const InterestedPage = () => {
         {/* Results Table */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Not Answered Calls </CardTitle>
+            <CardTitle className="text-lg">Interested</CardTitle>
           </CardHeader>
           <CardContent>
             {loading ? (
@@ -425,7 +443,7 @@ const InterestedPage = () => {
                     ) : sortedNotAnswered.length === 0 ? (
                       <TableRow>
                         <TableCell colSpan={9} className="text-center py-8 text-gray-500">
-                          {showNoDataMsg ? "No not answered calls found matching your criteria" : null}
+                          {showNoDataMsg ? "No interested calls found matching your criteria" : null}
                         </TableCell>
                       </TableRow>
                     ) : (

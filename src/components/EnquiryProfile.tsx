@@ -68,7 +68,7 @@ export function EnquiryProfile(id: id) {
     call_outcome: '',
     // call_start_time: '',
     // call_end_time: '',
-    note: '',
+    notes: '',
     follow_up_date: '',
     next_action: ''
   })
@@ -78,7 +78,7 @@ export function EnquiryProfile(id: id) {
     call_outcome: '',
     follow_up_date: '',
     next_action: '',
-    note: ''
+    notes: ''
   });
   const [checklists, setChecklists] = useState<ChecklistItem[]>([]);
   const [selectedChecklistIds, setSelectedChecklistIds] = useState<number[]>([]);
@@ -98,8 +98,8 @@ export function EnquiryProfile(id: id) {
 
   const handleChecklistToggle = (checklistId: number) => {
     setSelectedChecklistIds((prev) =>
-      prev.includes(checklistId) 
-        ? prev.filter((id) => id !== checklistId) 
+      prev.includes(checklistId)
+        ? prev.filter((id) => id !== checklistId)
         : [...prev, checklistId]
     );
   };
@@ -107,12 +107,12 @@ export function EnquiryProfile(id: id) {
   // Get selected checklist names for display
   const getSelectedChecklistNames = () => {
     if (selectedChecklistIds.length === 0) return "Select checklist(s)";
-    
+
     const selectedNames = checklists
       .filter(checklist => selectedChecklistIds.includes(checklist.id))
       .map(checklist => checklist.name)
       .join(", ");
-    
+
     return selectedNames.length > 50 ? selectedNames.substring(0, 50) + "..." : selectedNames;
   };
 
@@ -123,47 +123,58 @@ export function EnquiryProfile(id: id) {
     if (!formData.call_type) errors.call_type = 'Call type is required';
     if (!formData.call_status) errors.call_status = 'Call status is required';
     if (!formData.call_outcome) errors.call_outcome = 'Call outcome is required';
-    if (!formData.follow_up_date) errors.follow_up_date = 'Follow up date is required';
-    if (!formData.next_action) errors.next_action = 'Next action is required';
-    if (!formData.note) errors.note = 'Note is required';
-    
-    // Validate follow-up date is in the future
-    if (formData.follow_up_date) {
-      const selectedDate = new Date(formData.follow_up_date);
-      const currentDate = new Date();
-      if (selectedDate <= currentDate) {
-        errors.follow_up_date = 'Follow up date must be in the future';
+    // Only validate follow_up_date if not disabled
+    const isFollowUpDisabled =
+      formData.call_outcome === 'Won' ||
+      formData.call_outcome === 'closed' ||
+      formData.call_outcome === 'Not Interested' ||
+      formData.call_outcome === 'Do Not Call';
+    if (!isFollowUpDisabled) {
+      if (!formData.follow_up_date) errors.follow_up_date = 'Follow up date is required';
+      // Validate follow-up date is in the future
+      if (formData.follow_up_date) {
+        const selectedDate = new Date(formData.follow_up_date);
+        const currentDate = new Date();
+        if (selectedDate <= currentDate) {
+          errors.follow_up_date = 'Follow up date must be in the future';
+        }
       }
     }
-    
+    if (!formData.next_action) errors.next_action = 'Next action is required';
+    if (!formData.notes) errors.notes = 'Note is required';
+
     setFormErrors(errors);
     if (Object.keys(errors).length > 0) return;
-    
+
     try {
       // Format the data for API submission
       const submitData = {
         ...formData,
-        // Convert datetime-local to YYYY-MM-DD format
-        follow_up_date: formData.follow_up_date ? formData.follow_up_date.split('T')[0] : '',
         // Send selected checklist IDs as name field (as per your requirement)
         name: selectedChecklistIds, // This will be an array of IDs
         checklist_ids: selectedChecklistIds, // Keep this as well if needed
       };
-      
+
+      // Only include follow_up_date if it's not disabled and has a value
+      if (!isFollowUpDisabled && formData.follow_up_date) {
+        submitData.follow_up_date = formData.follow_up_date.split('T')[0];
+      } else {
+        // Remove follow_up_date from submitData if disabled
+        delete submitData.follow_up_date;
+      }
+
       console.log('Form data:', submitData)
       const response = await axiosInstance.post(API_URLS.CALLS.POST_CALLS, submitData)
       console.log(response);
       toast({ title: "Updated successfully", variant: "success" });
-      
+
       // Reset form
       setFormData({
         enquiry_id: id.id,
         call_type: '',
         call_status: '',
         call_outcome: '',
-        // call_start_time: '',
-        // call_end_time: '',
-        note: '',
+        notes: '',
         follow_up_date: '',
         next_action: ''
       })
@@ -379,6 +390,12 @@ export function EnquiryProfile(id: id) {
                     id="follow_up_date"
                     value={formData.follow_up_date}
                     onChange={(e) => handleInputChange('follow_up_date', e.target.value)}
+                    disabled={
+                      formData.call_outcome === 'Won' ||
+                      formData.call_outcome === 'closed' ||
+                      formData.call_outcome === 'Not Interested' ||
+                      formData.call_outcome === 'Do Not Call'
+                    }
                   />
                   {formErrors.follow_up_date && <span className="text-red-500 text-xs">{formErrors.follow_up_date}</span>}
                 </div>
@@ -404,20 +421,20 @@ export function EnquiryProfile(id: id) {
                   {formErrors.next_action && <span className="text-red-500 text-xs">{formErrors.next_action}</span>}
                 </div>
 
-             
+
               </div>
 
               {/* Note */}
               <div className="space-y-2">
-                <Label htmlFor="note">Note</Label>
+                <Label htmlFor="notes">Note</Label>
                 <Textarea
-                  id="note"
+                  id="notes"
                   placeholder="Enter call notes..."
-                  value={formData.note}
-                  onChange={(e) => handleInputChange('note', e.target.value)}
+                  value={formData.notes}
+                  onChange={(e) => handleInputChange('notes', e.target.value)}
                   rows={4}
                 />
-                {formErrors.note && <span className="text-red-500 text-xs">{formErrors.note}</span>}
+                {formErrors.notes && <span className="text-red-500 text-xs">{formErrors.notes}</span>}
               </div>
 
               {/* Submit Button */}

@@ -28,6 +28,7 @@ interface Profile {
   mettad_name: string | null;
   phone: string;
   phone2: string;
+   assigned_by_id: string | null;
   preferred_course: string;
   required_service: string;
   // Add checklist fields to Profile interface
@@ -330,6 +331,7 @@ export function ProfileInfoTab({ id }: ProfileInfoTabProps) {
       return;
     }
 
+    
     // Create submit data with only the required fields
     const submitData: any = {
       candidate_name: formData.candidate_name?.trim(),
@@ -341,7 +343,11 @@ export function ProfileInfoTab({ id }: ProfileInfoTabProps) {
       enquiry_status: formData.enquiry_status || null,
       feedback: formData.feedback || null,
       follow_up_on: formData.follow_up_on || null,
+       assigned_by_id: profile?.assigned_by_id || null,
     };
+
+
+        console.log(submitData);
 
     if (userRole !== "Admin") {
       // Clear all checklist fields first

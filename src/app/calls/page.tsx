@@ -138,7 +138,6 @@ export default function CallsPage() {
                     <TableHead>Phone</TableHead>
                     <TableHead>Call Status</TableHead>
                     <TableHead>Call Outcome</TableHead>
-                    <TableHead>Start Time</TableHead>
                     <TableHead>Telecaller</TableHead>
                     <TableHead>Branch</TableHead>
                   </TableRow>
@@ -146,13 +145,13 @@ export default function CallsPage() {
                 <TableBody>
                   {callsLoading ? (
                     <TableRow>
-                      <TableCell colSpan={8} className="text-center py-8">
+                      <TableCell colSpan={7} className="text-center py-8">
                         <RefreshCw className="w-6 h-6 animate-spin mx-auto" />
                       </TableCell>
                     </TableRow>
                   ) : calls.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={8} className="text-center py-8 text-gray-500">
+                      <TableCell colSpan={7} className="text-center py-8 text-gray-500">
                         No calls found
                       </TableCell>
                     </TableRow>
@@ -164,7 +163,6 @@ export default function CallsPage() {
                         <TableCell>{call.phone || call.enquiry_details?.phone || "-"}</TableCell>
                         <TableCell>{call.call_status || "-"}</TableCell>
                         <TableCell>{call.call_outcome || "-"}</TableCell>
-                        <TableCell>{call.call_start_time || "-"}</TableCell>
                         <TableCell>{call.telecaller_name || "-"}</TableCell>
                         <TableCell>{call.branch_name || "-"}</TableCell>
                       </TableRow>

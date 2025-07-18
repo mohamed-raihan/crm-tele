@@ -377,7 +377,7 @@ const FollowUpsPage = () => {
               </div>
             </div>
             <div className="flex gap-2 mt-4">
-              <Button onClick={handleSearch} disabled={loading} className="bg-blue-500 hover:bg-blue-600 text-white">
+              <Button onClick={handleSearch} disabled={loading} className="bg-green-500 hover:bg-green-600 text-white">
                 {delayedLoading ? (
                   <>
                     <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
@@ -394,10 +394,10 @@ const FollowUpsPage = () => {
                 <RefreshCw className="w-4 h-4 mr-2" />
                 Reset
               </Button>
-              <Button variant="outline" className="bg-green-600 hover:bg-green-700 text-white" onClick={exportToExcel} disabled={loading || followUps.length === 0}>
+              {/* <Button variant="outline" className="bg-green-600 hover:bg-green-700 text-white" onClick={exportToExcel} disabled={loading || followUps.length === 0}>
                 <FileDown className="w-4 h-4 mr-2" />
                 Export Excel
-              </Button>
+              </Button> */}
             </div>
           </CardContent>
         </Card>
