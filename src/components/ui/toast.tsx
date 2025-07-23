@@ -1,7 +1,7 @@
 import * as React from "react"
 import * as ToastPrimitives from "@radix-ui/react-toast"
 import { cva, type VariantProps } from "class-variance-authority"
-import { X } from "lucide-react"
+import { X, Check } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 
@@ -51,7 +51,16 @@ const Toast = React.forwardRef<
       className={cn(toastVariants({ variant }), className)}
       duration={2000}
       {...props}
-    />
+    >
+      {variant === "success" && (
+        <div className="flex-shrink-0 ">
+          <Check className="h-5 w-5 text-green-600" />
+        </div>
+      )}
+      <div className="flex-grow">
+        {props.children}
+      </div>
+    </ToastPrimitives.Root>
   )
 })
 Toast.displayName = ToastPrimitives.Root.displayName

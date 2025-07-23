@@ -20,6 +20,10 @@ import {
   Briefcase,
   CheckCircle,
   Book,
+  Star,
+  UserCheck,
+  GraduationCap,
+  ListTodo,
 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 import { useState } from "react"
@@ -78,11 +82,11 @@ const navigationItems = [
   {
     title: "Walk-in List",
     url: "/admin/walk-ins",
-    icon: Mail,
+    icon: UserCheck,
     type: "single"
   },
   {
-    title: "Follow-up",
+    title: "Follow-ups",
     url: "/admin/follow-ups",
     icon: Calendar,
     type: "single"
@@ -90,18 +94,18 @@ const navigationItems = [
   {
     title: "Interested",
     url: "/admin/interested",
-    icon: Phone,
+    icon: Star,
     type: "single"
   },
   {
-    title: "Call",
+    title: "Calls",
     url: "/admin/calls",
     icon: Phone,
     type: "single"
   },
   
   {
-    title: "Not Answer",
+    title: "Not Answer Calls",
     url: "/admin/not-answer",
     icon: PhoneMissed,
     type: "single"
@@ -124,7 +128,7 @@ const myJobSubItems = [
   {
     title: "Remaining",
     url: "/admin/remining",
-    icon: Briefcase,
+    icon: ListTodo,
   },
   {
     title: "Completed",
@@ -162,7 +166,7 @@ const dataManagement = [
       {
         title: "Courses",
         url: "/admin/course",
-        icon: Book
+        icon: GraduationCap
       },
       {
         title: "Services",

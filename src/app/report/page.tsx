@@ -833,15 +833,69 @@ export default function ReportPage() {
   };
 
   // Handle branch change
-  const handleBranchChange = (branchValue: string) => {
-    setBranch(branchValue);
-    setCounselor("");
-    setTelecallerSearchTerm("");
-    setTelecallerPagination({ currentPage: 1, hasMore: false, limit: 1000 });
+ // Replace the existing handleBranchChange function with this updated version
+const handleBranchChange = async (branchValue: string) => {
+  setBranch(branchValue);
+  setTelecallerSearchTerm("");
+  setTelecallerPagination({ currentPage: 1, hasMore: false, limit: 1000 });
 
+  try {
     // Fetch telecallers for the selected branch (or all if no branch selected)
-    fetchTelecaller(1, 1000, "");
-  };
+    const authConfig = getAuthConfig();
+    if (!authConfig) return;
+
+    const params = new URLSearchParams({
+      page: "1",
+      limit: "1000",
+    });
+
+    // Only add branch filter if a branch is selected
+    if (branchValue) {
+      params.append("branch_name", branchValue);
+    }
+
+    const response = await axiosInstance.get(
+      `${API_URLS.TELLE_CALLERS.GET_TELLE_CALLERS}?${params.toString()}`,
+      authConfig
+    );
+
+    if (response.data?.code === 200) {
+      const telecallersData = response.data.data || [];
+      setAllTelecallers(telecallersData);
+      setTelecallers(telecallersData);
+
+      // Check if current counselor is valid for the new branch
+      if (counselor) {
+        const isValidCounselor = telecallersData.some(
+          (telecaller: Telecaller) => telecaller.name === counselor
+        );
+        
+        // Only clear counselor if it's not valid for the selected branch
+        if (!isValidCounselor) {
+          setCounselor("");
+        }
+      }
+
+      setTelecallerPagination({
+        currentPage: 1,
+        hasMore: false,
+        limit: 1000,
+      });
+    } else {
+      // If API fails, clear counselor as fallback
+      setCounselor("");
+      showToast("Failed to fetch telecallers", "error");
+    }
+  } catch (err: any) {
+    console.error("Error fetching telecallers:", err);
+    // If there's an error, clear counselor as fallback
+    setCounselor("");
+    showToast(
+      err.response?.data?.message || "Failed to fetch telecallers",
+      "error"
+    );
+  }
+};
 
 
   // Handle filter changes

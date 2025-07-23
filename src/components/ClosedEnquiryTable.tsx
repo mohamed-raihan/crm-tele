@@ -21,7 +21,7 @@ import { toast } from '@/hooks/use-toast';
 
 export function ClosedEnquiryTable() {
   const navigate = useNavigate();
-  const [selectedRows, setSelectedRows] = useState<string[]>([]);
+  // const [selectedRows, setSelectedRows] = useState<string[]>([]);
   const [Enquiries, setEnquiry] = useState([]);
   const [filters, setFilters] = useState<TableFilter[]>([
     {
@@ -121,6 +121,7 @@ export function ClosedEnquiryTable() {
     toast({ title: 'Table refreshed', variant: 'default' });
   };
 
+
   useEffect(() => {
     fetchEnquiry(page, searchTerm);
   }, [page]);
@@ -217,21 +218,21 @@ export function ClosedEnquiryTable() {
     },
   ] : [];
 
-  const handleSelectAll = (selected: boolean) => {
-    if (selected) {
-      setSelectedRows(Enquiries.map(item => item.id));
-    } else {
-      setSelectedRows([]);
-    }
-  };
+  // const handleSelectAll = (selected: boolean) => {
+  //   if (selected) {
+  //     setSelectedRows(Enquiries.map(item => item.id));
+  //   } else {
+  //     setSelectedRows([]);
+  //   }
+  // };
 
-  const handleSelectRow = (id: string, selected: boolean) => {
-    if (selected) {
-      setSelectedRows([...selectedRows, id]);
-    } else {
-      setSelectedRows(selectedRows.filter(rowId => rowId !== id));
-    }
-  };
+  // const handleSelectRow = (id: string, selected: boolean) => {
+  //   if (selected) {
+  //     setSelectedRows([...selectedRows, id]);
+  //   } else {
+  //     setSelectedRows(selectedRows.filter(rowId => rowId !== id));
+  //   }
+  // };
 
   const handleSearch = (term: string) => {
     setSearchTerm(term);
@@ -258,7 +259,7 @@ export function ClosedEnquiryTable() {
 
   return (
     <>
-      <div className="px-2 md:px-6 w-full">
+      <div className=" w-full">
         {/* Search input and button */}
         <div className="mb-4 flex flex-col md:flex-row md:items-center gap-2 justify-between">
           <div className="flex gap-2 w-full md:w-auto">
@@ -306,9 +307,9 @@ export function ClosedEnquiryTable() {
               // filters={filters}
               // searchPlaceholder="Search"
               // onSearch={handleSearch}
-              onSelectAll={handleSelectAll}
-              onSelectRow={handleSelectRow}
-              selectedRows={selectedRows}
+              // onSelectAll={handleSelectAll}
+              // onSelectRow={handleSelectRow}
+              // selectedRows={selectedRows}
               rowIdKey="id"
               showBulkActions={true}
               exportActions={exportActions}

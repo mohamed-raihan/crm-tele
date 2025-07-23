@@ -83,6 +83,25 @@ const InterestedPage = () => {
     limit: 10,
   });
 
+  // Get user role from localStorage
+  let userRole = "";
+  try {
+    const userData = typeof window !== 'undefined' ? localStorage.getItem("user_data") : null;
+    if (userData) {
+      const user = JSON.parse(userData);
+      userRole = user.role;
+    }
+  } catch (e) {
+    userRole = "";
+  }
+  
+  // Set button color class based on role
+  const searchButtonColorClass = userRole === "Telecaller"
+    ? "bg-green-600 hover:bg-green-700"
+    : userRole === "Admin"
+      ? "bg-blue-500 hover:bg-blue-600"
+      : "bg-blue-500 hover:bg-blue-600";
+
   // Helper to build query params from filters and pagination
   const buildQueryParams = (filters: FiltersType, page: number, limit: number) => {
     const params = new URLSearchParams();
@@ -228,13 +247,13 @@ const InterestedPage = () => {
       const link = document.createElement("a");
       const url = URL.createObjectURL(blob);
       link.setAttribute("href", url);
-      link.setAttribute("download", "not-answered-calls.csv");
+      link.setAttribute("download", "interested-calls.csv");
       link.style.visibility = "hidden";
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
     } catch (error) {
-      console.error('Error exporting not-answered calls:', error);
+      console.error('Error exporting interested calls:', error);
     } finally {
       setLoading(false);
     }
@@ -273,24 +292,6 @@ const InterestedPage = () => {
     return pages;
   };
   const paginationNumbers = generatePaginationNumbers();
-
-  // Get user role from localStorage
-  let userRole = "";
-  try {
-    const userData = typeof window !== 'undefined' ? localStorage.getItem("user_data") : null;
-    if (userData) {
-      const user = JSON.parse(userData);
-      userRole = user.role;
-    }
-  } catch (e) {
-    userRole = "";
-  }
-  // Set button color class based on role
-  const searchButtonColorClass = userRole === "Telecaller"
-    ? "bg-green-600 hover:bg-green-700"
-    : userRole === "Admin"
-      ? "bg-blue-500 hover:bg-blue-600"
-      : "bg-blue-500 hover:bg-blue-600";
 
   return (
     <div className="flex-1 flex flex-col">
@@ -398,10 +399,13 @@ const InterestedPage = () => {
                 <RefreshCw className="w-4 h-4 mr-2" />
                 Reset
               </Button>
-              {/* <Button variant="outline" className="bg-green-600 hover:bg-green-700 text-white" onClick={exportToExcel} disabled={loading || notAnswered.length === 0}>
-                <FileDown className="w-4 h-4 mr-2" />
-                Export Excel
-              </Button> */}
+              {/* Only show Export to Excel button for Admin role */}
+              {userRole === "Admin" && (
+                <Button variant="outline" className="bg-green-600 hover:bg-green-700 text-white" onClick={exportToExcel} disabled={loading || notAnswered.length === 0}>
+                  <FileDown className="w-4 h-4 mr-2" />
+                  Export Excel
+                </Button>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -522,4 +526,4 @@ const InterestedPage = () => {
   );
 };
 
-export default InterestedPage; 
+export default InterestedPage;

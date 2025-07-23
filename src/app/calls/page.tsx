@@ -2,7 +2,14 @@ import React, { useState, useEffect, useRef } from "react";
 import axiosInstance from "@/components/apiconfig/axios";
 import { API_URLS } from "@/components/apiconfig/api_urls";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { RefreshCw } from "lucide-react";
@@ -21,7 +28,8 @@ export default function CallsPage() {
   // Get user role and set button color
   let userRole = "";
   try {
-    const userData = typeof window !== 'undefined' ? localStorage.getItem("user_data") : null;
+    const userData =
+      typeof window !== "undefined" ? localStorage.getItem("user_data") : null;
     if (userData) {
       const user = JSON.parse(userData);
       userRole = user.role;
@@ -29,9 +37,10 @@ export default function CallsPage() {
   } catch (e) {
     userRole = "";
   }
-  const buttonColorClass = userRole === "Telecaller"
-    ? "bg-green-600 hover:bg-green-700"
-    : userRole === "Admin"
+  const buttonColorClass =
+    userRole === "Telecaller"
+      ? "bg-green-600 hover:bg-green-700"
+      : userRole === "Admin"
       ? "bg-blue-600 hover:bg-blue-700"
       : "bg-gray-500 hover:bg-gray-600";
 
@@ -102,9 +111,11 @@ export default function CallsPage() {
             type="text"
             placeholder="Search by candidate name or phone..."
             value={callsSearchInput}
-            onChange={e => setCallsSearchInput(e.target.value)}
+            onChange={(e) => setCallsSearchInput(e.target.value)}
             className="w-full md:w-64"
-            onKeyDown={e => e.key === "Enter" && setCallsSearch(callsSearchInput)}
+            onKeyDown={(e) =>
+              e.key === "Enter" && setCallsSearch(callsSearchInput)
+            }
           />
           <Button
             onClick={() => setCallsSearch(callsSearchInput)}
@@ -119,8 +130,9 @@ export default function CallsPage() {
               setCallsPage(1);
             }}
             variant="outline"
+            className="bg-gray-100 hover:bg-gray-200 text-gray-700"
           >
-            Reset
+            <RefreshCw className="w-4 h-4 mr-2" /> Reset
           </Button>
         </div>
         {/* Table Card */}
@@ -151,7 +163,10 @@ export default function CallsPage() {
                     </TableRow>
                   ) : calls.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={7} className="text-center py-8 text-gray-500">
+                      <TableCell
+                        colSpan={7}
+                        className="text-center py-8 text-gray-500"
+                      >
                         No calls found
                       </TableCell>
                     </TableRow>
@@ -159,8 +174,14 @@ export default function CallsPage() {
                     calls.map((call, idx) => (
                       <TableRow key={call.id || idx}>
                         <TableCell>{(callsPage - 1) * 10 + idx + 1}</TableCell>
-                        <TableCell>{call.candidate_name || call.enquiry_details?.candidate_name || "-"}</TableCell>
-                        <TableCell>{call.phone || call.enquiry_details?.phone || "-"}</TableCell>
+                        <TableCell>
+                          {call.candidate_name ||
+                            call.enquiry_details?.candidate_name ||
+                            "-"}
+                        </TableCell>
+                        <TableCell>
+                          {call.phone || call.enquiry_details?.phone || "-"}
+                        </TableCell>
                         <TableCell>{call.call_status || "-"}</TableCell>
                         <TableCell>{call.call_outcome || "-"}</TableCell>
                         <TableCell>{call.telecaller_name || "-"}</TableCell>
@@ -175,7 +196,9 @@ export default function CallsPage() {
             {callsTotalPages > 1 && (
               <div className="mt-6 flex flex-col md:flex-row justify-between items-center gap-2">
                 <div className="text-sm text-gray-600">
-                  Showing {(callsPage - 1) * 10 + 1} to {Math.min(callsPage * 10, callsTotalRecords)} of {callsTotalRecords} entries
+                  Showing {(callsPage - 1) * 10 + 1} to{" "}
+                  {Math.min(callsPage * 10, callsTotalRecords)} of{" "}
+                  {callsTotalRecords} entries
                 </div>
                 <div className="flex gap-2 flex-wrap">
                   <Button
@@ -212,4 +235,4 @@ export default function CallsPage() {
       </main>
     </div>
   );
-} 
+}
