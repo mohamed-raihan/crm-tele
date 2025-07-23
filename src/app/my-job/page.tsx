@@ -1,7 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { API_URLS } from "@/components/apiconfig/api_urls";
@@ -33,9 +40,17 @@ const MyJobPage = () => {
   const [jobs, setJobs] = useState<JobData[]>([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
-  const [pagination, setPagination] = useState<Pagination>({ total: 0, page: 1, limit: 10 });
+  const [pagination, setPagination] = useState<Pagination>({
+    total: 0,
+    page: 1,
+    limit: 10,
+  });
 
-  const fetchJobs = async (page = 1, status = tab || "remaining", name = search) => {
+  const fetchJobs = async (
+    page = 1,
+    status = tab || "remaining",
+    name = search
+  ) => {
     setLoading(true);
     try {
       const token = localStorage.getItem("access_token");
@@ -46,18 +61,24 @@ const MyJobPage = () => {
         status,
       });
       if (name) params.append("name", name);
-      const response = await axiosInstance.get(`/api/jobs-summary/?${params.toString()}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
+      const response = await axiosInstance.get(
+        `/api/jobs-summary/?${params.toString()}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
       if (response.data?.code === 200) {
         setJobs(response.data.data || []);
         if (response.data.pagination) {
           setPagination((prev) => ({ ...prev, ...response.data.pagination }));
         } else {
-          setPagination((prev) => ({ ...prev, total: response.data.data?.length || 0 }));
+          setPagination((prev) => ({
+            ...prev,
+            total: response.data.data?.length || 0,
+          }));
         }
       } else {
         setJobs([]);
@@ -83,7 +104,10 @@ const MyJobPage = () => {
   };
 
   // Sort jobs by assigned_date ascending (oldest first, latest last)
-  const sortedJobs = [...jobs].sort((a, b) => new Date(a.assigned_date).getTime() - new Date(b.assigned_date).getTime());
+  const sortedJobs = [...jobs].sort(
+    (a, b) =>
+      new Date(a.assigned_date).getTime() - new Date(b.assigned_date).getTime()
+  );
 
   // Generate pagination numbers with ellipsis
   const generatePaginationNumbers = () => {
@@ -101,7 +125,7 @@ const MyJobPage = () => {
       pages.push(1);
 
       if (currentPage > 3) {
-        pages.push('...');
+        pages.push("...");
       }
 
       // Show pages around current page
@@ -115,7 +139,7 @@ const MyJobPage = () => {
       }
 
       if (currentPage < totalPages - 2) {
-        pages.push('...');
+        pages.push("...");
       }
 
       // Always show last page
@@ -134,7 +158,9 @@ const MyJobPage = () => {
       <DashboardHeader />
       <main className="flex-1 p-6">
         <div className="mb-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">My Job - {tab === "completed" ? "Completed" : "Remaining"}</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">
+            My Job - {tab === "completed" ? "Completed" : "Remaining"}
+          </h2>
           <p className="text-gray-600">View your assigned jobs</p>
         </div>
         {/* Search Bar */}
@@ -143,11 +169,19 @@ const MyJobPage = () => {
             type="text"
             placeholder="Search by name..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              if (e.target.value === "") {
+                fetchJobs(1, tab, "");
+              }
+            }}
             className="w-full md:w-64"
             onKeyDown={(e) => e.key === "Enter" && handleSearch()}
           />
-          <Button onClick={handleSearch} className="bg-green-600 hover:bg-green-700 text-white">
+          <Button
+            onClick={() => handleSearch()}
+            className="bg-green-600 hover:bg-green-700 text-white"
+          >
             Search
           </Button>
         </div>
@@ -179,14 +213,19 @@ const MyJobPage = () => {
                     </TableRow>
                   ) : sortedJobs.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={7} className="text-center py-8 text-gray-500">
+                      <TableCell
+                        colSpan={7}
+                        className="text-center py-8 text-gray-500"
+                      >
                         No jobs found
                       </TableCell>
                     </TableRow>
                   ) : (
                     sortedJobs.map((job, idx) => (
                       <TableRow key={job.enquiry_id}>
-                        <TableCell>{(pagination.page - 1) * pagination.limit + idx + 1}</TableCell>
+                        <TableCell>
+                          {(pagination.page - 1) * pagination.limit + idx + 1}
+                        </TableCell>
                         <TableCell>{job.name}</TableCell>
                         <TableCell>{job.contact}</TableCell>
                         <TableCell>{job.email}</TableCell>
@@ -203,7 +242,12 @@ const MyJobPage = () => {
             {pagination.total > pagination.limit && (
               <div className="mt-6 flex flex-col md:flex-row justify-between items-center gap-2">
                 <div className="text-sm text-gray-600">
-                  Showing {(pagination.page - 1) * pagination.limit + 1} to {Math.min(pagination.page * pagination.limit, pagination.total)} of {pagination.total} entries
+                  Showing {(pagination.page - 1) * pagination.limit + 1} to{" "}
+                  {Math.min(
+                    pagination.page * pagination.limit,
+                    pagination.total
+                  )}{" "}
+                  of {pagination.total} entries
                 </div>
                 <div className="flex gap-2 flex-wrap items-center">
                   <Button
@@ -216,14 +260,20 @@ const MyJobPage = () => {
                   </Button>
                   {paginationNumbers.map((pageNum, index) => (
                     <React.Fragment key={index}>
-                      {pageNum === '...' ? (
+                      {pageNum === "..." ? (
                         <span className="px-2 py-1 text-gray-500">...</span>
                       ) : (
                         <Button
-                          variant={pagination.page === pageNum ? "default" : "outline"}
+                          variant={
+                            pagination.page === pageNum ? "default" : "outline"
+                          }
                           size="sm"
                           onClick={() => handlePageChange(pageNum as number)}
-                          className={pagination.page === pageNum ? "bg-green-500 hover:bg-green-600" : ""}
+                          className={
+                            pagination.page === pageNum
+                              ? "bg-green-500 hover:bg-green-600"
+                              : ""
+                          }
                         >
                           {pageNum}
                         </Button>
@@ -233,7 +283,10 @@ const MyJobPage = () => {
                   <Button
                     variant="outline"
                     size="sm"
-                    disabled={pagination.page === Math.ceil(pagination.total / pagination.limit)}
+                    disabled={
+                      pagination.page ===
+                      Math.ceil(pagination.total / pagination.limit)
+                    }
                     onClick={() => handlePageChange(pagination.page + 1)}
                   >
                     Next

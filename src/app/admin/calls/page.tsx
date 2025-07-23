@@ -119,8 +119,9 @@ export default function CallsPage() {
               setCallsPage(1);
             }}
             variant="outline"
+            className="bg-gray-100 hover:bg-gray-200 text-gray-700"
           >
-            Reset
+            <RefreshCw className="w-4 h-4 mr-2" /> Reset
           </Button>
         </div>
         {/* Table Card */}

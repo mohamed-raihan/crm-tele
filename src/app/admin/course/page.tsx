@@ -38,6 +38,7 @@ export default function CoursePage() {
     name: "",
   });
   const [adding, setAdding] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<{[key: string]: string[]}>({});
   const { toast } = useToast();
 
   // Pagination state
@@ -62,6 +63,23 @@ export default function CoursePage() {
     return pages;
   };
   const paginationNumbers = generatePaginationNumbers();
+
+  // Clear validation errors when dialog opens/closes
+  const handleDialogChange = (isOpen: boolean) => {
+    setOpen(isOpen);
+    if (!isOpen) {
+      setValidationErrors({});
+      setAd({ id: "", name: "" });
+    }
+  };
+
+  // Clear validation errors when input changes
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setAd({ ...ad, name: e.target.value });
+    if (validationErrors.name) {
+      setValidationErrors(prev => ({ ...prev, name: [] }));
+    }
+  };
 
   // Fetch ads
   const fetchAds = async () => {
@@ -91,10 +109,12 @@ export default function CoursePage() {
   const handleAddAd = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!ad.name.trim()) {
-      toast({ title: "Name is required", variant: "destructive" });
+      setValidationErrors({ name: ["Name is required"] });
       return;
     }
     setAdding(true);
+    setValidationErrors({});
+    
     try {
       if (ad.id) {
         await axiosInstance.patch(API_URLS.COURSES.PATCH_COURSES(ad.id), {
@@ -110,12 +130,36 @@ export default function CoursePage() {
       setAd({ id: "", name: "" });
       setOpen(false);
       fetchAds();
-    } catch (err) {
-      toast({
-        title: "Failed to add course",
-        description: "Please try again.",
-        variant: "destructive",
-      });
+    } catch (err: any) {
+      console.log(err);
+      
+      // Check if the error response contains validation errors
+      if (err.response && err.response.data) {
+        // Handle validation errors from API response
+        if (err.response.data.name) {
+          setValidationErrors({ name: err.response.data.name });
+        } else if (err.response.data.message) {
+          // Handle general error message
+          toast({
+            title: err.response.data.message,
+            description: "Please try again.",
+            variant: "destructive",
+          });
+        } else {
+          // Fallback error message
+          toast({
+            title: "Failed to add course",
+            description: "Please try again.",
+            variant: "destructive",
+          });
+        }
+      } else {
+        toast({
+          title: "Failed to add course",
+          description: "Please try again.",
+          variant: "destructive",
+        });
+      }
     } finally {
       setAdding(false);
     }
@@ -126,6 +170,7 @@ export default function CoursePage() {
     // You can implement edit modal logic here
     setOpen(true);
     setAd(ad);
+    setValidationErrors({});
   };
 
   // Delete ad
@@ -135,11 +180,11 @@ export default function CoursePage() {
       await axiosInstance.delete(API_URLS.COURSES.DELETE_COURSES(ad.id));
       toast({ title: "Course deleted successfully", variant: "success" });
       fetchAds();
-    } catch (err) {
+    } catch (err: any) {
       console.log(err);
 
       toast({
-        title: err.response.data.message,
+        title: err.response?.data?.message || "Failed to delete course",
         description: "Please try again.",
         variant: "destructive",
       });
@@ -195,7 +240,7 @@ export default function CoursePage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-2xl font-bold">COURSES</CardTitle>
-            <Dialog open={open} onOpenChange={setOpen}>
+            <Dialog open={open} onOpenChange={handleDialogChange}>
               <DialogTrigger asChild>
                 <Button
                   variant="default"
@@ -224,10 +269,20 @@ export default function CoursePage() {
                       id="ad-name"
                       name="name"
                       value={ad.name}
-                      onChange={(e) => setAd({ ...ad, name: e.target.value })}
+                      onChange={handleNameChange}
                       placeholder="Enter course name"
                       required
+                      className={validationErrors.name?.length ? "border-red-500 focus:border-red-500" : ""}
                     />
+                    {validationErrors.name?.length > 0 && (
+                      <div className="mt-1">
+                        {validationErrors.name.map((error, index) => (
+                          <p key={index} className="text-sm text-red-600">
+                            {error}
+                          </p>
+                        ))}
+                      </div>
+                    )}
                   </div>
                   <DialogFooter>
                     <Button

@@ -11,7 +11,12 @@ import {
   CheckCircle,
   PhoneOff,
   Briefcase,
-  ChevronDown
+  ChevronDown,
+  Star,
+  Repeat,
+  Users,
+  UserCheck,
+  ListTodo
 } from "lucide-react"
 import { Link, useLocation } from "react-router-dom"
 import {
@@ -42,30 +47,30 @@ const navigationItems = [
   {
     title: "Interested",
     url: "/interested",
-    icon: Phone,
+    icon: Star,
   },
   {
     title: "Calls",
     url: "/calls",
     icon: Phone,
   },
-  {
-    title: "Walk-in List",
-    url: "/walk-in-list",
-    icon: Calendar,
-  },
-  {
-    title: "Follow Ups",
-    url: "/calls/follow-ups",
-    icon: Calendar,
-  },
+ {
+  title: "Walk-in List",
+  url: "/walk-in-list",
+  icon: UserCheck, // or DoorOpen
+},
+{
+  title: "Follow Ups",
+  url: "/calls/follow-ups",
+  icon: Calendar,// or RefreshCw
+},
   // {
   //   title: "Follow-ups Management",
   //   url: "/calls/follow-ups",
   //   icon: Calendar,
   // },
   {
-    title: "Not Answered",
+    title: "Not Answered Calls",
     url: "/calls/not-answered",
     icon: PhoneOff,
   },
@@ -95,7 +100,7 @@ const myJobSubItems = [
   {
     title: "Remaining",
     url: "/my-job/remining",
-    icon: Briefcase,
+    icon: ListTodo,
   },
   {
     title: "Completed",
