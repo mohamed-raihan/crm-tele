@@ -11,6 +11,7 @@ import axiosInstance from "@/components/apiconfig/axios.ts";
 import { useToast } from "@/components/ui/use-toast";
 import { API_URLS } from "@/components/apiconfig/api_urls.ts";
 import { DashboardHeader } from "@/components/DashboardHeader";
+import { Pencil } from "lucide-react";
 
 interface Ad {
     id: string;
@@ -139,7 +140,7 @@ export default function ServicePage() {
     const actions: TableAction[] = [
         {
             label: "Edit",
-            icon: <Edit className="mr-2 h-4 w-4 text-blue-500" />,
+            icon: <Pencil className="mr-2 h-4 w-4 text-blue-500" />, // changed from Edit to Pencil
             onClick: handleEditAd,
             variant: "outline",
         },
@@ -161,6 +162,16 @@ export default function ServicePage() {
         return numA - numB;
     });
     const paginatedAds = sortedAds.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+
+    // Ensure currentPage is valid after ads change (e.g., after deletion)
+    useEffect(() => {
+        const newTotalPages = Math.ceil(ads.length / pageSize);
+        if (currentPage > newTotalPages && newTotalPages > 0) {
+            setCurrentPage(newTotalPages);
+        }
+        // Optionally, if ads.length === 0, you could reset to page 1
+        // if (ads.length === 0) setCurrentPage(1);
+    }, [ads, pageSize, currentPage]);
 
     return (
         <div>
