@@ -317,6 +317,13 @@ export function NewEnquiryForm() {
     }
   };
 
+  const handleCancel = () => {
+  // Reset the form by incrementing the key, which will remount the component
+  setFormKey(prev => prev + 1);
+};
+
+
+
   return (
     <div className="space-y-6">
       <DynamicForm
@@ -327,7 +334,7 @@ export function NewEnquiryForm() {
         submitLabel={loading ? "Saving..." : "Save Enquiry"}
         submitButtonClassName={`${buttonColorClass} ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
         showCancel={true}
-        onCancel={() => console.log('Cancel clicked')}
+       onCancel={handleCancel}
         defaultValues={{
           assigned_by_id: isTelecaller ? String(telecallerId) : undefined,
           enquiry_status: 'Active', // Set default status

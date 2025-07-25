@@ -141,6 +141,50 @@ export function DynamicForm({
     }));
   };
 
+  // Create a flat list of all field names in order
+  const getAllFieldNames = () => {
+    const fieldNames: string[] = [];
+    sections.forEach(section => {
+      section.fields.forEach(field => {
+        fieldNames.push(field.name);
+      });
+    });
+    return fieldNames;
+  };
+
+  // Function to move focus to next field
+  const focusNextField = (currentFieldName: string) => {
+    const allFieldNames = getAllFieldNames();
+    const currentIndex = allFieldNames.indexOf(currentFieldName);
+    
+    if (currentIndex >= 0 && currentIndex < allFieldNames.length - 1) {
+      const nextFieldName = allFieldNames[currentIndex + 1];
+      
+      // Small delay to ensure the DOM is ready
+      setTimeout(() => {
+        // Try to focus the next field - works for inputs, textareas, and select triggers
+        const nextField = document.querySelector(`[name="${nextFieldName}"]`) as HTMLElement;
+        if (nextField) {
+          nextField.focus();
+        } else {
+          // For select fields, try to focus the trigger
+          const selectTrigger = document.querySelector(`[data-field-name="${nextFieldName}"]`) as HTMLElement;
+          if (selectTrigger) {
+            selectTrigger.focus();
+          }
+        }
+      }, 0);
+    }
+  };
+
+  // Handle Enter key press
+  const handleKeyDown = (e: React.KeyboardEvent, fieldName: string) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      focusNextField(fieldName);
+    }
+  };
+
   const renderField = (field: FormField) => {
     const isPasswordField = field.label.toLowerCase() === 'password';
     return (
@@ -159,6 +203,7 @@ export function DynamicForm({
                       placeholder={field.placeholder}
                       type={passwordVisibility[field.name] ? 'text' : 'password'}
                       {...formField}
+                      onKeyDown={(e) => handleKeyDown(e, field.name)}
                     />
                     <button
                       type="button"
@@ -174,10 +219,14 @@ export function DynamicForm({
                     placeholder={field.placeholder}
                     className="min-h-[100px]"
                     {...formField}
+                    onKeyDown={(e) => handleKeyDown(e, field.name)}
                   />
                 ) : field.type === 'select' ? (
                   <Select onValueChange={formField.onChange} defaultValue={formField.value}>
-                    <SelectTrigger>
+                    <SelectTrigger 
+                      data-field-name={field.name}
+                      onKeyDown={(e) => handleKeyDown(e, field.name)}
+                    >
                       <SelectValue placeholder={field.placeholder || "Select option"} />
                     </SelectTrigger>
                     <SelectContent>
@@ -199,6 +248,7 @@ export function DynamicForm({
                       formField.onChange(val ? new Date(val) : undefined);
                     }}
                     className="text-center pr-0"
+                    onKeyDown={(e) => handleKeyDown(e, field.name)}
                   />
                 ) : (
                   <Input
@@ -214,6 +264,7 @@ export function DynamicForm({
                         }
                         : undefined
                     }
+                    onKeyDown={(e) => handleKeyDown(e, field.name)}
                   />
                 )}
               </FormControl>

@@ -11,6 +11,7 @@ import axiosInstance from "@/components/apiconfig/axios.ts";
 import { useToast } from "@/components/ui/use-toast";
 import { API_URLS } from "@/components/apiconfig/api_urls.ts";
 import { DashboardHeader } from "@/components/DashboardHeader";
+import { Pencil } from "lucide-react";
 
 interface Checklist {
     id: string;
@@ -107,7 +108,7 @@ export default function ChecklistPage() {
     const actions: TableAction[] = [
         {
             label: "Edit",
-            icon: <Edit className="mr-2 h-4 w-4 text-blue-500" />,
+            icon: <Pencil className="mr-2 h-4 w-4 text-blue-500" />, // changed from Edit to Pencil
             onClick: handleEditChecklist,
             variant: "outline",
         },
