@@ -171,9 +171,10 @@ export function ClosedEnquiryTable() {
     },
     {
       label: 'Delete',
-      icon: <Trash className="h-4 w-4 mr-2" />,
+      icon: <Trash className="h-4 w-4 mr-2 text-red-500" />,
       onClick: handleDelete
     },
+    
   ];
 
   const handleExportExcel = () => {
