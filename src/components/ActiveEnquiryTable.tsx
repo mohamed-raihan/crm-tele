@@ -255,7 +255,7 @@ export function ActiveEnquiryTable() {
     },
     {
       label: "Delete",
-      icon: <Trash className="h-4 w-4 mr-2" />,
+      icon: <Trash className="h-4 w-4 mr-2 text-red-600" />, // Added red color
       onClick: handleDelete,
     },
     // {
